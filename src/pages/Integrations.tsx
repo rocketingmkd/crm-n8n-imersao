@@ -995,7 +995,7 @@ export default function Integrations() {
                 onChange={(e) =>
                   setFormData({ ...formData, companyName: e.target.value })
                 }
-                placeholder="ex: clinica-gabriella"
+                placeholder="ex: minha-empresa"
                 disabled={isConnecting}
               />
               <p className="text-xs text-muted-foreground">

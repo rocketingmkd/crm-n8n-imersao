@@ -167,10 +167,10 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-bold text-foreground leading-tight truncate">
-                      Flow<span className="text-gradient-pink">Clinic</span>
+                      Flow<span className="text-gradient-pink">grammers</span>
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">
-                      by Flowgrammers
+                      Gestão Inteligente
                     </span>
                   </div>
                 )}
@@ -180,7 +180,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 
           {organization && !isCollapsed && (
             <div className="mt-3 rounded-md bg-muted/60 px-3 py-2">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Organização</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
               <p className="text-xs font-semibold text-foreground truncate">{organization.name}</p>
             </div>
           )}
@@ -501,7 +501,7 @@ export default function Layout() {
           <img src={flowgrammersLogo} alt="Flowgrammers" className="h-7 w-auto object-contain" />
           <div className="flex flex-col">
             <span className="text-xs font-bold text-foreground leading-tight">
-              Flow<span className="text-gradient-pink">Clinic</span>
+              Flow<span className="text-gradient-pink">grammers</span>
             </span>
           </div>
         </div>
