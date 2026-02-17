@@ -75,7 +75,7 @@ export function useChatMetrics() {
 
       try {
         // Buscar todas as mensagens
-        const { data: allMessages, error } = await supabase
+        const { data: allMessages, error } = await (supabase as any)
           .from(tableName)
           .select('id, session_id, message, data')
           .order('data', { ascending: false });

@@ -8,6 +8,10 @@ export interface Organization {
   settings: Record<string, any>;
   is_active: boolean;
   logo_url: string | null;
+  contact_email: string | null;
+  subscription_plan: string | null;
+  plan_features: Record<string, any> | null;
+  consultation_duration: number | null;
 }
 
 export interface Profile {

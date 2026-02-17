@@ -34,7 +34,8 @@ interface AgentConfig {
   follow_up_1_minutes: number;
   follow_up_2_minutes: number;
   follow_up_3_minutes: number;
-  qualification_questions: string[];
+  qualification_questions: any;
+  confirmation_email_html?: string | null;
 }
 
 const personalityLabels: Record<string, string> = {
@@ -221,8 +222,8 @@ export default function AgentIA() {
           ...data,
           openai_api_key: globalSettings?.openai_api_key || null,
         };
-        setConfig(configWithGlobalKey);
-        setEditConfig(configWithGlobalKey);
+        setConfig(configWithGlobalKey as AgentConfig);
+        setEditConfig(configWithGlobalKey as AgentConfig);
       }
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
@@ -295,7 +296,7 @@ export default function AgentIA() {
       const tableName = getTableName(organization.slug);
       
       // Buscar todas as mensagens para cálculos completos
-      const { data: allMessages, error: messagesError } = await supabase
+      const { data: allMessages, error: messagesError } = await (supabase as any)
         .from(tableName)
         .select('id, message, data, session_id')
         .order('data', { ascending: true });
@@ -493,8 +494,8 @@ export default function AgentIA() {
 
         if (error) throw error;
         if (data) {
-          setConfig(data);
-          setEditConfig(data);
+          setConfig(data as unknown as AgentConfig);
+          setEditConfig(data as unknown as AgentConfig);
           setIsEditing(false);
           toast.success("Configurações salvas com sucesso!");
           return;

@@ -338,7 +338,7 @@ export default function Agenda() {
           patient_email: patient?.email || '',
           type: apt.type,
           status: apt.status,
-          observations: apt.observations || apt.notes || ''
+          observations: apt.observations || ''
         };
       });
 

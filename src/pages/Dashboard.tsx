@@ -68,11 +68,7 @@ export default function Dashboard() {
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
 
   // Forms
-  const appointmentForm = useForm<AppointmentFormData>({
-    defaultValues: {
-      status: 'pending',
-    },
-  });
+  const appointmentForm = useForm<AppointmentFormData>();
 
   const patientForm = useForm<PatientFormData>({
     defaultValues: {
@@ -103,10 +99,10 @@ export default function Dashboard() {
 
     try {
       await createAppointment.mutateAsync({
-        start_date: data.start_date,
-        start_time: data.start_time,
-        end_date: data.end_date,
-        end_time: data.end_time,
+        date: data.start_date,
+        time: data.start_time,
+        start_datetime: `${data.start_date}T${data.start_time}:00-03:00`,
+        end_datetime: `${data.end_date}T${data.end_time}:00-03:00`,
         patient_id: data.patient_id,
         patient_name: patients.find(p => p.id === data.patient_id)?.name || '',
         type: data.type,
@@ -634,7 +630,7 @@ export default function Dashboard() {
               Agende um novo atendimento para um paciente.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment)} className="space-y-4">
+          <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment as any)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="patient_id">Paciente *</Label>
               <Select

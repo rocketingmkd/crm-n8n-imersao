@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Database } from '@/types/database';
+import type { Database } from '@/integrations/supabase/types';
 
 type Patient = Database['public']['Tables']['patients']['Row'];
 type PatientInsert = Database['public']['Tables']['patients']['Insert'];
