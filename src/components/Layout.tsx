@@ -155,19 +155,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 )}
               />
             ) : (
-              <>
-                <FlowgrammersLogo height={isCollapsed ? 28 : 36} />
-                {!isCollapsed && (
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold text-foreground leading-tight truncate">
-                      Flow<span className="text-gradient-pink">grammers</span>
-                    </span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">
-                      Gestão Inteligente
-                    </span>
-                  </div>
-                )}
-              </>
+              <FlowgrammersLogo height={isCollapsed ? 28 : 36} />
             )}
           </div>
 
@@ -492,11 +480,6 @@ export default function Layout() {
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
           <FlowgrammersLogo height={28} />
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-foreground leading-tight">
-              Flow<span className="text-gradient-pink">grammers</span>
-            </span>
-          </div>
         </div>
         
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
