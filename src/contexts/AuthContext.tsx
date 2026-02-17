@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (profileError) throw profileError;
-      setProfile(profileData);
+      setProfile(profileData as unknown as Profile);
 
       // Buscar organization (apenas se não for super admin)
       if (profileData?.organization_id && !profileData?.is_super_admin) {
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (orgError) throw orgError;
-        setOrganization(orgData);
+        setOrganization(orgData as unknown as Organization);
       } else if (profileData?.is_super_admin) {
         // Super admins não têm organização
         setOrganization(null);

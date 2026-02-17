@@ -229,7 +229,7 @@ export default function Kanban() {
 
       if (error) throw error;
 
-      setCards(data || []);
+      setCards((data || []) as KanbanCard[]);
     } catch (error) {
       console.error("Erro ao carregar pacientes:", error);
       toast.error("Erro ao carregar pacientes");
@@ -293,7 +293,7 @@ export default function Kanban() {
         const { error } = await supabase
           .from("patients")
           .update({ kanban_status: newStatus })
-          .eq("id", active.id);
+          .eq("id", String(active.id));
 
         if (error) throw error;
 
@@ -340,7 +340,7 @@ export default function Kanban() {
 
       // Adicionar o novo card à lista
       if (data) {
-        setCards((prev) => [data, ...prev]);
+        setCards((prev) => [data as KanbanCard, ...prev]);
       }
 
       setNewCardForm({ name: "", email: "", phone: "" });
@@ -435,7 +435,7 @@ export default function Kanban() {
                 variant="outline"
                 onClick={() => {
                   setIsDialogOpen(false);
-                  setNewCardForm({ name: "", email: "", phone: "", notes: "" });
+                  setNewCardForm({ name: "", email: "", phone: "" });
                 }}
               >
                 Cancelar

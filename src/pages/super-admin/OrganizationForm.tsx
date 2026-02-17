@@ -429,7 +429,7 @@ export default function OrganizationForm() {
         name: organization.name,
         contact_email: organization.contact_email || "",
         is_active: organization.is_active,
-        subscription_plan: organization.subscription_plan,
+        subscription_plan: (organization.subscription_plan || 'plano_a') as OrganizationFormData['subscription_plan'],
         adminEmail: "",
         adminPassword: "",
         adminFullName: "",
