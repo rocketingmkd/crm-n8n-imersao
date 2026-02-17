@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FlowgrammersLogo } from '@/components/FlowgrammersLogo';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -60,14 +61,19 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-background p-4">
-      <Card className="w-full max-w-md card-luxury border-border/50">
-        <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Criar Conta
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            Crie sua conta e comece a gerenciar sua empresa
-          </CardDescription>
+      <Card className="w-full max-w-md border-border/50 shadow-lg">
+        <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <FlowgrammersLogo height={38} />
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+              Criar Conta
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Crie sua conta e comece a gerenciar sua empresa
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
