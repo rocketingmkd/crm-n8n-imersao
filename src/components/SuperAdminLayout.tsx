@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import flowgrammersLogo from "@/assets/logo-flowgrammers.png";
+import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
 
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -76,14 +76,7 @@ export default function SuperAdminLayout() {
               "flex items-center transition-all duration-300",
               isSidebarCollapsed ? "justify-center gap-0" : "gap-3"
             )}>
-              <img
-                src={flowgrammersLogo}
-                alt="Flowgrammers"
-                className={cn(
-                  "object-contain shrink-0 transition-all duration-300",
-                  isSidebarCollapsed ? "h-7" : "h-8"
-                )}
-              />
+              <FlowgrammersLogo height={isSidebarCollapsed ? 28 : 32} />
               {!isSidebarCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <h1 className="text-sm font-bold text-foreground leading-tight">
@@ -225,7 +218,7 @@ export default function SuperAdminLayout() {
             </Button>
 
             <div className="flex items-center gap-2.5">
-              <img src={flowgrammersLogo} alt="Flowgrammers" className="h-7 w-auto object-contain" />
+              <FlowgrammersLogo height={28} />
               <div className="flex flex-col">
                 <h2 className="text-xs font-bold text-foreground leading-tight">
                   Flow<span className="text-gradient-pink">grammers</span>
