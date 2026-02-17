@@ -48,28 +48,16 @@ const allNavigationItems = [
   { name: "Integração WhatsApp", href: "/app/integrations", icon: Plug, requiredFeature: null },
 ];
 
-// Flowgrammers SVG Logo
+import flowgrammersLogo from "@/assets/logo-flowgrammers.png";
+
 function FlowgrammersLogo({ size = 32 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="4" y="4" width="10" height="10" rx="2" fill="hsl(330, 90%, 55%)" />
-      <rect x="4" y="18" width="10" height="10" rx="2" fill="hsl(330, 90%, 55%)" />
-      <path
-        d="M14 9 Q22 9 22 16 Q22 23 14 23"
-        stroke="hsl(330, 90%, 55%)"
-        strokeWidth="3.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M14 23 L10 20.5 L10 25.5 Z" fill="hsl(330, 90%, 55%)" />
-    </svg>
+    <img
+      src={flowgrammersLogo}
+      alt="Flowgrammers"
+      style={{ height: size, width: 'auto' }}
+      className="object-contain"
+    />
   );
 }
 
