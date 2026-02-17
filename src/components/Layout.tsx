@@ -40,7 +40,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import SupportButton from "@/components/SupportButton";
-import flowgrammersLogo from "@/assets/logo-flowgrammers.png";
+import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
 
 const allNavigationItems = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
@@ -156,14 +156,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               />
             ) : (
               <>
-                <img
-                  src={flowgrammersLogo}
-                  alt="Flowgrammers"
-                  className={cn(
-                    "object-contain shrink-0 transition-all duration-300",
-                    isCollapsed ? "h-8" : "h-9"
-                  )}
-                />
+                <FlowgrammersLogo height={isCollapsed ? 28 : 36} />
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-bold text-foreground leading-tight truncate">
@@ -498,7 +491,7 @@ export default function Layout() {
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
-          <img src={flowgrammersLogo} alt="Flowgrammers" className="h-7 w-auto object-contain" />
+          <FlowgrammersLogo height={28} />
           <div className="flex flex-col">
             <span className="text-xs font-bold text-foreground leading-tight">
               Flow<span className="text-gradient-pink">grammers</span>
