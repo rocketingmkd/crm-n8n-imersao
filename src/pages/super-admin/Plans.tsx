@@ -27,14 +27,12 @@ interface PlanConfig {
   price_annual: number | null;
 }
 
-// Recursos principais que diferenciam os planos
 const mainFeatures = [
   { key: 'atendimento_inteligente', label: 'Atendimento Inteligente', description: 'Chatbot com IA para atendimento' },
   { key: 'base_conhecimento', label: 'Base de Conhecimento', description: 'Personalização com informações do negócio' },
   { key: 'agendamento_automatico', label: 'Agendamento Automático', description: 'Sistema de agenda integrado' },
 ];
 
-// Recursos secundários
 const secondaryFeatures = [
   { key: 'lembretes_automaticos', label: 'Lembretes Automáticos' },
   { key: 'confirmacao_email', label: 'Confirmação por Email' },
@@ -46,7 +44,6 @@ const secondaryFeatures = [
 ];
 
 export default function Plans() {
-  // Carregar planos
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['admin-subscription-plans'],
     queryFn: async () => {
@@ -54,146 +51,84 @@ export default function Plans() {
         .from('subscription_plan_configs')
         .select('*')
         .order('plan_id', { ascending: true });
-      
       if (error) throw error;
       return data as PlanConfig[];
     },
   });
 
-  const getPlanColor = (planId: string) => {
-    switch (planId) {
-      case 'plano_a': return 'border-blue-500/30 bg-blue-500/5';
-      case 'plano_b': return 'border-green-500/30 bg-green-500/5';
-      case 'plano_c': return 'border-amber-500/30 bg-amber-500/5';
-      case 'plano_d': return 'border-purple-500/30 bg-purple-500/5';
-      default: return 'border-gray-500/30 bg-gray-500/5';
-    }
-  };
-
-  const getCrownColor = (planId: string) => {
-    switch (planId) {
-      case 'plano_a': return 'text-blue-500';
-      case 'plano_b': return 'text-green-500';
-      case 'plano_c': return 'text-amber-500';
-      case 'plano_d': return 'text-purple-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getPlanAccentColor = (planId: string) => {
-    switch (planId) {
-      case 'plano_a': return {
-        border: 'border-blue-500/30',
-        bg: 'bg-blue-500/10',
-        text: 'text-blue-400',
-        check: 'text-blue-400',
-        gradient: 'from-blue-500 to-cyan-500'
-      };
-      case 'plano_b': return {
-        border: 'border-green-500/30',
-        bg: 'bg-green-500/10',
-        text: 'text-green-400',
-        check: 'text-green-400',
-        gradient: 'from-green-500 to-emerald-500'
-      };
-      case 'plano_c': return {
-        border: 'border-amber-500/30',
-        bg: 'bg-amber-500/10',
-        text: 'text-amber-400',
-        check: 'text-amber-400',
-        gradient: 'from-amber-500 to-yellow-500'
-      };
-      case 'plano_d': return {
-        border: 'border-purple-500/30',
-        bg: 'bg-purple-500/10',
-        text: 'text-purple-400',
-        check: 'text-purple-400',
-        gradient: 'from-purple-500 to-violet-500'
-      };
-      default: return {
-        border: 'border-gray-500/30',
-        bg: 'bg-gray-500/10',
-        text: 'text-gray-400',
-        check: 'text-gray-400',
-        gradient: 'from-gray-500 to-gray-600'
-      };
-    }
-  };
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 bg-black min-h-screen">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Planos de Assinatura</h1>
-        <p className="text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Planos de Assinatura</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Visualize os planos disponíveis e seus recursos
         </p>
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {plans.map((plan) => {
-          const accentColors = getPlanAccentColor(plan.plan_id);
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {plans.map((plan, index) => {
+          const isPopular = index === 1;
           return (
             <Card 
               key={plan.plan_id}
               className={cn(
-                "border-2 transition-all hover:shadow-xl hover:scale-[1.02]",
-                getPlanColor(plan.plan_id),
-                plan.plan_id === 'plano_a' && "hover:border-blue-500/50",
-                plan.plan_id === 'plano_b' && "hover:border-green-500/50",
-                plan.plan_id === 'plano_c' && "hover:border-amber-500/50",
-                plan.plan_id === 'plano_d' && "hover:border-purple-500/50"
+                "border transition-all hover:shadow-lg hover:shadow-primary/5 hover:border-primary/40",
+                isPopular
+                  ? "border-primary/50 ring-1 ring-primary/20"
+                  : "border-border"
               )}
             >
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br",
-                    accentColors.gradient
-                  )}>
-                    <Crown className={cn("h-6 w-6 text-white")} />
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <Crown className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-foreground text-base">{plan.plan_name}</CardTitle>
+                      <CardDescription className="text-muted-foreground text-xs mt-0.5">
+                        {plan.plan_description}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-white">{plan.plan_name}</CardTitle>
-                    <CardDescription className="text-gray-400 mt-1">
-                      {plan.plan_description}
-                    </CardDescription>
-                  </div>
+                  {isPopular && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                      Popular
+                    </span>
+                  )}
                 </div>
                 
-                {/* Preço */}
-                <div className="mt-4">
+                {/* Price */}
+                <div className="mt-4 pt-4 border-t border-border">
                   {plan.price_monthly ? (
                     <div className="flex items-baseline gap-1">
-                      <span className={cn(
-                        "text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                        accentColors.gradient
-                      )}>
+                      <span className="text-3xl font-bold text-foreground">
                         R$ {plan.price_monthly.toFixed(2)}
                       </span>
-                      <span className="text-gray-400">/mês</span>
+                      <span className="text-sm text-muted-foreground">/mês</span>
                     </div>
                   ) : (
-                    <span className="text-lg font-semibold text-gray-300">
+                    <span className="text-base font-semibold text-muted-foreground">
                       Sob consulta
                     </span>
                   )}
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-6">
-                {/* Recursos Principais */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+              <CardContent className="space-y-5">
+                {/* Main Features */}
+                <div className="space-y-2.5">
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Recursos Principais
                   </h3>
                   <div className="space-y-2">
@@ -203,27 +138,31 @@ export default function Plans() {
                         <div 
                           key={feature.key} 
                           className={cn(
-                            "flex items-center gap-3 p-3 rounded-lg border",
+                            "flex items-center gap-3 p-2.5 rounded-lg border transition-colors",
                             isEnabled 
-                              ? `${accentColors.bg} ${accentColors.border}` 
-                              : "bg-black/60 border-gray-500/20"
+                              ? "bg-primary/5 border-primary/20" 
+                              : "bg-muted/30 border-border/50"
                           )}
                         >
                           {isEnabled ? (
-                            <Check className={cn("h-5 w-5 shrink-0", accentColors.check)} />
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 shrink-0">
+                              <Check className="h-3 w-3 text-primary" />
+                            </div>
                           ) : (
-                            <X className="h-5 w-5 text-gray-500/50 shrink-0" />
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted shrink-0">
+                              <X className="h-3 w-3 text-muted-foreground/40" />
+                            </div>
                           )}
                           <div>
                             <p className={cn(
-                              "text-sm font-medium",
-                              isEnabled ? "text-white" : "text-gray-400/50"
+                              "text-xs font-medium",
+                              isEnabled ? "text-foreground" : "text-muted-foreground/50"
                             )}>
                               {feature.label}
                             </p>
                             <p className={cn(
-                              "text-xs",
-                              isEnabled ? "text-gray-300" : "text-gray-500/50"
+                              "text-[10px]",
+                              isEnabled ? "text-muted-foreground" : "text-muted-foreground/30"
                             )}>
                               {feature.description}
                             </p>
@@ -234,27 +173,24 @@ export default function Plans() {
                   </div>
                 </div>
 
-                {/* Recursos Secundários */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+                {/* Secondary Features */}
+                <div className="space-y-2.5">
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Outros Recursos
                   </h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {secondaryFeatures.map((feature) => {
                       const isEnabled = plan[feature.key as keyof PlanConfig] as boolean;
                       return (
-                        <div 
-                          key={feature.key} 
-                          className="flex items-center gap-2"
-                        >
+                        <div key={feature.key} className="flex items-center gap-2 py-1">
                           {isEnabled ? (
-                            <Check className={cn("h-4 w-4 shrink-0", accentColors.check)} />
+                            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
                           ) : (
-                            <X className="h-4 w-4 text-gray-500/50 shrink-0" />
+                            <X className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
                           )}
                           <span className={cn(
-                            "text-xs",
-                            isEnabled ? "text-white" : "text-gray-500/50"
+                            "text-[11px]",
+                            isEnabled ? "text-foreground" : "text-muted-foreground/40"
                           )}>
                             {feature.label}
                           </span>
@@ -264,64 +200,28 @@ export default function Plans() {
                   </div>
                 </div>
 
-                {/* Limites */}
-                <div className={cn("space-y-3 pt-3 border-t", accentColors.border)}>
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+                {/* Limits */}
+                <div className="space-y-2.5 pt-4 border-t border-border">
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Limites
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className={cn(
-                      "text-center p-3 rounded-lg border",
-                      accentColors.bg,
-                      accentColors.border
-                    )}>
-                      <p className={cn(
-                        "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                        accentColors.gradient
-                      )}>
-                        {plan.max_agendamentos_mes || '∞'}
-                      </p>
-                      <p className="text-xs text-gray-400">Agendamentos/mês</p>
-                    </div>
-                    <div className={cn(
-                      "text-center p-3 rounded-lg border",
-                      accentColors.bg,
-                      accentColors.border
-                    )}>
-                      <p className={cn(
-                        "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                        accentColors.gradient
-                      )}>
-                        {plan.max_mensagens_whatsapp_mes || '∞'}
-                      </p>
-                      <p className="text-xs text-gray-400">Mensagens/mês</p>
-                    </div>
-                    <div className={cn(
-                      "text-center p-3 rounded-lg border",
-                      accentColors.bg,
-                      accentColors.border
-                    )}>
-                      <p className={cn(
-                        "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                        accentColors.gradient
-                      )}>
-                        {plan.max_usuarios || '∞'}
-                      </p>
-                      <p className="text-xs text-gray-400">Usuários</p>
-                    </div>
-                    <div className={cn(
-                      "text-center p-3 rounded-lg border",
-                      accentColors.bg,
-                      accentColors.border
-                    )}>
-                      <p className={cn(
-                        "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                        accentColors.gradient
-                      )}>
-                        {plan.max_pacientes || '∞'}
-                      </p>
-                      <p className="text-xs text-gray-400">Pacientes</p>
-                    </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: plan.max_agendamentos_mes, label: 'Agendamentos/mês' },
+                      { value: plan.max_mensagens_whatsapp_mes, label: 'Mensagens/mês' },
+                      { value: plan.max_usuarios, label: 'Usuários' },
+                      { value: plan.max_pacientes, label: 'Clientes' },
+                    ].map((limit) => (
+                      <div
+                        key={limit.label}
+                        className="text-center p-2.5 rounded-lg bg-muted/50 border border-border"
+                      >
+                        <p className="text-xl font-bold text-primary">
+                          {limit.value || '∞'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{limit.label}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -330,18 +230,18 @@ export default function Plans() {
         })}
       </div>
 
-      {/* Info Alert */}
-      <Card className="border-pink-500/30 bg-pink-500/5">
-        <CardContent className="pt-6">
+      {/* Info */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-5 pb-5">
           <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-pink-400 shrink-0" />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-white">
+            <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-foreground">
                 Sobre os Planos
               </p>
-              <p className="text-xs text-gray-300">
-                Os recursos de cada plano são fixos. Para alterar o plano de uma organização, 
-                acesse a página de edição da organização em "Organizações".
+              <p className="text-xs text-muted-foreground">
+                Os recursos de cada plano são fixos. Para alterar o plano de uma empresa, 
+                acesse a página de edição em "Empresas".
               </p>
             </div>
           </div>
