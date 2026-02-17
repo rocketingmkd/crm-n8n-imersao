@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
+import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -12,7 +12,8 @@ const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
   { path: "/super-admin/organizations", label: "Empresas", icon: Building2 },
   { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
-  { path: "/super-admin/token-usage", label: "Observabilidade", icon: Eye },
+  { path: "/super-admin/token-usage", label: "Uso de tokens", icon: Eye },
+  { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },
   { path: "/super-admin/settings", label: "Configs", icon: Sliders },
 ];
 

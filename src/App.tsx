@@ -26,6 +26,7 @@ import Kanban from "./pages/Kanban";
 import AgentIA from "./pages/AgentIA";
 import Conhecimento from "./pages/Conhecimento";
 import Integrations from "./pages/Integrations";
+import Observability from "./pages/Observability";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/super-admin/Dashboard";
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/super-admin/organizations/:id/edit" element={<OrganizationForm />} />
                 <Route path="/super-admin/plans" element={<Plans />} />
                 <Route path="/super-admin/token-usage" element={<TokenUsage />} />
+                <Route path="/super-admin/observability" element={<Observability />} />
                 <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
               </Route>
 
