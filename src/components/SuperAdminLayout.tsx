@@ -67,27 +67,12 @@ export default function SuperAdminLayout() {
             )}
           </Button>
 
-          {/* Header */}
+          {/* Header - Logo only */}
           <div className={cn(
             "flex h-14 items-center justify-between border-b border-border transition-all duration-300",
-            isSidebarCollapsed ? "px-2" : "px-4"
+            isSidebarCollapsed ? "px-2 justify-center" : "px-4"
           )}>
-            <div className={cn(
-              "flex items-center transition-all duration-300",
-              isSidebarCollapsed ? "justify-center gap-0" : "gap-3"
-            )}>
-              <FlowgrammersLogo height={isSidebarCollapsed ? 28 : 32} />
-              {!isSidebarCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <h1 className="text-sm font-bold text-foreground leading-tight">
-                    Flow<span className="text-gradient-pink">grammers</span>
-                  </h1>
-                  <p className="text-[10px] text-muted-foreground leading-tight">
-                    Painel Admin
-                  </p>
-                </div>
-              )}
-            </div>
+            <FlowgrammersLogo height={isSidebarCollapsed ? 24 : 30} />
             <Button
               variant="ghost"
               size="icon"
@@ -163,7 +148,7 @@ export default function SuperAdminLayout() {
                   </Tooltip>
                 );
               }
-              return btn;
+              return <div key={item.path}>{btn}</div>;
             })}
           </nav>
 
@@ -173,30 +158,34 @@ export default function SuperAdminLayout() {
             isSidebarCollapsed ? "p-2" : "p-3"
           )}>
             {/* Theme Toggle */}
-            {isCollapsedThemeButton(isSidebarCollapsed, theme, toggleTheme)}
+            {isSidebarCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={toggleTheme} className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted">
+                    {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>{theme === "dark" ? "Modo claro" : "Modo escuro"}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={toggleTheme} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs">
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === "dark" ? "Modo claro" : "Modo escuro"}
+              </Button>
+            )}
 
             {/* Logout */}
             {isSidebarCollapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    onClick={handleLogout}
-                    variant="ghost"
-                    size="icon"
-                    className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
+                  <Button onClick={handleLogout} variant="ghost" size="icon" className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>Sair</TooltipContent>
               </Tooltip>
             ) : (
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs"
-              >
+              <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs">
                 <LogOut className="h-4 w-4" />
                 Sair
               </Button>
@@ -217,17 +206,7 @@ export default function SuperAdminLayout() {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center gap-2.5">
-              <FlowgrammersLogo height={28} />
-              <div className="flex flex-col">
-                <h2 className="text-xs font-bold text-foreground leading-tight">
-                  Flow<span className="text-gradient-pink">grammers</span>
-                </h2>
-                <p className="text-[10px] text-muted-foreground leading-tight">
-                  Painel Admin
-                </p>
-              </div>
-            </div>
+            <FlowgrammersLogo height={26} />
 
             <div className="ml-auto">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/20">
@@ -243,38 +222,5 @@ export default function SuperAdminLayout() {
         </div>
       </div>
     </TooltipProvider>
-  );
-}
-
-function isCollapsedThemeButton(isCollapsed: boolean, theme: string, toggleTheme: () => void) {
-  if (isCollapsed) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          {theme === "dark" ? "Modo claro" : "Modo escuro"}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={toggleTheme}
-      className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs"
-    >
-      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      {theme === "dark" ? "Modo claro" : "Modo escuro"}
-    </Button>
   );
 }
