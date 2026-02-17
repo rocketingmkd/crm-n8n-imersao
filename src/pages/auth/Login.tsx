@@ -6,6 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
+function FlowgrammersLogo({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="4" width="10" height="10" rx="2" fill="hsl(330, 90%, 55%)" />
+      <rect x="4" y="18" width="10" height="10" rx="2" fill="hsl(330, 90%, 55%)" />
+      <path d="M14 9 Q22 9 22 16 Q22 23 14 23" stroke="hsl(330, 90%, 55%)" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 23 L10 20.5 L10 25.5 Z" fill="hsl(330, 90%, 55%)" />
+    </svg>
+  );
+}
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,10 +24,8 @@ export default function Login() {
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirecionar após login bem-sucedido e profile carregado
   useEffect(() => {
     if (user && profile && !authLoading) {
-      // Redirecionar baseado no tipo de usuário
       if (profile.is_super_admin) {
         navigate('/super-admin/dashboard');
       } else {
@@ -31,29 +40,35 @@ export default function Login() {
 
     try {
       await signIn(email, password);
-      // O redirecionamento será feito pelo useEffect acima
     } catch (error) {
-      // Erro já tratado no AuthContext
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-background p-4">
-      <Card className="w-full max-w-md card-luxury border-border/50">
-        <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            🏥 FlowClinic 🏥
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            Informe seu email e senha para acessar o sistema
-          </CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      {/* Subtle gradient overlay */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
+      
+      <Card className="relative w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-2xl shadow-primary/10">
+        <CardHeader className="space-y-4 text-center pb-2">
+          <div className="flex justify-center">
+            <FlowgrammersLogo size={56} />
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+              Flow<span className="text-gradient-pink">Clinic</span>
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground mt-1">
+              Informe seu email e senha para acessar o sistema
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">E-mail</Label>
+              <Label htmlFor="email" className="text-foreground text-sm">E-mail</Label>
               <Input
                 id="email"
                 type="email"
@@ -63,12 +78,12 @@ export default function Login() {
                 required
                 disabled={loading}
                 autoComplete="email"
-                className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/30"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Senha</Label>
+              <Label htmlFor="password" className="text-foreground text-sm">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -78,16 +93,16 @@ export default function Login() {
                 required
                 disabled={loading}
                 autoComplete="current-password"
-                className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/30"
               />
             </div>
 
             <div className="text-right">
               <Link
                 to="/forgot-password"
-                className="text-sm text-accent hover:text-accent/80 hover:underline transition-colors"
+                className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"
               >
-                Esqueceu a sua senha? Recupere agora.
+                Esqueceu a sua senha?
               </Link>
             </div>
           </CardContent>
@@ -95,7 +110,7 @@ export default function Login() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+              className="w-full gradient-pink text-primary-foreground shadow-pink hover:opacity-90 transition-all font-semibold"
               disabled={loading}
             >
               {loading ? 'Entrando...' : 'Entrar'}
@@ -103,8 +118,8 @@ export default function Login() {
 
             <p className="text-sm text-center text-muted-foreground">
               Não tem uma conta?{' '}
-              <Link to="/register" className="text-accent font-semibold hover:text-accent/80 hover:underline transition-colors">
-                Cadastre-se agora.
+              <Link to="/register" className="text-primary font-semibold hover:text-primary/80 hover:underline transition-colors">
+                Cadastre-se agora
               </Link>
             </p>
           </CardFooter>
@@ -113,4 +128,3 @@ export default function Login() {
     </div>
   );
 }
-
