@@ -59,7 +59,7 @@ export default function Login() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-              Flow<span className="text-gradient-pink">Clinic</span>
+              Flow<span className="text-gradient-pink">grammers</span>
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground mt-1">
               Informe seu email e senha para acessar o sistema

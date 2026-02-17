@@ -66,19 +66,19 @@ export default function Register() {
             Criar Conta
           </CardTitle>
           <CardDescription className="text-base text-muted-foreground">
-            Crie sua conta e comece a gerenciar sua clínica
+            Crie sua conta e comece a gerenciar sua empresa
           </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="organizationName" className="text-foreground">Nome da Clínica *</Label>
+              <Label htmlFor="organizationName" className="text-foreground">Nome da Empresa *</Label>
               <Input
                 id="organizationName"
                 name="organizationName"
                 type="text"
-                placeholder="Clínica São Paulo"
+                placeholder="Minha Empresa"
                 value={formData.organizationName}
                 onChange={handleChange}
                 required

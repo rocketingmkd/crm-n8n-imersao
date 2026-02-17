@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Hospital, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
+import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -10,7 +10,7 @@ import flowgrammersLogo from "@/assets/logo-flowgrammers.png";
 
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-  { path: "/super-admin/organizations", label: "Clínicas", icon: Hospital },
+  { path: "/super-admin/organizations", label: "Empresas", icon: Building2 },
   { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
   { path: "/super-admin/token-usage", label: "Observabilidade", icon: Eye },
   { path: "/super-admin/settings", label: "Configs", icon: Sliders },
@@ -87,7 +87,7 @@ export default function SuperAdminLayout() {
               {!isSidebarCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <h1 className="text-sm font-bold text-foreground leading-tight">
-                    Flow<span className="text-gradient-pink">Clinic</span>
+                    Flow<span className="text-gradient-pink">grammers</span>
                   </h1>
                   <p className="text-[10px] text-muted-foreground leading-tight">
                     Painel Admin
@@ -228,7 +228,7 @@ export default function SuperAdminLayout() {
               <img src={flowgrammersLogo} alt="Flowgrammers" className="h-7 w-auto object-contain" />
               <div className="flex flex-col">
                 <h2 className="text-xs font-bold text-foreground leading-tight">
-                  Flow<span className="text-gradient-pink">Clinic</span>
+                  Flow<span className="text-gradient-pink">grammers</span>
                 </h2>
                 <p className="text-[10px] text-muted-foreground leading-tight">
                   Painel Admin

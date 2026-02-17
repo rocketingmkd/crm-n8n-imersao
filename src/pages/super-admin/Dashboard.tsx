@@ -403,10 +403,10 @@ export default function SuperAdminDashboard() {
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <Building2 className="h-5 w-5 text-pink-500" />
-              Tokens por Clínica (Top 10)
+              Tokens por Empresa (Top 10)
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Distribuição de consumo de tokens por clínica
+              Distribuição de consumo de tokens por empresa
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -466,10 +466,10 @@ export default function SuperAdminDashboard() {
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-pink-500" />
-              Custo por Clínica (Top 10)
+              Custo por Empresa (Top 10)
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Distribuição de custos por clínica
+              Distribuição de custos por empresa
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -534,10 +534,10 @@ export default function SuperAdminDashboard() {
       <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="text-white">
-            Clínicas Recentes
+            Empresas Recentes
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Últimas clínicas cadastradas
+            Últimas empresas cadastradas
           </CardDescription>
         </CardHeader>
         <CardContent>

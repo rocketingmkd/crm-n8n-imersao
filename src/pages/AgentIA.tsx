@@ -87,7 +87,7 @@ export default function AgentIA() {
     personality: "profissional",
     pause_duration_seconds: 1800, // 30 minutos em segundos
     customer_pause_duration_seconds: 300, // 5 minutos em segundos
-    greeting_message: "Olá! Sou o assistente virtual da clínica. Como posso ajudá-lo hoje?",
+    greeting_message: "Olá! Sou o assistente virtual da empresa. Como posso ajudá-lo hoje?",
     closing_message: "Foi um prazer atendê-lo! Se precisar de algo mais, estou à disposição.",
     openai_api_key: null,
     reminder_1_minutes: 15,

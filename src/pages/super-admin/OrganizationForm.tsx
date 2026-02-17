@@ -887,7 +887,7 @@ export default function OrganizationForm() {
                   Clínica Ativa
                 </Label>
                 <p className="text-xs text-gray-400">
-                Clínicas inativas não podem acessar o sistema
+                Empresas inativas não podem acessar o sistema
                 </p>
               </div>
               <Switch

@@ -110,9 +110,9 @@ export default function Organizations() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Clínicas</h1>
+          <h1 className="text-3xl font-bold text-white">Empresas</h1>
           <p className="text-gray-400 mt-1">
-            Gerencie todas as clínicas e consultórios
+            Gerencie todas as empresas cadastradas
           </p>
         </div>
         <Button
