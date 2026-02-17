@@ -28,10 +28,10 @@ export default function SuperAdminLayout() {
   const handleLogout = async () => {
     try {
       await signOut();
+      window.location.href = '/login';
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-    } finally {
-      navigate("/login");
+      window.location.href = '/login';
     }
   };
 

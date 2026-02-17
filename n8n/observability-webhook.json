@@ -1,0 +1,79 @@
+{
+  "name": "Observability API (Webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "observability",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-observability",
+      "name": "Webhook GET Observability",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "observability-api"
+    },
+    {
+      "parameters": {
+        "url": "=http://observability-api:3001/api/observability",
+        "authentication": "none",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-observability-api",
+      "name": "Chamar API Observability",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "notesInFlow": true,
+      "notes": "Ajuste a URL: use o host do container da observability-api (ex: http://observability-api:3001 ou http://host.docker.internal:3001)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder com JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook GET Observability": {
+      "main": [
+        [
+          {
+            "node": "Chamar API Observability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar API Observability": {
+      "main": [
+        [
+          {
+            "node": "Responder com JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCreds": {}
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "name": "Observability API (standalone - Execute Command)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "observability-standalone",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-observability-standalone",
+      "name": "Webhook GET",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "observability-standalone"
+    },
+    {
+      "parameters": {
+        "command": "node -e \"const os=require('os');const {execSync}=require('child_process');const n=os.cpus().length;const load=os.loadavg()[0];const cpu=Math.min(100,Math.round((load/n)*100));const t=os.totalmem();const f=os.freemem();const usedMb=Math.round((t-f)/1024/1024);const totalMb=Math.round(t/1024/1024);const pct=Math.round((t-f)/t*100);let d={usedGb:0,totalGb:0,percent:0};try{const o=execSync('df -k /').toString();const L=o.trim().split(/\\\\n/)[1];if(L){const P=L.split(/\\\\s+/);const usedK=parseInt(P[2],10);const totalK=parseInt(P[1],10);d={usedGb:Math.round(usedK/1024/1024*100)/100,totalGb:Math.round(totalK/1024/1024*100)/100,percent:parseInt(P[5],10)||0};}}catch(e){}\nconsole.log(JSON.stringify({metrics:{cpu:{percent:cpu},memory:{usedMb,totalMb,percent:pct},disk:d,n8nWorkers:{active:0,idle:0,busy:0,total:0}},history:[]}));\"",
+        "executeOnce": true
+      },
+      "id": "exec-metrics",
+      "name": "Coletar métricas (Execute Command)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "notesInFlow": true,
+      "notes": "Requer n8n com Execute Command habilitado (não disponível no n8n Cloud). Roda no container do n8n."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst raw = item.json.stdout ?? item.json?.stdout ?? item.json?.output ?? (typeof item.json === 'string' ? item.json : '') ?? '';\nlet data = { metrics: {}, history: [] };\ntry {\n  const str = typeof raw === 'string' ? raw : JSON.stringify(raw);\n  data = JSON.parse(str.trim());\n} catch (e) {\n  data = { metrics: { cpu: { percent: 0 }, memory: { usedMb: 0, totalMb: 0, percent: 0 }, disk: { usedGb: 0, totalGb: 0, percent: 0 }, n8nWorkers: { active: 0, idle: 0, busy: 0, total: 0 } }, history: [] };\n}\nreturn [{ json: data }];"
+      },
+      "id": "code-parse",
+      "name": "Parsear JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook-standalone",
+      "name": "Responder com JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook GET": {
+      "main": [
+        [
+          {
+            "node": "Coletar métricas (Execute Command)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Coletar métricas (Execute Command)": {
+      "main": [
+        [
+          {
+            "node": "Parsear JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear JSON": {
+      "main": [
+        [
+          {
+            "node": "Responder com JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCreds": {}
+  }
+}
