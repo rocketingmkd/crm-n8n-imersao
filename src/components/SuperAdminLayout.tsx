@@ -4,6 +4,7 @@ import { Menu, X, Shield, Hospital, LayoutDashboard, LogOut, Gem, Eye, Sliders, 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import flowgrammersLogo from "@/assets/logo-flowgrammers.png";
 
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -74,48 +75,8 @@ export default function SuperAdminLayout() {
             isSidebarCollapsed ? "justify-center gap-0" : "gap-3"
           )}>
             {/* Logo Flowgrammers */}
-            <div className="flex h-10 w-10 items-center justify-center shrink-0 bg-black rounded">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-full w-full"
-              >
-                {/* Quadrado superior */}
-                <rect
-                  x="4"
-                  y="4"
-                  width="10"
-                  height="10"
-                  rx="2"
-                  fill="#ec4899"
-                />
-                {/* Quadrado inferior */}
-                <rect
-                  x="4"
-                  y="18"
-                  width="10"
-                  height="10"
-                  rx="2"
-                  fill="#ec4899"
-                />
-                {/* Seta curva grossa apontando para a esquerda */}
-                <path
-                  d="M14 9 Q22 9 22 16 Q22 23 14 23"
-                  stroke="#ec4899"
-                  strokeWidth="3.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {/* Cabeça da seta (triângulo) */}
-                <path
-                  d="M14 23 L10 20.5 L10 25.5 Z"
-                  fill="#ec4899"
-                />
-              </svg>
+            <div className="flex h-10 w-10 items-center justify-center shrink-0">
+              <img src={flowgrammersLogo} alt="Flowgrammers" className="h-10 w-auto object-contain" />
             </div>
             {!isSidebarCollapsed && (
               <div className="flex flex-col">
@@ -231,48 +192,8 @@ export default function SuperAdminLayout() {
 
           <div className="flex items-center gap-2">
             {/* Logo Flowgrammers */}
-            <div className="flex h-8 w-8 items-center justify-center shrink-0 bg-black rounded">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-full w-full"
-              >
-                {/* Quadrado superior */}
-                <rect
-                  x="4"
-                  y="4"
-                  width="10"
-                  height="10"
-                  rx="2"
-                  fill="#ec4899"
-                />
-                {/* Quadrado inferior */}
-                <rect
-                  x="4"
-                  y="18"
-                  width="10"
-                  height="10"
-                  rx="2"
-                  fill="#ec4899"
-                />
-                {/* Seta curva grossa apontando para a esquerda */}
-                <path
-                  d="M14 9 Q22 9 22 16 Q22 23 14 23"
-                  stroke="#ec4899"
-                  strokeWidth="3.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {/* Cabeça da seta (triângulo) */}
-                <path
-                  d="M14 23 L10 20.5 L10 25.5 Z"
-                  fill="#ec4899"
-                />
-              </svg>
+            <div className="flex h-8 w-8 items-center justify-center shrink-0">
+              <img src={flowgrammersLogo} alt="Flowgrammers" className="h-8 w-auto object-contain" />
             </div>
             <div className="flex flex-col">
               <h2 className="text-xs font-bold text-white leading-tight">
