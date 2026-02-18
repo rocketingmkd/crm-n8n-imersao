@@ -692,22 +692,22 @@ export default function OrganizationForm() {
   };
 
   return (
-    <div className="space-y-6 bg-black min-h-screen p-6">
+    <div className="space-y-6 min-h-screen p-6">
       {/* Page Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/super-admin/organizations")}
-          className="text-pink-300 hover:text-pink-100 hover:bg-pink-800/30"
+          className="text-primary hover:text-primary-foreground hover:bg-primary/20"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             {isEditing ? "Editar Organização" : "Nova Organização"}
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isEditing
               ? "Atualize as informações da organização"
               : "Crie uma nova clínica/consultório e seu administrador"}
@@ -718,31 +718,31 @@ export default function OrganizationForm() {
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Organization Info */}
-        <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+        <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-white">Informações da Clínica</CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardTitle className="text-foreground">Informações da Clínica</CardTitle>
+            <CardDescription>
               Dados básicos da clínica/consultório
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name" className="text-white">
+              <Label htmlFor="name">
                 Nome da Clínica *
               </Label>
               <Input
                 id="name"
                 {...register("name", { required: "Nome é obrigatório" })}
                 placeholder="Ex: Clínica São Paulo"
-                className="mt-1.5 bg-black/60 border-pink-500/30 text-white placeholder:text-gray-400/50"
+                className="mt-1.5"
               />
               {errors.name && (
-                <p className="text-xs text-red-400 mt-1">{errors.name.message}</p>
+                <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="contact_email" className="text-white">
+              <Label htmlFor="contact_email">
                 E-mail de Contato
               </Label>
               <Input
@@ -750,22 +750,22 @@ export default function OrganizationForm() {
                 type="email"
                 {...register("contact_email")}
                 placeholder="contato@clinica.com"
-                className="mt-1.5 bg-black/60 border-pink-500/30 text-white placeholder:text-gray-400/50"
+                className="mt-1.5"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 E-mail usado para envio de confirmações de agendamento
               </p>
             </div>
 
             {/* Plano de Assinatura */}
             <div className="space-y-2">
-              <Label htmlFor="subscription_plan" className="text-blue-200">
+              <Label htmlFor="subscription_plan">
                 Pacote de Assinatura *
               </Label>
               <select
                 id="subscription_plan"
                 {...register("subscription_plan", { required: "Plano é obrigatório" })}
-                className="w-full h-10 px-3 rounded-md bg-black/60 border border-pink-500/30 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                className="w-full h-10 px-3 rounded-md bg-input border border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 {plans.map((plan) => (
                   <option key={plan.plan_id} value={plan.plan_id}>
@@ -774,90 +774,90 @@ export default function OrganizationForm() {
                 ))}
               </select>
               {errors.subscription_plan && (
-                <p className="text-xs text-red-400 mt-1">{errors.subscription_plan.message}</p>
+                <p className="text-xs text-destructive mt-1">{errors.subscription_plan.message}</p>
               )}
               
               {/* Descrição do Plano Selecionado */}
               {subscriptionPlan && plans.find(p => p.plan_id === subscriptionPlan) && (
-                <div className="mt-3 p-4 rounded-lg bg-pink-900/20 border border-pink-500/30">
-                  <p className="text-sm text-white mb-3">
+                <div className="mt-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-sm text-foreground mb-3">
                     {plans.find(p => p.plan_id === subscriptionPlan)?.plan_description}
                   </p>
                   
                   {/* Recursos do Plano */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-pink-300 uppercase tracking-wide">
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                       Recursos Inclusos:
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {plans.find(p => p.plan_id === subscriptionPlan)?.atendimento_inteligente && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Atendimento Inteligente</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.agendamento_automatico && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Agendamento Automático</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.lembretes_automaticos && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Lembretes Automáticos</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.confirmacao_email && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Confirmação por Email</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.base_conhecimento && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Base de Conhecimento</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.relatorios_avancados && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Relatórios Avançados</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.integracao_whatsapp && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Integração WhatsApp</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.multi_usuarios && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Múltiplos Usuários</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.personalizacao_agente && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Personalização do Agente</span>
                         </div>
                       )}
                       {plans.find(p => p.plan_id === subscriptionPlan)?.analytics && (
-                        <div className="flex items-center gap-2 text-xs text-white">
-                          <Check className="h-3 w-3 text-pink-400" />
+                        <div className="flex items-center gap-2 text-xs text-foreground">
+                          <Check className="h-3 w-3 text-primary" />
                           <span>Analytics</span>
                         </div>
                       )}
                     </div>
                     
                     {/* Limites do Plano */}
-                    <div className="mt-3 pt-3 border-t border-pink-500/30">
-                      <p className="text-xs font-semibold text-pink-300 uppercase tracking-wide mb-2">
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
                         Limites:
                       </p>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                         <div>
                           <span className="font-medium">Agendamentos/mês:</span>{' '}
                           {plans.find(p => p.plan_id === subscriptionPlan)?.max_agendamentos_mes || 'Ilimitado'}
@@ -883,10 +883,10 @@ export default function OrganizationForm() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="is_active" className="text-white">
+                <Label htmlFor="is_active">
                   Clínica Ativa
                 </Label>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                 Empresas inativas não podem acessar o sistema
                 </p>
               </div>
@@ -901,38 +901,37 @@ export default function OrganizationForm() {
 
         {/* Logo Upload (only when editing) */}
         {isEditing && (
-          <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+          <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-white">Logo da Clínica</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle>Logo da Clínica</CardTitle>
+              <CardDescription>
                 Faça upload do logo que aparecerá no sistema da clínica
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Preview do logo atual ou novo */}
               {(logoPreview || currentLogoUrl) && (
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
                       src={logoPreview || currentLogoUrl || ''}
                       alt="Logo"
-                      className="h-20 w-20 object-contain rounded-lg border border-pink-600/30 bg-black/60 p-2"
+                      className="h-20 w-20 object-contain rounded-lg border border-border bg-muted p-2"
                     />
                     {logoPreview && (
                       <button
                         type="button"
                         onClick={removeLogo}
-                        className="absolute -top-2 -right-2 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
+                        className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
                       >
                         <X className="h-3 w-3" />
                       </button>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-foreground">
                       {logoPreview ? 'Novo logo (não salvo)' : 'Logo atual'}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       {logoPreview
                         ? 'Clique em "Atualizar" para salvar'
                         : 'Faça upload de uma nova imagem para substituir'}
@@ -941,18 +940,17 @@ export default function OrganizationForm() {
                 </div>
               )}
 
-              {/* Input de upload */}
               <div>
-                <Label htmlFor="logo" className="text-white">
+                <Label htmlFor="logo">
                   {currentLogoUrl ? 'Alterar Logo' : 'Adicionar Logo'}
                 </Label>
                 <div className="mt-2">
                   <label
                     htmlFor="logo"
-                    className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-pink-600/30 bg-black/60 px-4 py-8 text-center transition-colors hover:border-pink-600/50 hover:bg-black/80"
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/50 px-4 py-8 text-center transition-colors hover:border-primary/50 hover:bg-muted"
                   >
-                    <Upload className="h-5 w-5 text-pink-500" />
-                    <span className="text-sm text-white">
+                    <Upload className="h-5 w-5 text-primary" />
+                    <span className="text-sm text-foreground">
                       Clique para fazer upload ou arraste uma imagem
                     </span>
                   </label>
@@ -964,7 +962,7 @@ export default function OrganizationForm() {
                     className="hidden"
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   PNG, JPG ou SVG. Máximo 2MB. Recomendado: 200x200px
                 </p>
               </div>
@@ -974,16 +972,16 @@ export default function OrganizationForm() {
 
         {/* Admin Info (only when creating) */}
         {!isEditing && (
-          <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+          <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-white">Administrador da Organização</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle>Administrador da Organização</CardTitle>
+              <CardDescription>
                 Criar usuário admin para gerenciar a clínica
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="adminFullName" className="text-white">
+                <Label htmlFor="adminFullName">
                   Nome Completo *
                 </Label>
                 <Input
@@ -992,17 +990,17 @@ export default function OrganizationForm() {
                     required: !isEditing && "Nome completo é obrigatório",
                   })}
                   placeholder="Ex: Dr. João Silva"
-                  className="mt-1.5 bg-black/60 border-pink-500/30 text-white placeholder:text-gray-400/50"
+                  className="mt-1.5"
                 />
                 {errors.adminFullName && (
-                  <p className="text-xs text-red-400 mt-1">
+                  <p className="text-xs text-destructive mt-1">
                     {errors.adminFullName.message}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="adminEmail" className="text-white">
+                <Label htmlFor="adminEmail">
                   Email *
                 </Label>
                 <Input
@@ -1012,15 +1010,15 @@ export default function OrganizationForm() {
                     required: !isEditing && "Email é obrigatório",
                   })}
                   placeholder="admin@clinica.com"
-                  className="mt-1.5 bg-black/60 border-pink-500/30 text-white placeholder:text-gray-400/50"
+                  className="mt-1.5"
                 />
                 {errors.adminEmail && (
-                  <p className="text-xs text-red-400 mt-1">{errors.adminEmail.message}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.adminEmail.message}</p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="adminPassword" className="text-white">
+                <Label htmlFor="adminPassword">
                   Senha *
                 </Label>
                 <Input
@@ -1034,10 +1032,10 @@ export default function OrganizationForm() {
                     },
                   })}
                   placeholder="Mínimo 6 caracteres"
-                  className="mt-1.5 bg-black/60 border-pink-500/30 text-white placeholder:text-gray-400/50"
+                  className="mt-1.5"
                 />
                 {errors.adminPassword && (
-                  <p className="text-xs text-red-400 mt-1">
+                  <p className="text-xs text-destructive mt-1">
                     {errors.adminPassword.message}
                   </p>
                 )}
@@ -1048,10 +1046,10 @@ export default function OrganizationForm() {
 
         {/* Workflow Section (only when editing) */}
         {isEditing && (
-          <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+          <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-white">Automações e Workflows</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle>Automações e Workflows</CardTitle>
+              <CardDescription>
                 Configure fluxos de trabalho automatizados para esta clínica
               </CardDescription>
             </CardHeader>
@@ -1060,7 +1058,7 @@ export default function OrganizationForm() {
                 type="button"
                 onClick={handleCreateWorkflow}
                 disabled={isCreatingWorkflow}
-                className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white"
+                className="gradient-pink text-primary-foreground shadow-pink"
               >
                 {isCreatingWorkflow ? (
                   <>
@@ -1080,98 +1078,95 @@ export default function OrganizationForm() {
 
         {/* WhatsApp Instance Info (only when editing) */}
         {isEditing && (
-          <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+          <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-pink-500" />
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
                 Instância WhatsApp
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription>
                 Informações de conexão do WhatsApp desta clínica
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingWhatsapp ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-pink-500" />
-                  <span className="ml-2 text-gray-300">Carregando...</span>
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-2 text-muted-foreground">Carregando...</span>
                 </div>
               ) : whatsappInstance ? (
                 <div className="space-y-4">
-                  {/* Status Badge */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-white">Status:</span>
+                    <span className="text-sm text-foreground">Status:</span>
                     {whatsappInstance.status === 'connected' ? (
-                      <span className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full text-green-400 text-sm font-medium">
+                      <span className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full text-green-600 dark:text-green-400 text-sm font-medium">
                         <Check className="h-4 w-4" />
                         Conectado
                       </span>
                     ) : whatsappInstance.status === 'pending' ? (
-                      <span className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-400 text-sm font-medium">
+                      <span className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-600 dark:text-yellow-400 text-sm font-medium">
                         <Clock className="h-4 w-4" />
                         Aguardando
                       </span>
                     ) : (
-                      <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-red-400 text-sm font-medium">
+                      <span className="flex items-center gap-2 px-3 py-1 bg-destructive/10 border border-destructive/30 rounded-full text-destructive text-sm font-medium">
                         <XCircle className="h-4 w-4" />
                         {whatsappInstance.status}
                       </span>
                     )}
                   </div>
 
-                  {/* Instance Details */}
                   <div className="grid gap-3">
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Nome da Instância:</span>
-                      <span className="text-sm font-mono text-white">{whatsappInstance.instance_name}</span>
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Nome da Instância:</span>
+                      <span className="text-sm font-mono text-foreground">{whatsappInstance.instance_name}</span>
                     </div>
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Empresa:</span>
-                      <span className="text-sm text-white">{whatsappInstance.admin_field_01}</span>
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Empresa:</span>
+                      <span className="text-sm text-foreground">{whatsappInstance.admin_field_01}</span>
                     </div>
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Telefone:</span>
-                      <span className="text-sm font-mono text-white">{whatsappInstance.phone}</span>
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Telefone:</span>
+                      <span className="text-sm font-mono text-foreground">{whatsappInstance.phone}</span>
                     </div>
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Instance ID:</span>
-                      <span className="text-xs font-mono text-gray-300">{whatsappInstance.instance_id}</span>
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Instance ID:</span>
+                      <span className="text-xs font-mono text-muted-foreground">{whatsappInstance.instance_id}</span>
                     </div>
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Token:</span>
-                      <span className="text-xs font-mono text-gray-300 break-all">
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Token:</span>
+                      <span className="text-xs font-mono text-muted-foreground break-all">
                         {whatsappInstance.token}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between border-b border-pink-500/30 pb-2">
-                      <span className="text-sm text-gray-400">Criado em:</span>
-                      <span className="text-sm text-white">
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted-foreground">Criado em:</span>
+                      <span className="text-sm text-foreground">
                         {new Date(whatsappInstance.created_at).toLocaleString('pt-BR')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Atualizado em:</span>
-                      <span className="text-sm text-white">
+                      <span className="text-sm text-muted-foreground">Atualizado em:</span>
+                      <span className="text-sm text-foreground">
                         {new Date(whatsappInstance.updated_at).toLocaleString('pt-BR')}
                       </span>
                     </div>
                   </div>
 
-                  {/* Webhook Info */}
                   {whatsappInstance.webhook_url && (
-                    <div className="mt-4 p-4 bg-pink-900/20 border border-pink-700/30 rounded-lg space-y-3">
-                      <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Workflow className="h-4 w-4" />
                         Webhook Configurado
                       </h4>
                       <div className="space-y-2">
-                        <span className="text-xs text-gray-400 block">URL do Webhook:</span>
-                        <div className="bg-black/60 rounded p-2 border border-pink-500/30">
-                          <p className="text-xs font-mono text-white break-all">
+                        <span className="text-xs text-muted-foreground block">URL do Webhook:</span>
+                        <div className="bg-muted rounded p-2 border border-border">
+                          <p className="text-xs font-mono text-foreground break-all">
                             {whatsappInstance.webhook_url}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-pink-400">
+                        <div className="flex items-center gap-2 text-xs text-primary">
                           <Check className="h-3 w-3" />
                           <span>Webhook ativo e recebendo eventos</span>
                         </div>
@@ -1179,13 +1174,12 @@ export default function OrganizationForm() {
                     </div>
                   )}
 
-                  {/* Botão Configurar Webhook */}
-                  <div className="pt-4 border-t border-pink-500/30">
+                  <div className="pt-4 border-t border-border">
                     <Button
                       type="button"
                       onClick={handleConfigureWebhook}
                       disabled={isConfiguringWebhook}
-                      className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white"
+                      className="w-full gradient-pink text-primary-foreground shadow-pink"
                     >
                       {isConfiguringWebhook ? (
                         <>
@@ -1203,11 +1197,11 @@ export default function OrganizationForm() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 text-pink-600 mx-auto mb-3" />
-                  <p className="text-gray-300 text-sm">
+                  <MessageSquare className="h-12 w-12 text-primary mx-auto mb-3" />
+                  <p className="text-foreground text-sm">
                     Nenhuma instância WhatsApp conectada
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">
+                  <p className="text-muted-foreground text-xs mt-1">
                     O cliente ainda não conectou o WhatsApp
                   </p>
                 </div>
@@ -1218,22 +1212,22 @@ export default function OrganizationForm() {
 
         {/* Usuários da Organização (only when editing) */}
         {isEditing && (
-          <Card className="border-pink-500/30 bg-black/80 backdrop-blur-xl">
+          <Card className="border-border">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Users className="h-5 w-5 text-pink-500" />
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
                     Usuários da Clínica
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription>
                     Gerencie os usuários que têm acesso a esta clínica
                   </CardDescription>
                 </div>
                 <Button
                   type="button"
                   onClick={() => setIsAddUserModalOpen(true)}
-                  className="bg-pink-600 hover:bg-pink-700"
+                  className="gradient-pink text-primary-foreground shadow-pink"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Adicionar Usuário
@@ -1243,11 +1237,11 @@ export default function OrganizationForm() {
             <CardContent>
               {orgUsers.length === 0 ? (
                 <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-pink-600 mx-auto mb-3" />
-                  <p className="text-gray-300 text-sm">
+                  <Users className="h-12 w-12 text-primary mx-auto mb-3" />
+                  <p className="text-foreground text-sm">
                     Nenhum usuário cadastrado
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">
+                  <p className="text-muted-foreground text-xs mt-1">
                     Adicione usuários para que possam acessar o sistema
                   </p>
                 </div>
@@ -1256,25 +1250,25 @@ export default function OrganizationForm() {
                   {orgUsers.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-4 bg-black/60 border border-pink-500/30 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-600/20">
-                          <span className="font-semibold text-pink-300">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                          <span className="font-semibold text-primary">
                             {user.full_name?.charAt(0).toUpperCase() || 'U'}
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-foreground">
                             {user.full_name}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-400 capitalize">
+                            <span className="text-xs text-muted-foreground capitalize">
                               {user.role === 'admin' ? 'Administrador' : 
                                user.role === 'doctor' ? 'Médico' : 'Assistente'}
                             </span>
-                            <span className="text-pink-600">•</span>
-                            <span className={`text-xs ${user.is_active ? 'text-pink-400' : 'text-gray-400'}`}>
+                            <span className="text-primary">•</span>
+                            <span className={`text-xs ${user.is_active ? 'text-primary' : 'text-muted-foreground'}`}>
                               {user.is_active ? 'Ativo' : 'Inativo'}
                             </span>
                           </div>
@@ -1285,7 +1279,7 @@ export default function OrganizationForm() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setUserToDelete(user.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -1303,14 +1297,13 @@ export default function OrganizationForm() {
             type="button"
             variant="outline"
             onClick={() => navigate("/super-admin/organizations")}
-            className="border-pink-600/30 text-pink-300 hover:bg-pink-800/30 hover:text-pink-100"
           >
             Cancelar
           </Button>
           <Button
             type="submit"
             disabled={saveMutation.isPending || uploadingLogo}
-            className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white"
+            className="gradient-pink text-primary-foreground shadow-pink"
           >
             <Save className="mr-2 h-4 w-4" />
             {uploadingLogo
