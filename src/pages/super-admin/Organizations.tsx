@@ -26,6 +26,11 @@ interface Organization {
 
 const PAGE_SIZES = [10, 20, 50];
 
+const PLAN_LABELS: Record<string, string> = {
+  plano_a: "Atendimento",
+  plano_b: "Atendimento + Conhecimento",
+};
+
 export default function Organizations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toggleOrgId, setToggleOrgId] = useState<string | null>(null);
@@ -161,8 +166,8 @@ export default function Organizations() {
                     <TableCell className="font-medium text-foreground">{org.name}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{org.id.slice(0, 8)}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {org.subscription_plan || "—"}
+                      <Badge variant="outline" className="text-xs">
+                        {org.subscription_plan ? (PLAN_LABELS[org.subscription_plan] || org.subscription_plan) : "—"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
