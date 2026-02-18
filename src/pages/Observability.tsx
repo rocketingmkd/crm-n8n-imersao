@@ -205,7 +205,7 @@ function WorkerCard({ worker, defaultOpen = false }: { worker: WorkerInfo; defau
 }
 
 export default function Observability() {
-  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(5_000);
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(30_000);
   const [allWorkersExpanded, setAllWorkersExpanded] = useState(false);
   const [workerToggleKey, setWorkerToggleKey] = useState(0);
   const { data, isLoading, isFetching, error } = useObservability(refreshInterval);
