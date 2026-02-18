@@ -9,8 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { useObservability, isObservabilityConfigured, REFRESH_OPTIONS, type RefreshInterval, type WorkerInfo } from "@/hooks/useObservability";
-import { config } from "@/lib/config";
+import { useObservability, getObservabilityUrl, REFRESH_OPTIONS, type RefreshInterval, type WorkerInfo } from "@/hooks/useObservability";
 import { cn } from "@/lib/utils";
 
 const chartConfig = {
@@ -224,15 +223,15 @@ export default function Observability() {
     );
   }
 
+  const apiUrl = getObservabilityUrl();
+
   if (error) {
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
           <p className="font-medium">Não foi possível carregar os dados do servidor.</p>
           <p className="mt-1 text-sm">{error instanceof Error ? error.message : "Erro desconhecido."}</p>
-          {config.observabilityApiUrl && (
-            <p className="mt-2 text-xs">URL configurada: {config.observabilityApiUrl}</p>
-          )}
+          <p className="mt-2 text-xs font-mono break-all">URL: {apiUrl}</p>
         </div>
       </div>
     );
@@ -248,8 +247,6 @@ export default function Observability() {
     workers: [],
     history: [],
   };
-
-  const fromServer = isObservabilityConfigured();
 
   return (
     <div className="space-y-6">
@@ -281,12 +278,6 @@ export default function Observability() {
           </div>
         </div>
       </div>
-
-      {!fromServer && (
-        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
-          <strong>Dados de exemplo.</strong> Configure <code className="rounded bg-muted px-1">VITE_OBSERVABILITY_API_URL</code> no <code className="rounded bg-muted px-1">.env</code> para ver dados reais.
-        </div>
-      )}
 
       {/* Cards: CPU, RAM, Disco */}
       <div className="grid gap-4 md:grid-cols-3">
