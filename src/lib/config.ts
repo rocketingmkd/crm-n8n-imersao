@@ -6,4 +6,6 @@ export const config = {
   supabaseProjectId: import.meta.env.VITE_SUPABASE_PROJECT_ID || "detsacgocmirxkgjusdf",
   /** URL do endpoint de observabilidade do servidor (CPU, RAM, disco, workers n8n). Pode ser path ex: /api/observability ou URL completa. */
   observabilityApiUrl: import.meta.env.VITE_OBSERVABILITY_API_URL || "",
+  /** URL do webhook n8n que retorna insights (workflows + execuções) */
+  n8nInsightsUrl: import.meta.env.VITE_N8N_INSIGHTS_URL || "",
 };

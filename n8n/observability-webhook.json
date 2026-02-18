@@ -1,5 +1,5 @@
 {
-  "name": "Observability API (Webhook)",
+  "name": "Observability API (Webhook + n8n Workers)",
   "nodes": [
     {
       "parameters": {
@@ -27,9 +27,44 @@
       "name": "Chamar API Observability",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 300],
+      "position": [460, 200],
       "notesInFlow": true,
-      "notes": "Ajuste a URL: use o host do container da observability-api (ex: http://observability-api:3001 ou http://host.docker.internal:3001)"
+      "notes": "Ajuste a URL para o host do container observability-api"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.N8N_API_URL || 'http://localhost:5678' }}/api/v1/executions?status=running&limit=20",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 5000,
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "http-n8n-executions",
+      "name": "Buscar execuções n8n (running)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 450],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_AQUI",
+          "name": "n8n API Key"
+        }
+      },
+      "continueOnFail": true,
+      "notesInFlow": true,
+      "notes": "Credential: Header Auth com Name='X-N8N-API-KEY' e Value=sua API key do n8n"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiItem = $('Chamar API Observability').first();\nconst execItem = $('Buscar execuções n8n (running)').first();\n\nconst serverData = apiItem.json || {};\nif (!serverData.metrics) serverData.metrics = {};\nif (!serverData.workers) serverData.workers = [];\n\n// Parse n8n running executions\nlet runningCount = 0;\ntry {\n  const execData = execItem.json;\n  if (execData && execData.data && Array.isArray(execData.data)) {\n    runningCount = execData.data.filter(e => e.status === 'running').length;\n  }\n} catch (e) {}\n\n// Update n8nWorkers\nserverData.metrics.n8nWorkers = {\n  active: runningCount > 0 ? 1 : 1,\n  idle: runningCount > 0 ? 0 : 1,\n  busy: runningCount > 0 ? 1 : 0,\n  total: 1\n};\n\n// Update worker currentJobs\nif (serverData.workers && serverData.workers.length > 0) {\n  serverData.workers[0].currentJobs = runningCount;\n}\n\nreturn [{ json: serverData }];"
+      },
+      "id": "code-merge",
+      "name": "Combinar métricas + workers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
     },
     {
       "parameters": {
@@ -41,7 +76,7 @@
       "name": "Responder com JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [680, 300]
+      "position": [920, 300]
     }
   ],
   "connections": {
@@ -52,11 +87,38 @@
             "node": "Chamar API Observability",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Buscar execuções n8n (running)",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     },
     "Chamar API Observability": {
+      "main": [
+        [
+          {
+            "node": "Combinar métricas + workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar execuções n8n (running)": {
+      "main": [
+        [
+          {
+            "node": "Combinar métricas + workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar métricas + workers": {
       "main": [
         [
           {
