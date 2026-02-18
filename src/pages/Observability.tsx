@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { HardDrive, Laptop, Brain, Workflow, Info, RefreshCw, Server, Wifi, Cpu, MemoryStick, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -35,19 +35,21 @@ function progressBarClass(percent: number) {
   return "[&>div]:bg-emerald-500";
 }
 
-function WorkerCard({ worker, defaultOpen = false }: { worker: WorkerInfo; defaultOpen?: boolean }) {
+interface PerfPoint {
+  t: string;
+  jobs: number;
+  cpu: number;
+  memory: number;
+}
+
+const MAX_PERF_POINTS = 60;
+
+function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: WorkerInfo; perfHistory: PerfPoint[]; defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [jobsOpen, setJobsOpen] = useState(true);
   const [networkOpen, setNetworkOpen] = useState(false);
   const [perfOpen, setPerfOpen] = useState(true);
   const [memOpen, setMemOpen] = useState(true);
-
-  const mockPerfData = Array.from({ length: 30 }, (_, i) => ({
-    t: `${String(i).padStart(2, "0")}:00`,
-    jobs: i > 20 ? Math.floor(Math.random() * 2) : 0,
-    cpu: worker.cpuUsage + (Math.random() - 0.5) * 4,
-    memory: worker.memoryUsage + (Math.random() - 0.5) * 6,
-  }));
 
   return (
     <Card className="border-border overflow-hidden">
@@ -137,34 +139,34 @@ function WorkerCard({ worker, defaultOpen = false }: { worker: WorkerInfo; defau
             <div className="px-4 pb-4 space-y-4">
               {/* Job Count */}
               <ChartContainer config={workerJobChartConfig} className="h-[120px] w-full">
-                <LineChart data={mockPerfData} margin={{ left: 4, right: 4, top: 8 }}>
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} domain={[0, 5]} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} allowDecimals={false} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="jobs" name="Job Count" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} />
+                  <Line type="monotone" dataKey="jobs" name="Job Count" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
 
               {/* Processor Usage */}
               <ChartContainer config={workerCpuChartConfig} className="h-[120px] w-full">
-                <LineChart data={mockPerfData} margin={{ left: 4, right: 4, top: 8 }}>
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="cpu" name="Processor Usage" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} />
+                  <Line type="monotone" dataKey="cpu" name="Processor Usage" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
 
               {/* Memory Usage */}
               <ChartContainer config={workerMemChartConfig} className="h-[120px] w-full">
-                <LineChart data={mockPerfData} margin={{ left: 4, right: 4, top: 8 }}>
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="memory" name="Memory Usage (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} />
+                  <Line type="monotone" dataKey="memory" name="Memory Usage (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
             </div>
@@ -205,10 +207,40 @@ function WorkerCard({ worker, defaultOpen = false }: { worker: WorkerInfo; defau
 }
 
 export default function Observability() {
-  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(30_000);
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(5_000);
   const [allWorkersExpanded, setAllWorkersExpanded] = useState(false);
   const [workerToggleKey, setWorkerToggleKey] = useState(0);
   const { data, isLoading, isFetching, error } = useObservability(refreshInterval);
+
+  const workerPerfHistory = useRef<Record<string, PerfPoint[]>>({});
+  const lastDataId = useRef<number>(0);
+
+  useEffect(() => {
+    if (!data?.workers) return;
+
+    const ts = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+    for (const w of data.workers) {
+      const key = w.id || w.name;
+      if (!workerPerfHistory.current[key]) {
+        workerPerfHistory.current[key] = [];
+      }
+
+      const hist = workerPerfHistory.current[key];
+      hist.push({
+        t: ts,
+        jobs: w.currentJobs,
+        cpu: w.cpuUsage,
+        memory: w.memoryUsage,
+      });
+
+      if (hist.length > MAX_PERF_POINTS) {
+        workerPerfHistory.current[key] = hist.slice(-MAX_PERF_POINTS);
+      }
+    }
+
+    lastDataId.current += 1;
+  }, [data]);
 
   const setAllWorkersOpen = (open: boolean) => {
     setAllWorkersExpanded(open);
@@ -423,6 +455,7 @@ export default function Observability() {
               <WorkerCard
                 key={`${w.id || i}-${workerToggleKey}`}
                 worker={w}
+                perfHistory={workerPerfHistory.current[w.id || w.name] || []}
                 defaultOpen={workers.length === 1 || allWorkersExpanded}
               />
             ))}
