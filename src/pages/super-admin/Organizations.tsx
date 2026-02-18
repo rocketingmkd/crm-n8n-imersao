@@ -26,11 +26,6 @@ interface Organization {
 
 const PAGE_SIZES = [10, 20, 50];
 
-const PLAN_LABELS: Record<string, string> = {
-  plano_a: "Atendimento",
-  plano_b: "Atendimento + Conhecimento",
-};
-
 export default function Organizations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toggleOrgId, setToggleOrgId] = useState<string | null>(null);
@@ -48,6 +43,21 @@ export default function Organizations() {
       return data;
     },
   });
+
+  const { data: planConfigs } = useQuery({
+    queryKey: ["subscription-plan-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("subscription_plan_configs").select("plan_id, plan_name");
+      if (error) throw error;
+      return data as { plan_id: string; plan_name: string }[];
+    },
+  });
+
+  const planLabels = useMemo(() => {
+    const map: Record<string, string> = {};
+    planConfigs?.forEach((p) => { map[p.plan_id] = p.plan_name; });
+    return map;
+  }, [planConfigs]);
 
   const toggleStatus = useMutation({
     mutationFn: async ({ orgId, newStatus }: { orgId: string; newStatus: boolean }) => {
@@ -72,7 +82,7 @@ export default function Organizations() {
     if (!searchQuery.trim()) return organizations;
     const q = searchQuery.toLowerCase();
     return organizations.filter((org) =>
-      org.name.toLowerCase().includes(q) || org.id.toLowerCase().includes(q)
+      org.name.toLowerCase().includes(q) || org.slug.toLowerCase().includes(q)
     );
   }, [organizations, searchQuery]);
 
@@ -164,10 +174,10 @@ export default function Organizations() {
                 paginatedOrgs.map((org) => (
                   <TableRow key={org.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="font-medium text-foreground">{org.name}</TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">{org.id.slice(0, 8)}</TableCell>
+                    <TableCell className="text-muted-foreground font-mono text-xs">{org.slug}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
-                        {org.subscription_plan ? (PLAN_LABELS[org.subscription_plan] || org.subscription_plan) : "—"}
+                        {org.subscription_plan ? (planLabels[org.subscription_plan] || org.subscription_plan) : "—"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
