@@ -458,6 +458,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { organization } = useAuth();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => !prev);
@@ -479,7 +480,11 @@ export default function Layout() {
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
-          <FlowgrammersLogo height={28} />
+          {organization?.logo_url ? (
+            <img src={organization.logo_url} alt={organization.name} className="h-8 w-auto max-w-[120px] object-contain" />
+          ) : (
+            <FlowgrammersLogo height={28} />
+          )}
         </div>
         
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

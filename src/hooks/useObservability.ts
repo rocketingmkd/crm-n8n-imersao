@@ -143,13 +143,13 @@ async function fetchObservability(): Promise<ObservabilityResponse> {
       history: mockHistory(),
     };
   }
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { Accept: "application/json" },
-    credentials: "same-origin",
-  });
+
+  console.log("[observability] fetching:", url);
+
+  const res = await fetch(url, { mode: "cors" });
+
   if (!res.ok) {
-    const text = await res.text();
+    const text = await res.text().catch(() => "");
     throw new Error(`Servidor de observabilidade respondeu ${res.status}: ${text || res.statusText}`);
   }
   const data = await res.json();
@@ -177,7 +177,11 @@ export function useObservability(intervalMs: RefreshInterval = 30_000) {
   return useQuery({
     queryKey: ["observability", url],
     queryFn: fetchObservability,
+    enabled: true,
     refetchInterval: url ? intervalMs : false,
+    refetchOnWindowFocus: true,
+    retry: 2,
+    staleTime: 0,
   });
 }
 

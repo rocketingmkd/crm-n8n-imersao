@@ -103,35 +103,24 @@ export default function OrganizationForm() {
     const filePath = `${fileName}`;
     const bucketName = 'organization-logos';
 
-    // Verificar se o bucket existe
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('Erro ao listar buckets:', listError);
-      // Se não conseguir listar, tentar fazer upload mesmo assim
-      // (pode ser problema de permissão, mas o bucket pode existir)
-    } else {
-      const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-      
-      if (!bucketExists) {
-        const errorMessage = `Bucket '${bucketName}' não encontrado. ` +
-          `Por favor, crie o bucket no Supabase Dashboard:\n\n` +
-          `1. Acesse: https://supabase.com/dashboard\n` +
-          `2. Vá em Storage\n` +
-          `3. Clique em "New Bucket" ou "Create a new bucket"\n` +
-          `4. Nome: "${bucketName}"\n` +
-          `5. Marque "Public bucket"\n` +
-          `6. File size limit: 2 MB\n` +
-          `7. Allowed MIME types: image/*\n` +
-          `8. Clique em "Create bucket"`;
-        
-        toast.error(errorMessage, { duration: 10000 });
-        throw new Error(errorMessage);
+    // Garantir que o bucket existe (cria se não existir)
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(b => b.name === bucketName);
+
+    if (!bucketExists) {
+      console.log(`Bucket '${bucketName}' não existe, criando...`);
+      const { error: createErr } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 2 * 1024 * 1024,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
+      });
+      if (createErr && !createErr.message?.includes('already exists')) {
+        console.error('Erro ao criar bucket:', createErr);
+        throw new Error(`Não foi possível criar o bucket de logos. Erro: ${createErr.message}`);
       }
     }
 
-    // Fazer upload do arquivo
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -140,22 +129,6 @@ export default function OrganizationForm() {
 
     if (error) {
       console.error('Erro ao fazer upload:', error);
-      
-      // Mensagem de erro mais clara para bucket não encontrado
-      if (error.message?.includes('Bucket not found') || error.message?.includes('not found')) {
-        const errorMessage = `Bucket '${bucketName}' não encontrado.\n\n` +
-          `Por favor, crie o bucket no Supabase Dashboard:\n\n` +
-          `1. Acesse: https://supabase.com/dashboard\n` +
-          `2. Vá em Storage\n` +
-          `3. Clique em "New Bucket"\n` +
-          `4. Nome: "${bucketName}"\n` +
-          `5. Marque "Public bucket" ✅\n` +
-          `6. Clique em "Create bucket"`;
-        
-        toast.error(errorMessage, { duration: 10000 });
-        throw new Error(errorMessage);
-      }
-      
       throw error;
     }
 
@@ -469,7 +442,7 @@ export default function OrganizationForm() {
 
       let logoUrl = currentLogoUrl;
 
-      // Upload do logo se houver arquivo novo
+      // Upload do logo se houver arquivo novo (ao editar)
       if (logoFile && id) {
         try {
           setUploadingLogo(true);
@@ -485,7 +458,6 @@ export default function OrganizationForm() {
       }
 
       if (isEditing) {
-        // Atualizar direto no banco (super admin pode)
         const { error } = await supabase
           .from('organizations')
           .update({
@@ -551,6 +523,25 @@ export default function OrganizationForm() {
         }
         
         console.log("✅ Organização criada com sucesso!");
+
+        // Upload do logo para a organização recém-criada
+        const newOrgId = result.organizationId || result.organization_id || result.id;
+        if (logoFile && newOrgId) {
+          try {
+            setUploadingLogo(true);
+            const newLogoUrl = await uploadLogo(logoFile, newOrgId);
+            await supabase
+              .from('organizations')
+              .update({ logo_url: newLogoUrl })
+              .eq('id', newOrgId);
+            toast.success('Logo enviado com sucesso!');
+          } catch (logoErr) {
+            console.error('Erro ao fazer upload do logo:', logoErr);
+            toast.error('Organização criada, mas houve erro ao enviar o logo.');
+          } finally {
+            setUploadingLogo(false);
+          }
+        }
       }
     },
     onSuccess: () => {
@@ -575,7 +566,7 @@ export default function OrganizationForm() {
     }
 
     if (!id) {
-      toast.error("Clinica não encontrada");
+      toast.error("Empresa não encontrada");
       return;
     }
 
@@ -710,7 +701,7 @@ export default function OrganizationForm() {
           <p className="text-muted-foreground mt-1">
             {isEditing
               ? "Atualize as informações da organização"
-              : "Crie uma nova clínica/consultório e seu administrador"}
+              : "Crie uma nova empresa e seu administrador"}
           </p>
         </div>
       </div>
@@ -720,20 +711,20 @@ export default function OrganizationForm() {
         {/* Organization Info */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Informações da Clínica</CardTitle>
+            <CardTitle className="text-foreground">Informações da Empresa</CardTitle>
             <CardDescription>
-              Dados básicos da clínica/consultório
+              Dados básicos da empresa
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="name">
-                Nome da Clínica *
+                Nome da Empresa *
               </Label>
               <Input
                 id="name"
                 {...register("name", { required: "Nome é obrigatório" })}
-                placeholder="Ex: Clínica São Paulo"
+                placeholder="Ex: Empresa São Paulo"
                 className="mt-1.5"
               />
               {errors.name && (
@@ -749,7 +740,7 @@ export default function OrganizationForm() {
                 id="contact_email"
                 type="email"
                 {...register("contact_email")}
-                placeholder="contato@clinica.com"
+                placeholder="contato@empresa.com"
                 className="mt-1.5"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -884,7 +875,7 @@ export default function OrganizationForm() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="is_active">
-                  Clínica Ativa
+                  Empresa Ativa
                 </Label>
                 <p className="text-xs text-muted-foreground">
                 Empresas inativas não podem acessar o sistema
@@ -903,9 +894,9 @@ export default function OrganizationForm() {
         {isEditing && (
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Logo da Clínica</CardTitle>
+              <CardTitle>Logo da Empresa</CardTitle>
               <CardDescription>
-                Faça upload do logo que aparecerá no sistema da clínica
+                Faça upload do logo que aparecerá no sistema da empresa
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -976,7 +967,7 @@ export default function OrganizationForm() {
             <CardHeader>
               <CardTitle>Administrador da Organização</CardTitle>
               <CardDescription>
-                Criar usuário admin para gerenciar a clínica
+                Criar usuário admin para gerenciar a empresa
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1009,7 +1000,7 @@ export default function OrganizationForm() {
                   {...register("adminEmail", {
                     required: !isEditing && "Email é obrigatório",
                   })}
-                  placeholder="admin@clinica.com"
+                  placeholder="admin@empresa.com"
                   className="mt-1.5"
                 />
                 {errors.adminEmail && (
@@ -1050,7 +1041,7 @@ export default function OrganizationForm() {
             <CardHeader>
               <CardTitle>Automações e Workflows</CardTitle>
               <CardDescription>
-                Configure fluxos de trabalho automatizados para esta clínica
+                Configure fluxos de trabalho automatizados para esta empresa
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1085,7 +1076,7 @@ export default function OrganizationForm() {
                 Instância WhatsApp
               </CardTitle>
               <CardDescription>
-                Informações de conexão do WhatsApp desta clínica
+                Informações de conexão do WhatsApp desta empresa
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1218,10 +1209,10 @@ export default function OrganizationForm() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    Usuários da Clínica
+                    Usuários da Empresa
                   </CardTitle>
                   <CardDescription>
-                    Gerencie os usuários que têm acesso a esta clínica
+                    Gerencie os usuários que têm acesso a esta empresa
                   </CardDescription>
                 </div>
                 <Button
@@ -1323,7 +1314,7 @@ export default function OrganizationForm() {
           <DialogHeader>
             <DialogTitle>Adicionar Novo Usuário</DialogTitle>
             <DialogDescription>
-              Crie um novo usuário para acessar esta clínica
+              Crie um novo usuário para acessar esta empresa
             </DialogDescription>
           </DialogHeader>
 

@@ -1,10 +1,10 @@
-# Flow Clinic - Premium Clinic Dashboard
+# Flowgrammers - Gestão Inteligente
 
-Dashboard elegante e moderno para gestão de clínicas de saúde, desenvolvido pela **Flowgrammers**. 100% otimizado para dispositivos móveis e desktop.
+Dashboard elegante e moderno para gestão de empresas, desenvolvido pela **Flowgrammers**. 100% otimizado para dispositivos móveis e desktop.
 
 ## 🏢 Sobre
 
-**Flow Clinic** é uma solução completa de gestão para clínicas de saúde, desenvolvida com tecnologia de ponta pela **Flowgrammers**, oferecendo uma experiência premium e intuitiva para profissionais da área médica.
+**Flowgrammers** é uma solução completa de gestão para empresas, desenvolvida com tecnologia de ponta, oferecendo uma experiência premium e intuitiva.
 
 ## ✨ Funcionalidades
 
@@ -164,4 +164,4 @@ Este projeto é privado e proprietário.
 
 **Nota**: Este projeto foi otimizado para oferecer a melhor experiência possível tanto em dispositivos móveis quanto em desktops, com atenção especial a performance, acessibilidade e design premium.
 
-**Flow Clinic** - Solução completa de gestão para clínicas de saúde.
+**Flowgrammers** - Solução completa de gestão para empresas.

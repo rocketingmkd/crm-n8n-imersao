@@ -455,7 +455,7 @@ export default function Conhecimento() {
             Upload de Documentos
           </CardTitle>
           <CardDescription>
-            Envie documentos PDF para treinar seu agente de IA virtual com informações específicas da sua clínica
+            Envie documentos PDF para treinar seu agente de IA virtual com informações específicas da sua empresa
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -539,7 +539,7 @@ export default function Conhecimento() {
               ℹ️ Como funciona?
             </h4>
             <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Envie documentos em PDF sobre sua clínica, procedimentos, políticas, etc.</li>
+              <li>• Envie documentos em PDF sobre sua empresa, procedimentos, políticas, etc.</li>
               <li>• O Agente de IA usará essas informações para responder perguntas dos clientes</li>
               <li>• Quanto mais informações você fornecer, mais preciso será o agente de IA</li>
               <li>• O processamento pode levar alguns minutos</li>
@@ -712,7 +712,7 @@ export default function Conhecimento() {
                 id="fileName"
                 value={customFileName}
                 onChange={(e) => setCustomFileName(e.target.value)}
-                placeholder="Ex: Manual da Clínica"
+                placeholder="Ex: Manual da Empresa"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleConfirmFileName();

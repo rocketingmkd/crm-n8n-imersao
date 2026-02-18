@@ -102,7 +102,7 @@ export default function SuperAdminLayout() {
                   <p className="truncate text-xs font-semibold text-foreground">
                     {profile?.full_name || "Admin"}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">Super Admin</p>
+                  <p className="text-[10px] text-muted-foreground">Admin</p>
                 </div>
               )}
             </div>
@@ -212,7 +212,7 @@ export default function SuperAdminLayout() {
 
             <div className="ml-auto">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/20">
-                Super Admin
+                Admin
               </span>
             </div>
           </header>

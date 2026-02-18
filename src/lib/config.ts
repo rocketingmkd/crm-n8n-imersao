@@ -5,7 +5,7 @@ export const config = {
   n8nWebhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || "https://webhook.agentes-n8n.com.br/webhook/",
   supabaseProjectId: import.meta.env.VITE_SUPABASE_PROJECT_ID || "detsacgocmirxkgjusdf",
   /** URL do endpoint de observabilidade do servidor (CPU, RAM, disco, workers n8n). Pode ser path ex: /api/observability ou URL completa. */
-  observabilityApiUrl: import.meta.env.VITE_OBSERVABILITY_API_URL || "",
+  observabilityApiUrl: import.meta.env.VITE_OBSERVABILITY_API_URL || "https://webhook.agentes-n8n.com.br/webhook/observability-standalone",
   /** URL do webhook n8n que retorna insights (workflows + execuções) */
-  n8nInsightsUrl: import.meta.env.VITE_N8N_INSIGHTS_URL || "",
+  n8nInsightsUrl: import.meta.env.VITE_N8N_INSIGHTS_URL || "https://webhook.agentes-n8n.com.br/webhook/insights",
 };

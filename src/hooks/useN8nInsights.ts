@@ -44,7 +44,7 @@ export interface InsightsResponse {
 function generateMockData(): InsightsResponse {
   const names = [
     "Atendimento - Completo (RAG + Agendamento)",
-    "clinica-flowgrammers",
+    "empresa-flowgrammers",
     "Envio Lembrete",
     "Webhooks de Administração",
     "Gestão de Agendas",
