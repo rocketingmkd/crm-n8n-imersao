@@ -8,7 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useObservability, getObservabilityUrl, REFRESH_OPTIONS, type RefreshInterval, type WorkerInfo } from "@/hooks/useObservability";
 import { cn } from "@/lib/utils";
 
@@ -138,35 +138,41 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
           {perfOpen && (
             <div className="px-4 pb-4 space-y-4">
               {/* Job Count */}
-              <ChartContainer config={workerJobChartConfig} className="h-[120px] w-full">
-                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
+              <p className="text-xs font-semibold text-foreground">Contador de Jobs</p>
+              <ChartContainer config={workerJobChartConfig} className="h-[140px] w-full">
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} allowDecimals={false} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="jobs" name="Job Count" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="jobs" name="Jobs em execução" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
 
-              {/* Processor Usage */}
-              <ChartContainer config={workerCpuChartConfig} className="h-[120px] w-full">
-                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
+              {/* CPU */}
+              <p className="text-xs font-semibold text-foreground">Uso de CPU (%)</p>
+              <ChartContainer config={workerCpuChartConfig} className="h-[140px] w-full">
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="cpu" name="Processor Usage" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="cpu" name="CPU (%)" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
 
-              {/* Memory Usage */}
-              <ChartContainer config={workerMemChartConfig} className="h-[120px] w-full">
-                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8 }}>
+              {/* Memória */}
+              <p className="text-xs font-semibold text-foreground">Uso de Memória (%)</p>
+              <ChartContainer config={workerMemChartConfig} className="h-[140px] w-full">
+                <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
                   <XAxis dataKey="t" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={4} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="memory" name="Memory Usage (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="memory" name="Memória (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
             </div>
