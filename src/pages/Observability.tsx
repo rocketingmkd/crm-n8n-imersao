@@ -392,13 +392,14 @@ export default function Observability() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[240px] w-full">
-              <LineChart data={history} margin={{ left: 12, right: 12 }}>
+              <LineChart data={history} margin={{ left: 12, right: 12, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="time" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                 <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="cpu" name="CPU" stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="memory" name="Memória" stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="memory" name="RAM" stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={false} />
               </LineChart>
             </ChartContainer>
           </CardContent>

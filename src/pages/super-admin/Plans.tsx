@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 interface PlanConfig {
   id: string;
-  plan_id: string;
-  plan_name: string;
-  plan_description: string | null;
+  id_plano: string;
+  nome_plano: string;
+  descricao_plano: string | null;
   atendimento_inteligente: boolean;
   agendamento_automatico: boolean;
   lembretes_automaticos: boolean;
@@ -22,9 +22,9 @@ interface PlanConfig {
   max_agendamentos_mes: number | null;
   max_mensagens_whatsapp_mes: number | null;
   max_usuarios: number | null;
-  max_pacientes: number | null;
-  price_monthly: number | null;
-  price_annual: number | null;
+  max_contatos: number | null;
+  preco_mensal: number | null;
+  preco_anual: number | null;
 }
 
 const mainFeatures = [
@@ -48,9 +48,9 @@ export default function Plans() {
     queryKey: ['admin-subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscription_plan_configs')
+        .from('planos_assinatura')
         .select('*')
-        .order('plan_id', { ascending: true });
+        .order('id_plano', { ascending: true });
       if (error) throw error;
       return data as PlanConfig[];
     },
@@ -80,7 +80,7 @@ export default function Plans() {
           const isPopular = index === 1;
           return (
             <Card 
-              key={plan.plan_id}
+              key={plan.id_plano}
               className={cn(
                 "border transition-all hover:shadow-lg hover:shadow-primary/5 hover:border-primary/40",
                 isPopular
@@ -95,9 +95,9 @@ export default function Plans() {
                       <Crown className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-foreground text-base">{plan.plan_name}</CardTitle>
+                      <CardTitle className="text-foreground text-base">{plan.nome_plano}</CardTitle>
                       <CardDescription className="text-muted-foreground text-xs mt-0.5">
-                        {plan.plan_description}
+                        {plan.descricao_plano}
                       </CardDescription>
                     </div>
                   </div>
@@ -110,10 +110,10 @@ export default function Plans() {
                 
                 {/* Price */}
                 <div className="mt-4 pt-4 border-t border-border">
-                  {plan.price_monthly ? (
+                  {plan.preco_mensal ? (
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-foreground">
-                        R$ {plan.price_monthly.toFixed(2)}
+                        R$ {plan.preco_mensal.toFixed(2)}
                       </span>
                       <span className="text-sm text-muted-foreground">/mês</span>
                     </div>
@@ -210,7 +210,7 @@ export default function Plans() {
                       { value: plan.max_agendamentos_mes, label: 'Agendamentos/mês' },
                       { value: plan.max_mensagens_whatsapp_mes, label: 'Mensagens/mês' },
                       { value: plan.max_usuarios, label: 'Usuários' },
-                      { value: plan.max_pacientes, label: 'Clientes' },
+                      { value: plan.max_contatos, label: 'Clientes' },
                     ].map((limit) => (
                       <div
                         key={limit.label}

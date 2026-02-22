@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sun, Moon, ArrowLeft } from 'lucide-react';
-import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
+import { AppLogo } from "@/components/AppLogo";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
       <Card className="relative w-full max-w-[400px] border-border bg-card shadow-xl">
         <CardHeader className="space-y-4 text-center pb-2">
           <div className="flex justify-center">
-            <FlowgrammersLogo height={48} />
+            <AppLogo variant="platform" height={48} />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">

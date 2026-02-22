@@ -5,9 +5,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Sun, Moon } from 'lucide-react';
-import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
+import { AppLogo } from "@/components/AppLogo";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user && profile && !authLoading) {
-      if (profile.is_super_admin) {
+      if (profile.super_admin) {
         navigate('/super-admin/dashboard');
       } else {
         navigate('/app/dashboard');
@@ -55,12 +55,9 @@ export default function Login() {
       <Card className="relative w-full max-w-[400px] border-border bg-card shadow-xl">
         <CardHeader className="space-y-4 text-center pb-2">
           <div className="flex justify-center">
-            <FlowgrammersLogo height={48} />
+            <AppLogo variant="platform" height={48} />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-              Flow<span className="text-gradient-pink">grammers</span>
-            </CardTitle>
             <CardDescription className="text-sm text-muted-foreground mt-1">
               Informe seu email e senha para acessar o sistema
             </CardDescription>

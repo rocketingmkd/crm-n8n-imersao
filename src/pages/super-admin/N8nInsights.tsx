@@ -320,7 +320,7 @@ export default function N8nInsights() {
         <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
           <Info className="h-4 w-4 shrink-0" />
           <span>
-            <code>VITE_N8N_INSIGHTS_URL</code> não configurada. Exibindo dados de demonstração.
+            <code>VITE_N8N_WEBHOOK_URL</code> não configurada. Exibindo dados de demonstração.
           </span>
         </div>
       )}

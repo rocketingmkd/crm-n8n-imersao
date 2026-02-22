@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FlowgrammersLogo } from '@/components/FlowgrammersLogo';
+import { AppLogo } from '@/components/AppLogo';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -64,7 +64,7 @@ export default function Register() {
       <Card className="w-full max-w-md border-border/50 shadow-lg">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <FlowgrammersLogo height={38} />
+            <AppLogo variant="platform" height={38} />
           </div>
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
@@ -99,7 +99,7 @@ export default function Register() {
                 id="fullName"
                 name="fullName"
                 type="text"
-                placeholder="Dr. João Silva"
+                placeholder="João Silva"
                 value={formData.fullName}
                 onChange={handleChange}
                 required

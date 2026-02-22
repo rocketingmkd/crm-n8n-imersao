@@ -1,0 +1,3467 @@
+{
+  "updatedAt": "2026-01-24T18:18:26.601Z",
+  "createdAt": "2026-01-05T19:40:53.693Z",
+  "id": "8K_F60hSD9s_JYmvQRyPe",
+  "name": "Classificação Mensagem",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1776,
+        352
+      ],
+      "id": "b520a783-e6ac-4082-8045-0d9107c2be87",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                    "rightValue": "ativado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9f0639a5-0b9c-4010-a878-311b8e95d9c8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Agent On"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a91b818d-484a-4417-9a89-6a404d105176",
+                    "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                    "rightValue": "desativado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Agent Off"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e74c7e4c-aa79-4fd1-a558-e18d3fc8b55c",
+                    "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                    "rightValue": "parar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Mensagem do Atendente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -208,
+        272
+      ],
+      "id": "9f0ffec6-f368-46c3-a25f-c11a76086fb0",
+      "name": "Classificar Função"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc7dfd5d-c52f-4d30-940a-8208e8b2884e",
+              "name": "remotejId",
+              "value": "={{ $('Executa Workflow').last().json.remotejId }}",
+              "type": "string"
+            },
+            {
+              "id": "2bffaf43-8c76-450b-aa1c-f3d82f5a372d",
+              "name": "text",
+              "value": "={{ $('Classificar Função').last().json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "9e09db91-a5d3-4c7f-8561-89b730dcd4a3",
+              "name": "session_id",
+              "value": "={{ $('Merge').last().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5df94ed5-2db7-486f-82e3-1cc6c0389bdd",
+              "name": "retorno",
+              "value": "agente",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        80
+      ],
+      "id": "225fe9a3-2147-48ea-9b6e-0535d796f3d1",
+      "name": "Retorna Recebimento Mensagem"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "484eb978-79c2-4df0-8fae-7bf182dfe264",
+              "name": "retorno",
+              "value": "IA",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        496
+      ],
+      "id": "b76811f8-3e50-4797-8955-9c07a12beb99",
+      "name": "Retorno Status IA"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+              "name": "text",
+              "value": "=Imagem Recebida: {{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "1935b6b8-3824-4aee-84f9-aa6bbb099174",
+              "name": "fileURL",
+              "value": "={{ $('Obter Link da Imagem').item.json.fileURL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        32
+      ],
+      "id": "cd9ddc70-8d0b-480a-8a62-f9059901e2d2",
+      "name": "Setar Mensagem1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+              "name": "text",
+              "value": "=Documento Recebido: {{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "dba4dc98-8bda-49e1-889a-ae13218725ee",
+              "name": "fileURL",
+              "value": "={{ $('Obter Link do Documento').item.json.fileURL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        208
+      ],
+      "id": "2876832f-72be-41f7-9354-5ffba3a2cb59",
+      "name": "Setar Mensagem "
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+              "name": "text",
+              "value": "=Audio Recebido: {{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "f8cd4a2d-5cd1-4b8b-b64b-196048b12e7a",
+              "name": "fileURL",
+              "value": "={{ $('Obter base64 do Áudio').item.json.fileURL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        384
+      ],
+      "id": "04510551-84e6-4426-98d8-2cc4845ee86d",
+      "name": "Setar Mensagem4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+              "name": "text",
+              "value": "={{ $('Executa Workflow').item.json.mensagem }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        560
+      ],
+      "id": "0b5d9614-c3da-468e-ba18-8211fec412c4",
+      "name": "Setar Mensagem5"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "fromMe",
+              "type": "boolean"
+            },
+            {
+              "name": "mensagem"
+            },
+            {
+              "name": "messageType"
+            },
+            {
+              "name": "funcao"
+            },
+            {
+              "name": "messageId"
+            },
+            {
+              "name": "remotejId"
+            },
+            {
+              "name": "empresa"
+            },
+            {
+              "name": "token"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3184,
+        352
+      ],
+      "id": "16f6ae32-50c0-4d04-9fc3-7a5e10355da5",
+      "name": "Executa Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "whatsapp_instances",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "instance_name",
+              "condition": "eq",
+              "keyValue": "={{ $json.empresa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        352
+      ],
+      "id": "1f8adb42-8c4a-4678-9d47-240d65e50891",
+      "name": "Busca Instancia",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "keyValue": "={{ $json.id_organizacao }}"
+            },
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $('Executa Workflow').item.json.remotejId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2784,
+        352
+      ],
+      "id": "9479bf8c-6ec2-4460-b63f-b4fd7ef8d3a3",
+      "name": "Busca Cliente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "da396d94-2dcc-4573-8bc3-00eced798dd2",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2592,
+        352
+      ],
+      "id": "4d36ac6b-6a6b-4870-9324-ccd51ddb3ef5",
+      "name": "Se não encontrou"
+    },
+    {
+      "parameters": {
+        "action": "generate"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        416
+      ],
+      "id": "27defe4c-a043-46cf-be2d-5d0665638acd",
+      "name": "Gera UUID"
+    },
+    {
+      "parameters": {
+        "tableId": "contacts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id",
+              "fieldValue": "={{ $json.data }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('Executa Workflow').item.json.remotejId }}"
+            },
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Busca Instancia').item.json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2128,
+        416
+      ],
+      "id": "3ed1c9f9-5fd3-46e2-8d50-9e6e9f4df516",
+      "name": "Insere Cliente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                    "rightValue": "ImageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bbbc99f3-e953-49cd-99d7-cbe9baea5e96"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagem"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9f4f590c-e6ae-45a0-ab63-1e5e1cdd8a9d",
+                    "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                    "rightValue": "DocumentMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Documento"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6fa78419-2bc5-427b-b3b6-ac3905cd0ac4",
+                    "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                    "rightValue": "AudioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Áudio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "05217947-2587-4af1-97bb-a017ecceeba3",
+                    "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                    "rightValue": "=ExtendedTextMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3796d31a-c6c7-457d-b847-29a908eab12d",
+                    "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                    "rightValue": "Conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1552,
+        304
+      ],
+      "id": "b06fccde-81c5-4a3f-ae80-43cf6737aab7",
+      "name": "Roteador de Tipo de Mensagem"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('Executa Workflow').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Executa Workflow').item.json.messageId }}"
+            },
+            {
+              "name": "return_base64",
+              "value": "false"
+            },
+            {
+              "name": "return_link",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1296,
+        32
+      ],
+      "id": "88d634af-2d0c-479f-8b4b-3cd2d0ee2016",
+      "name": "Obter Link da Imagem"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('Executa Workflow').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Executa Workflow').item.json.messageId }}"
+            },
+            {
+              "name": "return_base64",
+              "value": "false"
+            },
+            {
+              "name": "return_link",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1296,
+        208
+      ],
+      "id": "13adb333-1f91-4ea3-9fe8-7be55a33982d",
+      "name": "Obter Link do Documento"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('Executa Workflow').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Executa Workflow').item.json.messageId }}"
+            },
+            {
+              "name": "return_base64",
+              "value": "true"
+            },
+            {
+              "name": "return_link",
+              "value": "true"
+            },
+            {
+              "name": "generate_mp3",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1296,
+        384
+      ],
+      "id": "cde13ffa-0765-4768-8017-bed3fc881a55",
+      "name": "Obter base64 do Áudio"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        560
+      ],
+      "id": "d11e1413-6478-4c7a-aaee-a83742b12701",
+      "name": "By Pass"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb17da64-d70b-469f-b06c-40108ebff9b5",
+              "name": "base64",
+              "value": "={{ $json.base64Data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        384
+      ],
+      "id": "ba339893-3b58-4b52-8591-093808b505e6",
+      "name": "Seta Base64"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -944,
+        384
+      ],
+      "id": "1765025e-77a8-4947-83fe-6c964badf516",
+      "name": "Converte para Arquivo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "prompt",
+              "value": "Converta o áudio em texto de forma clara e precisa."
+            },
+            {
+              "name": "language",
+              "value": "pt"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        384
+      ],
+      "id": "876e8383-3aea-41e2-adee-a4517bd3d01e",
+      "name": "Transcrição",
+      "credentials": {
+        "groqApi": {
+          "id": "VdxcF8OM6REZMRxW",
+          "name": "Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "7cf9980b-76bd-46be-bd4e-042f1a6a5fd0",
+              "name": "fileURL",
+              "value": "={{ $json.fileURL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        288
+      ],
+      "id": "8c34d979-3fc7-4f61-8e5d-a14e947093b9",
+      "name": "Mensagem"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  session_id VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        16,
+        80
+      ],
+      "id": "a9acbf7a-ccfe-40df-88fa-3fad885fa5ea",
+      "name": "Cria Tabela de chats da empresa",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44f1e966-eaad-432f-b359-e629298eae99",
+              "name": "retorno",
+              "value": "humano",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        272
+      ],
+      "id": "b83a28e9-f2a0-45af-9955-5efa0ac8cadf",
+      "name": "Retorno Status Humano"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a6375ad-097a-432a-9da9-74ac6ea3ecac",
+              "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+              "rightValue": "ExtendedTextMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "661d1a2e-4b40-47bf-b21e-bc6b3a8885c5",
+              "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+              "rightValue": "Conversation",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        288
+      ],
+      "id": "e8803ed1-bdb0-4c91-9075-aec4757dc67f",
+      "name": "Verifica se é Conversa"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe o payload, exemplo: [{ \"text\": \"oi\" }]\nconst items = $input.all();\n\n// Mapeia cada item mantendo a estrutura original\nreturn items.map(item => {\n  const textValue = item.json.text || \"\";\n\n  return {\n    json: {\n      type: \"human\",\n      content: textValue,\n      additional_kwargs: {},\n      response_metadata: {}\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        272
+      ],
+      "id": "0414d0b3-cc44-4b16-8efd-97fad3ebda47",
+      "name": "Cria mensagem do humano"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Merge').item.json.id }}",
+            "message": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        512,
+        272
+      ],
+      "id": "202ed2e4-c490-41f1-8a97-984b5c4d6823",
+      "name": "Salva Messagem Humano",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a6375ad-097a-432a-9da9-74ac6ea3ecac",
+              "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+              "rightValue": "ExtendedTextMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "000f5078-7917-4f7f-986e-7f90d28627af",
+              "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+              "rightValue": "Conversation",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        512
+      ],
+      "id": "37b40b00-a079-4341-ad53-cd9eedad369a",
+      "name": "Verifica se tem mensagem"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe o payload, exemplo: [{ \"text\": \"oi\" }]\nconst items = $input.all();\n\n// Mapeia cada item mantendo a estrutura original\nreturn items.map(item => {\n  const textValue = item.json.text || \"\";\n\n  return {\n    json: {\n      type: \"ai\",\n      content: textValue,\n      tool_calls: [],\n      additional_kwargs: {},\n      response_metadata: {},\n      invalid_tool_calls: []\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        496
+      ],
+      "id": "05504663-4b78-4800-8ef8-19c2f95019e0",
+      "name": "Cria Messagem da IA"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Merge').item.json.id }}",
+            "message": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        496
+      ],
+      "id": "158b014c-e543-4574-9de3-059ce08b4df7",
+      "name": "Salva Messagem da IA",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Verifica se o cliente existe e grava na base ",
+        "height": 496,
+        "width": 1648
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3248,
+        160
+      ],
+      "id": "e8efb680-883d-4e8e-91d8-d807bda4f8fa",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Trata os diferentes tipos de entrada - Texto, imagem ou audio",
+        "height": 784,
+        "width": 1328,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        -32
+      ],
+      "id": "161f38e5-597f-4156-8cfb-2de3455c890e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Gera dados para gravar histórico do chat",
+        "height": 784,
+        "width": 1216,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -32
+      ],
+      "id": "9ad047e1-267f-466a-8203-8d6eb63692f3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 272,
+        "width": 752,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3232,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "5e0f9a57-3ebb-4b1c-af39-d522c05642d6",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=O que tem nessa imagem? Seja conciso na resposta trazendo apenas as informações relevantes.\nSe a imagem possuir textos escreva extamente o questá na imagem.",
+        "imageUrls": "={{ $json.fileURL }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1120,
+        32
+      ],
+      "id": "95da7507-9f35-412d-9758-6dc9353debbb",
+      "name": "Analise da Imagem",
+      "credentials": {
+        "openAiApi": {
+          "id": "TNvVwiRTTnV3NVM1",
+          "name": "OpenAi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "=O que tem nesse documento? Seja conciso na resposta trazendo apenas as informações relevantes. ",
+        "documentUrls": "={{ $json.fileURL }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        208
+      ],
+      "id": "0c353986-bf98-43ac-8295-7cfeff219a7f",
+      "name": "Analise do conteúdo do documento",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bTQOnTrVMBnnGFwR",
+          "name": "Google Gemini"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Roteador de Tipo de Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classificar Função": {
+      "main": [
+        [
+          {
+            "node": "Cria Tabela de chats da empresa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verifica se é Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verifica se tem mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setar Mensagem1": {
+      "main": [
+        [
+          {
+            "node": "Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setar Mensagem ": {
+      "main": [
+        [
+          {
+            "node": "Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setar Mensagem4": {
+      "main": [
+        [
+          {
+            "node": "Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setar Mensagem5": {
+      "main": [
+        [
+          {
+            "node": "Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executa Workflow": {
+      "main": [
+        [
+          {
+            "node": "Busca Instancia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Instancia": {
+      "main": [
+        [
+          {
+            "node": "Busca Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Cliente": {
+      "main": [
+        [
+          {
+            "node": "Se não encontrou",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se não encontrou": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gera UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gera UUID": {
+      "main": [
+        [
+          {
+            "node": "Insere Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere Cliente": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Roteador de Tipo de Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Obter Link da Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Obter Link do Documento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Obter base64 do Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "By Pass",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "By Pass",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter Link da Imagem": {
+      "main": [
+        [
+          {
+            "node": "Analise da Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter Link do Documento": {
+      "main": [
+        [
+          {
+            "node": "Analise do conteúdo do documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter base64 do Áudio": {
+      "main": [
+        [
+          {
+            "node": "Seta Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "By Pass": {
+      "main": [
+        [
+          {
+            "node": "Setar Mensagem5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seta Base64": {
+      "main": [
+        [
+          {
+            "node": "Converte para Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converte para Arquivo": {
+      "main": [
+        [
+          {
+            "node": "Transcrição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcrição": {
+      "main": [
+        [
+          {
+            "node": "Setar Mensagem4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Classificar Função",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Tabela de chats da empresa": {
+      "main": [
+        [
+          {
+            "node": "Retorna Recebimento Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica se é Conversa": {
+      "main": [
+        [
+          {
+            "node": "Cria mensagem do humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria mensagem do humano": {
+      "main": [
+        [
+          {
+            "node": "Salva Messagem Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva Messagem Humano": {
+      "main": [
+        [
+          {
+            "node": "Retorno Status Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica se tem mensagem": {
+      "main": [
+        [
+          {
+            "node": "Cria Messagem da IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Messagem da IA": {
+      "main": [
+        [
+          {
+            "node": "Salva Messagem da IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva Messagem da IA": {
+      "main": [
+        [
+          {
+            "node": "Retorno Status IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analise da Imagem": {
+      "main": [
+        [
+          {
+            "node": "Setar Mensagem1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analise do conteúdo do documento": {
+      "main": [
+        [
+          {
+            "node": "Setar Mensagem ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Executa Workflow": [
+      {
+        "json": {
+          "fromMe": false,
+          "mensagem": "# 🚀 RESUMO URGENTE - N8N v2.4.3 (PRERELEASE)\n\n**⚠️ ATENÇÃO AUTOMADORES DE ELITE!**\n\nAcabou de sair a **versão 2.4.3** do n8n! Aqui está o que você PRECISA saber:\n\n## 📊 STATUS DA RELEASE\n🔴 **PRERELEASE: TRUE** - Versão de testes avançados\n📅 Data: 15 de Janeiro de 2026\n\n---\n\n## 🔍 O QUE MUDOU?\n\nBaseado nas informações disponíveis, esta é uma **release de correção (patch)** vindo da v2.4.2.\n\n### 📌 Características principais:\n• **Versão intermediária** - Correções pontuais e melhorias de estabilidade\n• **Não é versão final** - Prerelease indica fase de testes\n• **Incremento .3** - Terceira correção da série 2.4.x\n\n---\n\n## ⚡ RECOMENDAÇÕES DO ESPECIALISTA:\n\n✅ **SE VOCÊ É AVENTUREIRO**: Pode testar em ambiente de desenvolvimento\n❌ **SE VOCÊ TEM WORKFLOWS CRÍTICOS**: Aguarde a versão estável\n🔄 **BACKUP OBRIGATÓRIO**: Sempre antes de qualquer atualização\n\n---\n\n## 🎯 CONCLUSÃO:\nRelease de manutenção focada em **estabilidade e correções**. Por ser prerelease, recomendo cautela para ambientes de produção.\n\n**Quer detalhes técnicos?** Acesse: \nhttps://github.com/n8n-io/n8n/compare/n8n@2.4.2...n8n@2.4.3\n\n---\n\n*🔥 Mantenha seus workflows sempre atualizados, mas com sabedoria!*",
+          "messageType": "ExtendedTextMessage",
+          "funcao": "ativado",
+          "messageId": "3EB0369E97CB2E344474BA",
+          "remotejId": "551152863018@s.whatsapp.net",
+          "empresa": "clinica-flowgrammers",
+          "token": "a2b1b5d0-16e7-4f96-a9ab-e674b43a27d1"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "e5b2adf8-9c8f-47a3-9267-d10a642baef9",
+  "activeVersionId": "0874e4fb-080a-4344-8851-95fe35132c82",
+  "versionCounter": 69,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-05T19:40:53.693Z",
+      "createdAt": "2026-01-05T19:40:53.693Z",
+      "role": "workflow:owner",
+      "workflowId": "8K_F60hSD9s_JYmvQRyPe",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-17T13:32:46.619Z",
+    "createdAt": "2026-01-17T13:31:44.467Z",
+    "versionId": "0874e4fb-080a-4344-8851-95fe35132c82",
+    "workflowId": "8K_F60hSD9s_JYmvQRyPe",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          -1776,
+          352
+        ],
+        "id": "b520a783-e6ac-4082-8045-0d9107c2be87",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                      "rightValue": "ativado",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "9f0639a5-0b9c-4010-a878-311b8e95d9c8"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Agent On"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "a91b818d-484a-4417-9a89-6a404d105176",
+                      "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                      "rightValue": "desativado",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Agent Off"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "e74c7e4c-aa79-4fd1-a558-e18d3fc8b55c",
+                      "leftValue": "={{ $('Executa Workflow').item.json.funcao }}",
+                      "rightValue": "parar",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Mensagem do Atendente"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -208,
+          272
+        ],
+        "id": "9f0ffec6-f368-46c3-a25f-c11a76086fb0",
+        "name": "Classificar Função"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "dc7dfd5d-c52f-4d30-940a-8208e8b2884e",
+                "name": "remotejId",
+                "value": "={{ $('Executa Workflow').last().json.remotejId }}",
+                "type": "string"
+              },
+              {
+                "id": "2bffaf43-8c76-450b-aa1c-f3d82f5a372d",
+                "name": "text",
+                "value": "={{ $('Classificar Função').last().json.text }}",
+                "type": "string"
+              },
+              {
+                "id": "9e09db91-a5d3-4c7f-8561-89b730dcd4a3",
+                "name": "session_id",
+                "value": "={{ $('Merge').last().json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "5df94ed5-2db7-486f-82e3-1cc6c0389bdd",
+                "name": "retorno",
+                "value": "agente",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          256,
+          80
+        ],
+        "id": "225fe9a3-2147-48ea-9b6e-0535d796f3d1",
+        "name": "Retorna Recebimento Mensagem"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "484eb978-79c2-4df0-8fae-7bf182dfe264",
+                "name": "retorno",
+                "value": "IA",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          640,
+          496
+        ],
+        "id": "b76811f8-3e50-4797-8955-9c07a12beb99",
+        "name": "Retorno Status IA"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+                "name": "text",
+                "value": "=Imagem Recebida: {{ $json.content }}",
+                "type": "string"
+              },
+              {
+                "id": "1935b6b8-3824-4aee-84f9-aa6bbb099174",
+                "name": "fileURL",
+                "value": "={{ $('Obter Link da Imagem').item.json.fileURL }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -608,
+          32
+        ],
+        "id": "cd9ddc70-8d0b-480a-8a62-f9059901e2d2",
+        "name": "Setar Mensagem1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+                "name": "text",
+                "value": "=Documento Recebido: {{ $json.content.parts[0].text }}",
+                "type": "string"
+              },
+              {
+                "id": "dba4dc98-8bda-49e1-889a-ae13218725ee",
+                "name": "fileURL",
+                "value": "={{ $('Obter Link do Documento').item.json.fileURL }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -608,
+          208
+        ],
+        "id": "2876832f-72be-41f7-9354-5ffba3a2cb59",
+        "name": "Setar Mensagem "
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+                "name": "text",
+                "value": "=Audio Recebido: {{ $json.text }}",
+                "type": "string"
+              },
+              {
+                "id": "f8cd4a2d-5cd1-4b8b-b64b-196048b12e7a",
+                "name": "fileURL",
+                "value": "={{ $('Obter base64 do Áudio').item.json.fileURL }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -608,
+          384
+        ],
+        "id": "04510551-84e6-4426-98d8-2cc4845ee86d",
+        "name": "Setar Mensagem4"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+                "name": "text",
+                "value": "={{ $('Executa Workflow').item.json.mensagem }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -608,
+          560
+        ],
+        "id": "0b5d9614-c3da-468e-ba18-8211fec412c4",
+        "name": "Setar Mensagem5"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "fromMe",
+                "type": "boolean"
+              },
+              {
+                "name": "mensagem"
+              },
+              {
+                "name": "messageType"
+              },
+              {
+                "name": "funcao"
+              },
+              {
+                "name": "messageId"
+              },
+              {
+                "name": "remotejId"
+              },
+              {
+                "name": "empresa"
+              },
+              {
+                "name": "token"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -3184,
+          352
+        ],
+        "id": "16f6ae32-50c0-4d04-9fc3-7a5e10355da5",
+        "name": "Executa Workflow"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "whatsapp_instances",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "instance_name",
+                "condition": "eq",
+                "keyValue": "={{ $json.empresa }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2976,
+          352
+        ],
+        "id": "1f8adb42-8c4a-4678-9d47-240d65e50891",
+        "name": "Busca Instancia",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "keyValue": "={{ $json.id_organizacao }}"
+              },
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $('Executa Workflow').item.json.remotejId }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2784,
+          352
+        ],
+        "id": "9479bf8c-6ec2-4460-b63f-b4fd7ef8d3a3",
+        "name": "Busca Cliente",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "da396d94-2dcc-4573-8bc3-00eced798dd2",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2592,
+          352
+        ],
+        "id": "4d36ac6b-6a6b-4870-9324-ccd51ddb3ef5",
+        "name": "Se não encontrou"
+      },
+      {
+        "parameters": {
+          "action": "generate"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          -2320,
+          416
+        ],
+        "id": "27defe4c-a043-46cf-be2d-5d0665638acd",
+        "name": "Gera UUID"
+      },
+      {
+        "parameters": {
+          "tableId": "contacts",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "id",
+                "fieldValue": "={{ $json.data }}"
+              },
+              {
+                "fieldId": "phone",
+                "fieldValue": "={{ $('Executa Workflow').item.json.remotejId }}"
+              },
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Busca Instancia').item.json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2128,
+          416
+        ],
+        "id": "3ed1c9f9-5fd3-46e2-8d50-9e6e9f4df516",
+        "name": "Insere Cliente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                      "rightValue": "ImageMessage",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "bbbc99f3-e953-49cd-99d7-cbe9baea5e96"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Imagem"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "9f4f590c-e6ae-45a0-ab63-1e5e1cdd8a9d",
+                      "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                      "rightValue": "DocumentMessage",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Documento"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "6fa78419-2bc5-427b-b3b6-ac3905cd0ac4",
+                      "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                      "rightValue": "AudioMessage",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Áudio"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "05217947-2587-4af1-97bb-a017ecceeba3",
+                      "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                      "rightValue": "=ExtendedTextMessage",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Texto"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "3796d31a-c6c7-457d-b847-29a908eab12d",
+                      "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                      "rightValue": "Conversation",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Texto"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -1552,
+          304
+        ],
+        "id": "b06fccde-81c5-4a3f-ae80-43cf6737aab7",
+        "name": "Roteador de Tipo de Mensagem"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/json"
+              },
+              {
+                "name": "token",
+                "value": "={{ $('Executa Workflow').item.json.token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id",
+                "value": "={{ $('Executa Workflow').item.json.messageId }}"
+              },
+              {
+                "name": "return_base64",
+                "value": "false"
+              },
+              {
+                "name": "return_link",
+                "value": "true"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1296,
+          32
+        ],
+        "id": "88d634af-2d0c-479f-8b4b-3cd2d0ee2016",
+        "name": "Obter Link da Imagem"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/json"
+              },
+              {
+                "name": "token",
+                "value": "={{ $('Executa Workflow').item.json.token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id",
+                "value": "={{ $('Executa Workflow').item.json.messageId }}"
+              },
+              {
+                "name": "return_base64",
+                "value": "false"
+              },
+              {
+                "name": "return_link",
+                "value": "true"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1296,
+          208
+        ],
+        "id": "13adb333-1f91-4ea3-9fe8-7be55a33982d",
+        "name": "Obter Link do Documento"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/message/download",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/json"
+              },
+              {
+                "name": "token",
+                "value": "={{ $('Executa Workflow').item.json.token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id",
+                "value": "={{ $('Executa Workflow').item.json.messageId }}"
+              },
+              {
+                "name": "return_base64",
+                "value": "true"
+              },
+              {
+                "name": "return_link",
+                "value": "true"
+              },
+              {
+                "name": "generate_mp3",
+                "value": "true"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1296,
+          384
+        ],
+        "id": "cde13ffa-0765-4768-8017-bed3fc881a55",
+        "name": "Obter base64 do Áudio"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          -1296,
+          560
+        ],
+        "id": "d11e1413-6478-4c7a-aaee-a83742b12701",
+        "name": "By Pass"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cb17da64-d70b-469f-b06c-40108ebff9b5",
+                "name": "base64",
+                "value": "={{ $json.base64Data }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -1120,
+          384
+        ],
+        "id": "ba339893-3b58-4b52-8591-093808b505e6",
+        "name": "Seta Base64"
+      },
+      {
+        "parameters": {
+          "operation": "toBinary",
+          "sourceProperty": "base64",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.convertToFile",
+        "typeVersion": 1.1,
+        "position": [
+          -944,
+          384
+        ],
+        "id": "1765025e-77a8-4947-83fe-6c964badf516",
+        "name": "Converte para Arquivo"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer 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"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "model",
+                "value": "whisper-large-v3"
+              },
+              {
+                "name": "prompt",
+                "value": "Converta o áudio em texto de forma clara e precisa."
+              },
+              {
+                "name": "language",
+                "value": "pt"
+              },
+              {
+                "name": "response_format",
+                "value": "verbose_json"
+              },
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -768,
+          384
+        ],
+        "id": "876e8383-3aea-41e2-adee-a4517bd3d01e",
+        "name": "Transcrição"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a8ca7cdb-fc72-440d-91f0-da805b76f53d",
+                "name": "text",
+                "value": "={{ $json.text }}",
+                "type": "string"
+              },
+              {
+                "id": "7cf9980b-76bd-46be-bd4e-042f1a6a5fd0",
+                "name": "fileURL",
+                "value": "={{ $json.fileURL }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -400,
+          288
+        ],
+        "id": "8c34d979-3fc7-4f61-8e5d-a14e947093b9",
+        "name": "Mensagem"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  session_id VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          16,
+          80
+        ],
+        "id": "a9acbf7a-ccfe-40df-88fa-3fad885fa5ea",
+        "name": "Cria Tabela de chats da empresa",
+        "credentials": {
+          "postgres": {
+            "id": "sdVOFX9ZZ85bA3Cm",
+            "name": "Postgres FlowClinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "44f1e966-eaad-432f-b359-e629298eae99",
+                "name": "retorno",
+                "value": "humano",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          736,
+          272
+        ],
+        "id": "b83a28e9-f2a0-45af-9955-5efa0ac8cadf",
+        "name": "Retorno Status Humano"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "3a6375ad-097a-432a-9da9-74ac6ea3ecac",
+                "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                "rightValue": "ExtendedTextMessage",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "661d1a2e-4b40-47bf-b21e-bc6b3a8885c5",
+                "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                "rightValue": "Conversation",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          288
+        ],
+        "id": "e8803ed1-bdb0-4c91-9075-aec4757dc67f",
+        "name": "Verifica se é Conversa"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Recebe o payload, exemplo: [{ \"text\": \"oi\" }]\nconst items = $input.all();\n\n// Mapeia cada item mantendo a estrutura original\nreturn items.map(item => {\n  const textValue = item.json.text || \"\";\n\n  return {\n    json: {\n      type: \"human\",\n      content: textValue,\n      additional_kwargs: {},\n      response_metadata: {}\n    }\n  };\n});\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          256,
+          272
+        ],
+        "id": "0414d0b3-cc44-4b16-8efd-97fad3ebda47",
+        "name": "Cria mensagem do humano"
+      },
+      {
+        "parameters": {
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "value": "={{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats",
+            "mode": "name"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "session_id": "={{ $('Merge').item.json.id }}",
+              "message": "={{ $json }}"
+            },
+            "matchingColumns": [
+              "id"
+            ],
+            "schema": [
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": true,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "session_id",
+                "displayName": "session_id",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "message",
+                "displayName": "message",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "object",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "data",
+                "displayName": "data",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "dateTime",
+                "canBeUsedToMatch": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          512,
+          272
+        ],
+        "id": "202ed2e4-c490-41f1-8a97-984b5c4d6823",
+        "name": "Salva Messagem Humano",
+        "credentials": {
+          "postgres": {
+            "id": "sdVOFX9ZZ85bA3Cm",
+            "name": "Postgres FlowClinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "3a6375ad-097a-432a-9da9-74ac6ea3ecac",
+                "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                "rightValue": "ExtendedTextMessage",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "000f5078-7917-4f7f-986e-7f90d28627af",
+                "leftValue": "={{ $('Executa Workflow').item.json.messageType }}",
+                "rightValue": "Conversation",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          512
+        ],
+        "id": "37b40b00-a079-4341-ad53-cd9eedad369a",
+        "name": "Verifica se tem mensagem"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Recebe o payload, exemplo: [{ \"text\": \"oi\" }]\nconst items = $input.all();\n\n// Mapeia cada item mantendo a estrutura original\nreturn items.map(item => {\n  const textValue = item.json.text || \"\";\n\n  return {\n    json: {\n      type: \"ai\",\n      content: textValue,\n      tool_calls: [],\n      additional_kwargs: {},\n      response_metadata: {},\n      invalid_tool_calls: []\n    }\n  };\n});\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          496
+        ],
+        "id": "05504663-4b78-4800-8ef8-19c2f95019e0",
+        "name": "Cria Messagem da IA"
+      },
+      {
+        "parameters": {
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "value": "={{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats",
+            "mode": "name"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "session_id": "={{ $('Merge').item.json.id }}",
+              "message": "={{ $json }}"
+            },
+            "matchingColumns": [
+              "id"
+            ],
+            "schema": [
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": true,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "session_id",
+                "displayName": "session_id",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "message",
+                "displayName": "message",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "object",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          432,
+          496
+        ],
+        "id": "158b014c-e543-4574-9de3-059ce08b4df7",
+        "name": "Salva Messagem da IA",
+        "credentials": {
+          "postgres": {
+            "id": "sdVOFX9ZZ85bA3Cm",
+            "name": "Postgres FlowClinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Verifica se o cliente existe e grava na base ",
+          "height": 496,
+          "width": 1648
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -3248,
+          160
+        ],
+        "id": "e8efb680-883d-4e8e-91d8-d807bda4f8fa",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "## Trata os diferentes tipos de entrada - Texto, imagem ou audio",
+          "height": 784,
+          "width": 1328,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1584,
+          -32
+        ],
+        "id": "161f38e5-597f-4156-8cfb-2de3455c890e",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## Gera dados para gravar histórico do chat",
+          "height": 784,
+          "width": 1216,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -240,
+          -32
+        ],
+        "id": "9ad047e1-267f-466a-8203-8d6eb63692f3",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "height": 272,
+          "width": 752,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -3232,
+          -192
+        ],
+        "typeVersion": 1,
+        "id": "5e0f9a57-3ebb-4b1c-af39-d522c05642d6",
+        "name": "Sticky Note29"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "analyze",
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "text": "=O que tem nessa imagem? Seja conciso na resposta trazendo apenas as informações relevantes.\nSe a imagem possuir textos escreva extamente o questá na imagem.",
+          "imageUrls": "={{ $json.fileURL }}",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          -1120,
+          32
+        ],
+        "id": "95da7507-9f35-412d-9758-6dc9353debbb",
+        "name": "Analise da Imagem",
+        "credentials": {
+          "openAiApi": {
+            "id": "TNvVwiRTTnV3NVM1",
+            "name": "OpenAi"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "document",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-pro",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-pro"
+          },
+          "text": "=O que tem nesse documento? Seja conciso na resposta trazendo apenas as informações relevantes. ",
+          "documentUrls": "={{ $json.fileURL }}",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          -1120,
+          208
+        ],
+        "id": "0c353986-bf98-43ac-8295-7cfeff219a7f",
+        "name": "Analise do conteúdo do documento",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "bTQOnTrVMBnnGFwR",
+            "name": "Google Gemini"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Roteador de Tipo de Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classificar Função": {
+        "main": [
+          [
+            {
+              "node": "Cria Tabela de chats da empresa",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Verifica se é Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Verifica se tem mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setar Mensagem1": {
+        "main": [
+          [
+            {
+              "node": "Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setar Mensagem ": {
+        "main": [
+          [
+            {
+              "node": "Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setar Mensagem4": {
+        "main": [
+          [
+            {
+              "node": "Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setar Mensagem5": {
+        "main": [
+          [
+            {
+              "node": "Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executa Workflow": {
+        "main": [
+          [
+            {
+              "node": "Busca Instancia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Instancia": {
+        "main": [
+          [
+            {
+              "node": "Busca Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Cliente": {
+        "main": [
+          [
+            {
+              "node": "Se não encontrou",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se não encontrou": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Gera UUID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gera UUID": {
+        "main": [
+          [
+            {
+              "node": "Insere Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insere Cliente": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Roteador de Tipo de Mensagem": {
+        "main": [
+          [
+            {
+              "node": "Obter Link da Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Obter Link do Documento",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Obter base64 do Áudio",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "By Pass",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "By Pass",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obter Link da Imagem": {
+        "main": [
+          [
+            {
+              "node": "Analise da Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obter Link do Documento": {
+        "main": [
+          [
+            {
+              "node": "Analise do conteúdo do documento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obter base64 do Áudio": {
+        "main": [
+          [
+            {
+              "node": "Seta Base64",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "By Pass": {
+        "main": [
+          [
+            {
+              "node": "Setar Mensagem5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Seta Base64": {
+        "main": [
+          [
+            {
+              "node": "Converte para Arquivo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Converte para Arquivo": {
+        "main": [
+          [
+            {
+              "node": "Transcrição",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transcrição": {
+        "main": [
+          [
+            {
+              "node": "Setar Mensagem4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem": {
+        "main": [
+          [
+            {
+              "node": "Classificar Função",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cria Tabela de chats da empresa": {
+        "main": [
+          [
+            {
+              "node": "Retorna Recebimento Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verifica se é Conversa": {
+        "main": [
+          [
+            {
+              "node": "Cria mensagem do humano",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cria mensagem do humano": {
+        "main": [
+          [
+            {
+              "node": "Salva Messagem Humano",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salva Messagem Humano": {
+        "main": [
+          [
+            {
+              "node": "Retorno Status Humano",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verifica se tem mensagem": {
+        "main": [
+          [
+            {
+              "node": "Cria Messagem da IA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cria Messagem da IA": {
+        "main": [
+          [
+            {
+              "node": "Salva Messagem da IA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salva Messagem da IA": {
+        "main": [
+          [
+            {
+              "node": "Retorno Status IA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analise da Imagem": {
+        "main": [
+          [
+            {
+              "node": "Setar Mensagem1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analise do conteúdo do documento": {
+        "main": [
+          [
+            {
+              "node": "Setar Mensagem ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 3",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-17T13:32:46.616Z",
+        "id": 218,
+        "workflowId": "8K_F60hSD9s_JYmvQRyPe",
+        "versionId": "0874e4fb-080a-4344-8851-95fe35132c82",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

@@ -1,31 +1,55 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings as SettingsIcon, MessageCircle, Save } from "lucide-react";
+import { Settings as SettingsIcon, MessageCircle, Save, Palette, Mic } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
+import { aplicarCorPrimaria } from "@/hooks/useCoresPataforma";
 
-interface GlobalSettingsForm {
-  support_whatsapp: string;
-  openai_api_key: string;
+interface ConfiguracoesGlobaisForm {
+  whatsapp_suporte: string;
+  chave_openai: string;
+  chave_elevenlabs: string;
+  nome_plataforma: string;
+  url_logo_plataforma: string;
+  url_logo_plataforma_escuro: string;
+  cor_primaria: string;
 }
 
 export default function SuperAdminSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { theme } = useTheme();
+  const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<GlobalSettingsForm>();
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ConfiguracoesGlobaisForm>();
+
+  const corPrimaria = watch('cor_primaria');
+
+  useEffect(() => {
+    if (corPrimaria) aplicarCorPrimaria(corPrimaria, theme === 'dark');
+  }, [corPrimaria, theme]);
 
   useEffect(() => {
     const loadSettings = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase.from('global_settings').select('*').single();
+        const { data, error } = await supabase.from('configuracoes_globais').select('*').single();
         if (error) throw error;
-        if (data) reset({ support_whatsapp: data.support_whatsapp || "", openai_api_key: data.openai_api_key || "" });
+        if (data) reset({
+          whatsapp_suporte: data.whatsapp_suporte || "",
+          chave_openai: data.chave_openai || "",
+          nome_plataforma: data.nome_plataforma || "FlowAtend",
+          url_logo_plataforma: data.url_logo_plataforma || "",
+          url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || "",
+          cor_primaria: data.cor_primaria || "#D9156C",
+          chave_elevenlabs: data.chave_elevenlabs || "",
+        });
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
         toast.error('Erro ao carregar configurações');
@@ -36,11 +60,20 @@ export default function SuperAdminSettings() {
     loadSettings();
   }, [reset]);
 
-  const onSubmit = async (data: GlobalSettingsForm) => {
+  const onSubmit = async (data: ConfiguracoesGlobaisForm) => {
     setIsSaving(true);
     try {
-      const { error } = await supabase.from('global_settings').update({ support_whatsapp: data.support_whatsapp || null, openai_api_key: data.openai_api_key || null }).eq('id', '00000000-0000-0000-0000-000000000001');
+      const { error } = await supabase.from('configuracoes_globais').update({
+        whatsapp_suporte: data.whatsapp_suporte || null,
+        chave_openai: data.chave_openai || null,
+        nome_plataforma: data.nome_plataforma || 'FlowAtend',
+        url_logo_plataforma: data.url_logo_plataforma || null,
+        url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || null,
+        cor_primaria: data.cor_primaria || '#D9156C',
+        chave_elevenlabs: data.chave_elevenlabs || null,
+      }).eq('id', '00000000-0000-0000-0000-000000000001');
       if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['cores-plataforma'] });
       toast.success('Configurações salvas!');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao salvar');
@@ -49,6 +82,20 @@ export default function SuperAdminSettings() {
     }
   };
 
+  const loadingSpinner = (
+    <div className="flex items-center justify-center py-8">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+    </div>
+  );
+
+  const saveButton = (
+    <Button type="submit" disabled={isSaving} className="bg-primary text-primary-foreground hover:bg-primary/90">
+      {isSaving
+        ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />Salvando...</>
+        : <><Save className="mr-2 h-4 w-4" />Salvar</>}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -56,6 +103,115 @@ export default function SuperAdminSettings() {
         <p className="text-sm text-muted-foreground mt-1">Configurações gerais do sistema</p>
       </div>
 
+      {/* Branding da Plataforma */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Palette className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-foreground text-base">Branding da Plataforma</CardTitle>
+              <CardDescription>Nome e logos exibidos nas páginas de login e no painel super admin</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? loadingSpinner : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome_plataforma" className="text-foreground text-xs font-medium">
+                  Nome da Plataforma
+                </Label>
+                <Input
+                  id="nome_plataforma"
+                  {...register("nome_plataforma")}
+                  placeholder="FlowAtend"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Nome exibido no título do browser e como fallback quando não há logo configurado.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="url_logo_plataforma" className="text-foreground text-xs font-medium">
+                  URL do Logo (fundo escuro)
+                </Label>
+                <Input
+                  id="url_logo_plataforma"
+                  {...register("url_logo_plataforma")}
+                  placeholder="https://..."
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Logo para temas escuros (geralmente versão clara do logo).
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="url_logo_plataforma_escuro" className="text-foreground text-xs font-medium">
+                  URL do Logo (fundo claro)
+                </Label>
+                <Input
+                  id="url_logo_plataforma_escuro"
+                  {...register("url_logo_plataforma_escuro")}
+                  placeholder="https://..."
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Logo para temas claros (geralmente versão escura do logo).
+                </p>
+              </div>
+              {saveButton}
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Cores da Plataforma */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Palette className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-foreground text-base">Cores da Plataforma</CardTitle>
+              <CardDescription>Personalize a cor primária usada em botões, nav ativa e destaques</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? loadingSpinner : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cor_primaria" className="text-foreground text-xs font-medium">
+                  Cor Primária
+                </Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="cor_primaria"
+                    type="color"
+                    {...register("cor_primaria")}
+                    className="h-10 w-16 cursor-pointer rounded-md border border-border bg-background p-1"
+                  />
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-6 w-6 rounded-full border border-border"
+                      style={{ backgroundColor: corPrimaria || '#D9156C' }}
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {corPrimaria || '#D9156C'}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  A cor é aplicada imediatamente como preview. Clique em Salvar para persistir.
+                </p>
+              </div>
+              {saveButton}
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* WhatsApp de Suporte */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -69,30 +225,25 @@ export default function SuperAdminSettings() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            </div>
-          ) : (
+          {isLoading ? loadingSpinner : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="support_whatsapp" className="text-foreground text-xs font-medium">
+                <Label htmlFor="whatsapp_suporte" className="text-foreground text-xs font-medium">
                   Número de WhatsApp (formato internacional)
                 </Label>
-                <Input id="support_whatsapp" type="tel" {...register("support_whatsapp")} placeholder="5511999999999" />
+                <Input id="whatsapp_suporte" type="tel" {...register("whatsapp_suporte")} placeholder="5511999999999" />
                 <p className="text-[10px] text-muted-foreground">
                   Formato internacional sem espaços (ex: 5511999999999). Será exibido como botão flutuante para todos os usuários.
                 </p>
-                {errors.support_whatsapp && <p className="text-xs text-destructive">{errors.support_whatsapp.message}</p>}
+                {errors.whatsapp_suporte && <p className="text-xs text-destructive">{errors.whatsapp_suporte.message}</p>}
               </div>
-              <Button type="submit" disabled={isSaving} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                {isSaving ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />Salvando...</> : <><Save className="mr-2 h-4 w-4" />Salvar</>}
-              </Button>
+              {saveButton}
             </form>
           )}
         </CardContent>
       </Card>
 
+      {/* API Key OpenAI */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -106,23 +257,47 @@ export default function SuperAdminSettings() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            </div>
-          ) : (
+          {isLoading ? loadingSpinner : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="openai_api_key" className="text-foreground text-xs font-medium">Chave de API OpenAI</Label>
-                <Input id="openai_api_key" type="password" {...register("openai_api_key")} placeholder="sk-..." className="font-mono" />
+                <Label htmlFor="chave_openai" className="text-foreground text-xs font-medium">Chave de API OpenAI</Label>
+                <Input id="chave_openai" type="password" {...register("chave_openai")} placeholder="sk-..." className="font-mono" />
                 <p className="text-[10px] text-muted-foreground">
                   Esta chave é global e afeta todas as empresas do sistema.
                 </p>
-                {errors.openai_api_key && <p className="text-xs text-destructive">{errors.openai_api_key.message}</p>}
+                {errors.chave_openai && <p className="text-xs text-destructive">{errors.chave_openai.message}</p>}
               </div>
-              <Button type="submit" disabled={isSaving} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                {isSaving ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />Salvando...</> : <><Save className="mr-2 h-4 w-4" />Salvar</>}
-              </Button>
+              {saveButton}
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* API Key ElevenLabs */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Mic className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-foreground text-base">API Key ElevenLabs</CardTitle>
+              <CardDescription>Chave de API ElevenLabs para síntese de voz</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? loadingSpinner : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">Chave de API ElevenLabs</Label>
+                <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono" />
+                <p className="text-[10px] text-muted-foreground">
+                  Usada para geração de áudio com vozes realistas nos fluxos de atendimento.
+                </p>
+                {errors.chave_elevenlabs && <p className="text-xs text-destructive">{errors.chave_elevenlabs.message}</p>}
+              </div>
+              {saveButton}
             </form>
           )}
         </CardContent>

@@ -45,8 +45,8 @@ export default function Conhecimento() {
 
   // Carregar documentos da tabela geral filtrados por organização
   const loadDocuments = async () => {
-    if (!organization?.slug) {
-      console.log("❌ Organization slug não encontrado");
+    if (!organization?.identificador) {
+      console.log("❌ Organization identificador não encontrado");
       return;
     }
 
@@ -54,16 +54,16 @@ export default function Conhecimento() {
       setIsLoadingDocuments(true);
       
       console.log("=== DEBUG DOCUMENTOS ===");
-      console.log("Organization:", organization.name);
-      console.log("Slug:", organization.slug);
-      console.log("Buscando em: documents_geral");
-      console.log("Filtro: metadata->>'organizacao' =", organization.slug);
+      console.log("Organization:", organization.nome);
+      console.log("Slug:", organization.identificador);
+      console.log("Buscando em: documentos");
+      console.log("Filtro: metadados->>'organizacao' =", organization.identificador);
       
       // Buscar documentos da tabela geral filtrados por organização
       const { data, error } = await supabase
-        .from("documents_geral")
+        .from("documentos")
         .select('*')
-        .eq('metadata->>organizacao', organization.slug);
+        .eq('metadados->>organizacao', organization.identificador);
 
       if (error) {
         console.error("❌ Erro ao buscar documentos:", error);
@@ -103,11 +103,11 @@ export default function Conhecimento() {
   // Carregar documentos ao montar componente
   useEffect(() => {
     loadDocuments();
-  }, [organization?.slug]);
+  }, [organization?.identificador]);
 
   // Função para carregar conteúdo completo de um documento (todas as linhas com o mesmo título)
   const handleViewDocumentDetails = async (doc: any) => {
-    if (!organization?.slug) {
+    if (!organization?.identificador) {
       toast.error("Organização não encontrada");
       return;
     }
@@ -120,15 +120,15 @@ export default function Conhecimento() {
       console.log("🔍 === BUSCAR DETALHES DO DOCUMENTO ===");
       console.log("Documento:", doc);
       console.log("Título:", titulo);
-      console.log("Tabela: documents_geral");
-      console.log("Filtro 1: metadata->>'organizacao' =", organization.slug);
+      console.log("Tabela: documentos");
+      console.log("Filtro 1: metadados->>'organizacao' =", organization.identificador);
       console.log("Filtro 2: titulo =", titulo);
 
       // Buscar TODAS as linhas com este título da mesma organização
       const { data, error } = await supabase
-        .from("documents_geral")
+        .from("documentos")
         .select('*')
-        .eq('metadata->>organizacao', organization.slug)
+        .eq('metadados->>organizacao', organization.identificador)
         .eq('titulo', titulo);
 
       console.log("Query executada");
@@ -149,18 +149,18 @@ export default function Conhecimento() {
 
       // Combinar todo o conteúdo (títulos iguais = mesmo arquivo)
       const combinedContent = data
-        ?.map(row => row.content || "")
+        ?.map(row => row.conteudo || "")
         .filter(content => content.trim())
         .join("\n\n");
 
       // Criar documento agregado
       const aggregatedDoc = {
         ...doc,
-        content: combinedContent,
+        conteudo: combinedContent,
         pageCount: data?.length || 0
       };
 
-      console.log("📄 Conteúdo combinado:", combinedContent?.length, "caracteres");
+      console.log("📄 Conteúdo combinado:", combinedContent?.length ?? 0, "caracteres");
       console.log("📊 Total de partes:", aggregatedDoc.pageCount);
       console.log("=======================");
       
@@ -176,7 +176,7 @@ export default function Conhecimento() {
 
   // Função para apagar documento (todas as partes com o mesmo título)
   const handleDeleteDocument = async () => {
-    if (!documentToDelete || !organization?.slug) return;
+    if (!documentToDelete || !organization?.identificador) return;
 
     try {
       setIsDeletingDocument(true);
@@ -184,17 +184,17 @@ export default function Conhecimento() {
       const titulo = documentToDelete.titulo;
 
       console.log("🗑️ Deletando documento:");
-      console.log("  Tabela: documents_geral");
+      console.log("  Tabela: documentos");
       console.log("  Título:", titulo);
-      console.log("  Organização:", organization.slug);
+      console.log("  Organização:", organization.identificador);
 
       // Enviar para webhook de deleção
       const payload = {
-        tableName: "documents_geral",
+        tableName: "documentos",
         titulo: titulo,
-        organizacao: organization.slug,
+        organizacao: organization.identificador,
         organizationId: organization.id,
-        organizationName: organization.name,
+        organizationName: organization.nome,
       };
 
       console.log("Payload enviado:", payload);
@@ -231,7 +231,7 @@ export default function Conhecimento() {
 
   // Função para deletar todos os documentos da organização
   const handleDeleteAll = async () => {
-    if (!organization?.slug) {
+    if (!organization?.identificador) {
       toast.error("Informações da organização não encontradas");
       return;
     }
@@ -240,14 +240,14 @@ export default function Conhecimento() {
       setIsDeletingAll(true);
 
       console.log("🗑️ Deletando TODOS os documentos da organização");
-      console.log("Tabela: documents_geral");
-      console.log("Organização:", organization.slug);
+      console.log("Tabela: documentos");
+      console.log("Organização:", organization.identificador);
 
       const payload = {
-        tableName: "documents_geral",
-        organizacao: organization.slug,
+        tableName: "documentos",
+        organizacao: organization.identificador,
         organizationId: organization.id,
-        organizationName: organization.name,
+        organizationName: organization.nome,
       };
 
       console.log("Payload enviado:", payload);
@@ -362,18 +362,18 @@ export default function Conhecimento() {
         fileName: `${customFileName}.pdf`, // Nome customizado + extensão
         fileSize: selectedFile.size,
         mimeType: selectedFile.type,
-        uploadedBy: profile?.full_name || "Usuário",
+        uploadedBy: profile?.nome_completo || "Usuário",
         uploadedAt: new Date().toISOString(),
         titulo: customFileName, // Nome customizado para o banco
-        
+
         // Informações da organização
         organization: {
           id: organization.id,
-          name: organization.name,
-          slug: organization.slug,
-          is_active: organization.is_active,
-          logo_url: organization.logo_url,
-          created_at: organization.created_at,
+          nome: organization.nome,
+          identificador: organization.identificador,
+          ativo: organization.ativo,
+          url_logo: organization.url_logo,
+          criado_em: organization.criado_em,
         }
       };
 
@@ -382,7 +382,7 @@ export default function Conhecimento() {
         fileSize: selectedFile.size,
         titulo: customFileName,
         organizationId: organization.id,
-        organizationName: organization.name,
+        organizationName: organization.nome,
       });
 
       const response = await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}rag-cliente`, {
@@ -619,14 +619,14 @@ export default function Conhecimento() {
                           </div>
                         )}
                         
-                        {/* Metadata da organização */}
-                        {doc.metadata?.organizacao && (
+                        {/* Metadados da organização */}
+                        {doc.metadados?.organizacao && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-1">
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <span className="truncate">
-                              {doc.metadata.organizacao}
+                              {doc.metadados.organizacao}
                             </span>
                           </div>
                         )}
@@ -769,9 +769,9 @@ export default function Conhecimento() {
           
           <div className="flex-1 overflow-y-auto">
             <div className="bg-secondary/30 border border-border rounded-lg p-6">
-              {documentToView?.content ? (
+              {documentToView?.conteudo ? (
                 <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed">
-                  {documentToView.content}
+                  {documentToView.conteudo}
                 </pre>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
@@ -780,12 +780,12 @@ export default function Conhecimento() {
                 </div>
               )}
             </div>
-            
-            {documentToView?.content && (
+
+            {documentToView?.conteudo && (
               <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-accent" />
                 <span>
-                  {documentToView.content.length} caracteres indexados
+                  {documentToView.conteudo.length} caracteres indexados
                 </span>
               </div>
             )}

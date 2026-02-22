@@ -21,16 +21,16 @@ import { cn } from "@/lib/utils";
 
 interface TokenRecord {
   id: string;
-  organization_id: string;
+  id_organizacao: string;
   total_tokens: number;
-  cost_reais: number;
-  created_at: string;
+  custo_reais: number;
+  criado_em: string;
 }
 
 interface Organization {
   id: string;
-  name: string;
-  logo_url: string | null;
+  nome: string;
+  url_logo: string | null;
 }
 
 type PeriodFilter = "7d" | "14d" | "30d" | "90d" | "all";
@@ -89,8 +89,8 @@ export default function TokenUsage() {
     try {
       setIsLoading(true);
       const [tokenRes, orgsRes] = await Promise.all([
-        supabase.from("token_usage").select("id, organization_id, total_tokens, cost_reais, created_at").order("created_at", { ascending: true }),
-        supabase.from("organizations").select("id, name, logo_url"),
+        supabase.from("uso_tokens").select("id, id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
+        supabase.from("organizacoes").select("id, nome, url_logo"),
       ]);
       if (tokenRes.error) throw tokenRes.error;
       if (orgsRes.error) throw orgsRes.error;
@@ -111,26 +111,26 @@ export default function TokenUsage() {
     if (period !== "all") {
       const days = parseInt(period);
       const since = getDaysAgo(days);
-      data = data.filter((r) => new Date(r.created_at) >= since);
+      data = data.filter((r) => new Date(r.criado_em) >= since);
     }
     if (selectedOrg !== "all") {
-      data = data.filter((r) => r.organization_id === selectedOrg);
+      data = data.filter((r) => r.id_organizacao === selectedOrg);
     }
     return data;
   }, [records, period, selectedOrg]);
 
   const totalTokens = filtered.reduce((s, r) => s + (r.total_tokens || 0), 0);
-  const totalCost = filtered.reduce((s, r) => s + (r.cost_reais || 0), 0);
+  const totalCost = filtered.reduce((s, r) => s + (r.custo_reais || 0), 0);
 
   const orgGroups = useMemo(() => {
     const map: Record<string, { tokens: number; cost: number; name: string }> = {};
     filtered.forEach((r) => {
-      if (!map[r.organization_id]) {
-        const org = orgMap.get(r.organization_id);
-        map[r.organization_id] = { tokens: 0, cost: 0, name: org?.name || "Desconhecida" };
+      if (!map[r.id_organizacao]) {
+        const org = orgMap.get(r.id_organizacao);
+        map[r.id_organizacao] = { tokens: 0, cost: 0, name: org?.nome || "Desconhecida" };
       }
-      map[r.organization_id].tokens += r.total_tokens || 0;
-      map[r.organization_id].cost += r.cost_reais || 0;
+      map[r.id_organizacao].tokens += r.total_tokens || 0;
+      map[r.id_organizacao].cost += r.custo_reais || 0;
     });
     return Object.entries(map)
       .map(([id, d]) => ({ id, ...d }))
@@ -141,10 +141,10 @@ export default function TokenUsage() {
   const dailyData = useMemo(() => {
     const map: Record<string, { tokens: number; cost: number }> = {};
     filtered.forEach((r) => {
-      const key = new Date(r.created_at).toISOString().split("T")[0];
+      const key = new Date(r.criado_em).toISOString().split("T")[0];
       if (!map[key]) map[key] = { tokens: 0, cost: 0 };
       map[key].tokens += r.total_tokens || 0;
-      map[key].cost += r.cost_reais || 0;
+      map[key].cost += r.custo_reais || 0;
     });
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -159,13 +159,13 @@ export default function TokenUsage() {
   const weeklyData = useMemo(() => {
     const map: Record<string, { tokens: number; cost: number; label: string }> = {};
     filtered.forEach((r) => {
-      const d = new Date(r.created_at);
+      const d = new Date(r.criado_em);
       const weekStart = new Date(d);
       weekStart.setDate(weekStart.getDate() - weekStart.getDay());
       const key = weekStart.toISOString().split("T")[0];
       if (!map[key]) map[key] = { tokens: 0, cost: 0, label: getWeekLabel(d) };
       map[key].tokens += r.total_tokens || 0;
-      map[key].cost += r.cost_reais || 0;
+      map[key].cost += r.custo_reais || 0;
     });
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -180,11 +180,11 @@ export default function TokenUsage() {
   const monthlyData = useMemo(() => {
     const map: Record<string, { tokens: number; cost: number; label: string }> = {};
     filtered.forEach((r) => {
-      const d = new Date(r.created_at);
+      const d = new Date(r.criado_em);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       if (!map[key]) map[key] = { tokens: 0, cost: 0, label: getMonthLabel(d) };
       map[key].tokens += r.total_tokens || 0;
-      map[key].cost += r.cost_reais || 0;
+      map[key].cost += r.custo_reais || 0;
     });
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -216,7 +216,7 @@ export default function TokenUsage() {
   }, [orgGroups]);
 
   const orgsWithUsage = useMemo(() => {
-    const ids = new Set(records.map((r) => r.organization_id));
+    const ids = new Set(records.map((r) => r.id_organizacao));
     return orgs.filter((o) => ids.has(o.id));
   }, [records, orgs]);
 
@@ -290,7 +290,7 @@ export default function TokenUsage() {
               <SelectContent>
                 <SelectItem value="all">Todas as empresas</SelectItem>
                 {orgsWithUsage.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                  <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -500,8 +500,8 @@ export default function TokenUsage() {
                   <Card key={org.id} className="border-border hover:border-primary/30 transition-all">
                     <CardHeader>
                       <div className="flex items-center gap-3">
-                        {orgInfo?.logo_url ? (
-                          <img src={orgInfo.logo_url} alt={org.name} className="h-9 w-9 rounded-full object-cover shrink-0" />
+                        {orgInfo?.url_logo ? (
+                          <img src={orgInfo.url_logo} alt={org.name} className="h-9 w-9 rounded-full object-cover shrink-0" />
                         ) : (
                           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
                             <Building2 className="h-4 w-4 text-primary" />

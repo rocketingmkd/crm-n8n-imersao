@@ -12,7 +12,10 @@
       "name": "Webhook GET Insights",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "insights-api"
     },
     {
@@ -20,13 +23,18 @@
         "url": "={{ $env.N8N_API_URL || 'http://localhost:5678' }}/api/v1/workflows?limit=250",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "options": { "timeout": 15000 }
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-workflows",
       "name": "Listar Workflows",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 200],
+      "position": [
+        460,
+        200
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "CONFIGURE_AQUI",
@@ -42,13 +50,18 @@
         "url": "={{ $env.N8N_API_URL || 'http://localhost:5678' }}/api/v1/executions?limit=250",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "http-executions",
       "name": "Listar Execuções",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 450],
+      "position": [
+        460,
+        450
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "CONFIGURE_AQUI",
@@ -61,13 +74,16 @@
     },
     {
       "parameters": {
-        "jsCode": "const wfItem = $('Listar Workflows').first();\nconst exItem = $('Listar Execuções').first();\n\nconst workflows = (wfItem.json?.data || []).map(w => ({\n  id: w.id,\n  name: w.name,\n  active: w.active,\n  createdAt: w.createdAt,\n  updatedAt: w.updatedAt,\n  tags: (w.tags || []).map(t => t.name || t),\n}));\n\nconst executions = (exItem.json?.data || []).map(e => ({\n  id: e.id,\n  workflowId: e.workflowId || e.workflowData?.id,\n  workflowName: e.workflowData?.name || '',\n  status: e.status,\n  startedAt: e.startedAt,\n  stoppedAt: e.stoppedAt,\n  finished: e.finished,\n}));\n\n// Compute per-workflow stats\nconst wfMap = {};\nworkflows.forEach(w => {\n  wfMap[w.id] = { ...w, totalExec: 0, failedExec: 0, successExec: 0, runningExec: 0, waitingExec: 0, totalRuntimeMs: 0, execCount: 0 };\n});\n\nexecutions.forEach(e => {\n  const wId = String(e.workflowId);\n  if (!wfMap[wId]) {\n    wfMap[wId] = { id: wId, name: e.workflowName || `Workflow ${wId}`, active: false, tags: [], totalExec: 0, failedExec: 0, successExec: 0, runningExec: 0, waitingExec: 0, totalRuntimeMs: 0, execCount: 0 };\n  }\n  const wf = wfMap[wId];\n  wf.totalExec++;\n  if (e.status === 'error' || e.status === 'failed' || e.status === 'crashed') wf.failedExec++;\n  else if (e.status === 'success') wf.successExec++;\n  else if (e.status === 'running') wf.runningExec++;\n  else if (e.status === 'waiting') wf.waitingExec++;\n  if (e.startedAt && e.stoppedAt) {\n    const ms = new Date(e.stoppedAt).getTime() - new Date(e.startedAt).getTime();\n    if (ms > 0) { wf.totalRuntimeMs += ms; wf.execCount++; }\n  }\n});\n\nconst workflowStats = Object.values(wfMap).map(w => ({\n  id: w.id,\n  name: w.name,\n  active: w.active,\n  tags: w.tags,\n  totalExec: w.totalExec,\n  successExec: w.successExec,\n  failedExec: w.failedExec,\n  runningExec: w.runningExec,\n  waitingExec: w.waitingExec,\n  failureRate: w.totalExec > 0 ? Math.round((w.failedExec / w.totalExec) * 10000) / 100 : 0,\n  avgRuntimeMs: w.execCount > 0 ? Math.round(w.totalRuntimeMs / w.execCount) : 0,\n  avgRuntimeSec: w.execCount > 0 ? Math.round((w.totalRuntimeMs / w.execCount) / 10) / 100 : 0,\n})).sort((a, b) => b.totalExec - a.totalExec);\n\nconst totalExec = executions.length;\nconst successExec = executions.filter(e => e.status === 'success').length;\nconst failedExec = executions.filter(e => e.status === 'error' || e.status === 'failed' || e.status === 'crashed').length;\nconst runningExec = executions.filter(e => e.status === 'running').length;\n\nlet totalRt = 0, rtCount = 0;\nexecutions.forEach(e => {\n  if (e.startedAt && e.stoppedAt) {\n    const ms = new Date(e.stoppedAt).getTime() - new Date(e.startedAt).getTime();\n    if (ms > 0) { totalRt += ms; rtCount++; }\n  }\n});\nconst avgRuntimeSec = rtCount > 0 ? Math.round((totalRt / rtCount) / 10) / 100 : 0;\n\nreturn [{ json: {\n  summary: { totalExec, successExec, failedExec, runningExec, avgRuntimeSec, totalWorkflows: workflows.length },\n  workflows: workflowStats,\n  executions: executions,\n} }];"
+        "jsCode": "const wfItem = $('Listar Workflows').first();\nconst exItem = $('Listar Execuções').first();\n\nconst workflows = (wfItem.json?.data || []).map(w => ({\n  id: w.id,\n  name: w.name,\n  active: w.active,\n  createdAt: w.createdAt,\n  updatedAt: w.updatedAt,\n  tags: (w.tags || []).map(t => t.name || t),\n}));\n\nconst executions = (exItem.json?.data || []).map(e => ({\n  id: e.id,\n  workflowId: e.workflowId || e.workflowData?.id,\n  workflowName: e.workflowData?.name || '',\n  status: e.situacao,\n  startedAt: e.startedAt,\n  stoppedAt: e.stoppedAt,\n  finished: e.finished,\n}));\n\n// Compute per-workflow stats\nconst wfMap = {};\nworkflows.forEach(w => {\n  wfMap[w.id] = { ...w, totalExec: 0, failedExec: 0, successExec: 0, runningExec: 0, waitingExec: 0, totalRuntimeMs: 0, execCount: 0 };\n});\n\nexecutions.forEach(e => {\n  const wId = String(e.workflowId);\n  if (!wfMap[wId]) {\n    wfMap[wId] = { id: wId, name: e.workflowName || `Workflow ${wId}`, active: false, tags: [], totalExec: 0, failedExec: 0, successExec: 0, runningExec: 0, waitingExec: 0, totalRuntimeMs: 0, execCount: 0 };\n  }\n  const wf = wfMap[wId];\n  wf.totalExec++;\n  if (e.situacao === 'error' || e.situacao === 'failed' || e.situacao === 'crashed') wf.failedExec++;\n  else if (e.situacao === 'success') wf.successExec++;\n  else if (e.situacao === 'running') wf.runningExec++;\n  else if (e.situacao === 'waiting') wf.waitingExec++;\n  if (e.startedAt && e.stoppedAt) {\n    const ms = new Date(e.stoppedAt).getTime() - new Date(e.startedAt).getTime();\n    if (ms > 0) { wf.totalRuntimeMs += ms; wf.execCount++; }\n  }\n});\n\nconst workflowStats = Object.values(wfMap).map(w => ({\n  id: w.id,\n  name: w.name,\n  active: w.active,\n  tags: w.tags,\n  totalExec: w.totalExec,\n  successExec: w.successExec,\n  failedExec: w.failedExec,\n  runningExec: w.runningExec,\n  waitingExec: w.waitingExec,\n  failureRate: w.totalExec > 0 ? Math.round((w.failedExec / w.totalExec) * 10000) / 100 : 0,\n  avgRuntimeMs: w.execCount > 0 ? Math.round(w.totalRuntimeMs / w.execCount) : 0,\n  avgRuntimeSec: w.execCount > 0 ? Math.round((w.totalRuntimeMs / w.execCount) / 10) / 100 : 0,\n})).sort((a, b) => b.totalExec - a.totalExec);\n\nconst totalExec = executions.length;\nconst successExec = executions.filter(e => e.situacao === 'success').length;\nconst failedExec = executions.filter(e => e.situacao === 'error' || e.situacao === 'failed' || e.situacao === 'crashed').length;\nconst runningExec = executions.filter(e => e.situacao === 'running').length;\n\nlet totalRt = 0, rtCount = 0;\nexecutions.forEach(e => {\n  if (e.startedAt && e.stoppedAt) {\n    const ms = new Date(e.stoppedAt).getTime() - new Date(e.startedAt).getTime();\n    if (ms > 0) { totalRt += ms; rtCount++; }\n  }\n});\nconst avgRuntimeSec = rtCount > 0 ? Math.round((totalRt / rtCount) / 10) / 100 : 0;\n\nreturn [{ json: {\n  summary: { totalExec, successExec, failedExec, runningExec, avgRuntimeSec, totalWorkflows: workflows.length },\n  workflows: workflowStats,\n  executions: executions,\n} }];"
       },
       "id": "code-insights",
       "name": "Gerar Insights",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 300]
+      "position": [
+        700,
+        300
+      ]
     },
     {
       "parameters": {
@@ -79,36 +95,69 @@
       "name": "Responder com JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [920, 300]
+      "position": [
+        920,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook GET Insights": {
       "main": [
         [
-          { "node": "Listar Workflows", "type": "main", "index": 0 },
-          { "node": "Listar Execuções", "type": "main", "index": 0 }
+          {
+            "node": "Listar Workflows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Listar Execuções",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Listar Workflows": {
       "main": [
-        [{ "node": "Gerar Insights", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Gerar Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Listar Execuções": {
       "main": [
-        [{ "node": "Gerar Insights", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Gerar Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Gerar Insights": {
       "main": [
-        [{ "node": "Responder com JSON", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Responder com JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
   "pinData": {},
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "staticData": null,
-  "meta": { "templateCreds": {} }
+  "meta": {
+    "templateCreds": {}
+  }
 }

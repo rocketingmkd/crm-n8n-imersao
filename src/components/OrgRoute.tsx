@@ -40,7 +40,7 @@ export default function OrgRoute({ children }: OrgRouteProps) {
   }
 
   // Org admin sem organização - erro
-  if (!profile.organization_id) {
+  if (!profile.id_organizacao) {
     return <Navigate to="/login" replace />;
   }
 

@@ -40,7 +40,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import SupportButton from "@/components/SupportButton";
-import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
+import { AppLogo } from "@/components/AppLogo";
 
 const allNavigationItems = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
@@ -81,15 +81,15 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscription_plan_configs')
+        .from('planos_assinatura')
         .select('*')
-        .order('plan_id', { ascending: true });
+        .order('id_plano', { ascending: true });
       if (error) throw error;
       return data;
     },
   });
 
-  const currentPlan = plans.find(p => p.plan_id === organization?.subscription_plan);
+  const currentPlan = plans.find(p => p.id_plano === organization?.plano_assinatura);
 
   const handleRequestPlanChange = async () => {
     if (!selectedPlanForRequest || !organization?.id) {
@@ -98,7 +98,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
     }
     try {
       toast.success('Solicitação enviada! Entraremos em contato em breve.', {
-        description: `Plano solicitado: ${plans.find(p => p.plan_id === selectedPlanForRequest)?.plan_name}`,
+        description: `Plano solicitado: ${plans.find(p => p.id_plano === selectedPlanForRequest)?.nome_plano}`,
       });
       setIsPlanModalOpen(false);
       setSelectedPlanForRequest(null);
@@ -145,24 +145,24 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             "flex items-center transition-all duration-300",
             isCollapsed ? "justify-center" : "gap-3"
           )}>
-            {organization?.logo_url ? (
+            {organization?.url_logo ? (
               <img
-                src={organization.logo_url}
-                alt={organization.name}
+                src={organization.url_logo}
+                alt={organization.nome}
                 className={cn(
                   "w-auto object-contain transition-all duration-300",
                   isCollapsed ? "h-8 max-w-[40px]" : "h-9 max-w-[140px]"
                 )}
               />
             ) : (
-              <FlowgrammersLogo height={isCollapsed ? 28 : 36} />
+              <AppLogo variant="org" height={isCollapsed ? 28 : 36} />
             )}
           </div>
 
           {organization && !isCollapsed && (
             <div className="mt-3 rounded-md bg-muted/60 px-3 py-2">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
-              <p className="text-xs font-semibold text-foreground truncate">{organization.name}</p>
+              <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
             </div>
           )}
         </div>
@@ -258,7 +258,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 <div className="flex items-center gap-2">
                   <Crown className="h-3.5 w-3.5 text-primary" />
                   <span className="text-xs font-semibold text-foreground">
-                    {currentPlan.plan_name}
+                    {currentPlan.nome_plano}
                   </span>
                 </div>
                 <ChevronRight className="h-3 w-3 text-muted-foreground" />
@@ -276,7 +276,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   <Crown className="h-4 w-4 text-primary" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>{currentPlan.plan_name}</TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>{currentPlan.nome_plano}</TooltipContent>
             </Tooltip>
           )}
 
@@ -287,16 +287,16 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
           )}>
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
               <span className="text-xs font-bold text-primary-foreground">
-                {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
+                {profile?.nome_completo?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground truncate">
-                  {profile?.full_name || 'Usuário'}
+                  {profile?.nome_completo || 'Usuário'}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate capitalize">
-                  {profile?.role || 'doctor'}
+                  {profile?.funcao || 'doctor'}
                 </p>
               </div>
             )}
@@ -339,20 +339,20 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 Alterar Plano de Assinatura
               </DialogTitle>
               <DialogDescription>
-                Seu plano atual: <strong>{currentPlan?.plan_name}</strong>. 
+                Seu plano atual: <strong>{currentPlan?.nome_plano}</strong>. 
                 Selecione um novo plano para solicitar a alteração.
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               {plans.map((plan) => {
-                const isCurrentPlan = plan.plan_id === organization?.subscription_plan;
-                const isSelected = selectedPlanForRequest === plan.plan_id;
+                const isCurrentPlan = plan.id_plano === organization?.plano_assinatura;
+                const isSelected = selectedPlanForRequest === plan.id_plano;
                 
                 return (
                   <div
-                    key={plan.plan_id}
-                    onClick={() => !isCurrentPlan && setSelectedPlanForRequest(plan.plan_id)}
+                    key={plan.id_plano}
+                    onClick={() => !isCurrentPlan && setSelectedPlanForRequest(plan.id_plano)}
                     className={cn(
                       "relative p-5 rounded-lg border-2 transition-all cursor-pointer",
                       isCurrentPlan && "border-primary/40 bg-primary/5 cursor-not-allowed opacity-75",
@@ -376,12 +376,12 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                     <div className="mb-4">
                       <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                         <Crown className="h-5 w-5 text-primary" />
-                        {plan.plan_name}
+                        {plan.nome_plano}
                       </h3>
-                      <p className="text-sm text-muted-foreground mt-1">{plan.plan_description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{plan.descricao_plano}</p>
                       <div className="mt-3">
                         <span className="text-3xl font-bold text-foreground">
-                          R$ {plan.price_monthly?.toFixed(2)}
+                          R$ {plan.preco_mensal?.toFixed(2)}
                         </span>
                         <span className="text-sm text-muted-foreground">/mês</span>
                       </div>
@@ -427,7 +427,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                           <div><span className="font-medium">Agendamentos:</span> {plan.max_agendamentos_mes || '∞'}</div>
                           <div><span className="font-medium">Mensagens:</span> {plan.max_mensagens_whatsapp_mes || '∞'}</div>
                           <div><span className="font-medium">Usuários:</span> {plan.max_usuarios || '∞'}</div>
-                          <div><span className="font-medium">Pacientes:</span> {plan.max_pacientes || '∞'}</div>
+                          <div><span className="font-medium">Clientes:</span> {plan.max_contatos || '∞'}</div>
                         </div>
                       </div>
                     </div>
@@ -480,10 +480,10 @@ export default function Layout() {
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
-          {organization?.logo_url ? (
-            <img src={organization.logo_url} alt={organization.name} className="h-8 w-auto max-w-[120px] object-contain" />
+          {organization?.url_logo ? (
+            <img src={organization.url_logo} alt={organization.nome} className="h-8 w-auto max-w-[120px] object-contain" />
           ) : (
-            <FlowgrammersLogo height={28} />
+            <AppLogo variant="org" height={28} />
           )}
         </div>
         

@@ -15,27 +15,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Carregar dados do perfil e organização
   const loadUserData = async (userId: string) => {
     try {
-      // Buscar profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      // Buscar perfil
+      const { data: perfilData, error: perfilError } = await supabase
+        .from('perfis')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
-      setProfile(profileData as unknown as Profile);
+      if (perfilError) throw perfilError;
+      setProfile(perfilData as unknown as Profile);
 
-      // Buscar organization (apenas se não for super admin)
-      if (profileData?.organization_id && !profileData?.is_super_admin) {
+      // Buscar organização (apenas se não for super admin)
+      if (perfilData?.id_organizacao && !perfilData?.super_admin) {
         const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
+          .from('organizacoes')
           .select('*')
-          .eq('id', profileData.organization_id)
+          .eq('id', perfilData.id_organizacao)
           .single();
 
         if (orgError) throw orgError;
         setOrganization(orgData as unknown as Organization);
-      } else if (profileData?.is_super_admin) {
+      } else if (perfilData?.super_admin) {
         // Super admins não têm organização
         setOrganization(null);
       }
@@ -99,8 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Erro ao criar usuário');
 
-      // 2. Gerar slug da organização
-      const slug = organizationName
+      // 2. Gerar identificador da organização
+      const identificador = organizationName
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -111,11 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 3. Criar organização
       const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
+        .from('organizacoes')
         .insert({
-          name: organizationName,
-          slug: slug + '-' + Date.now(), // Adicionar timestamp para unicidade
-          settings: {},
+          nome: organizationName,
+          identificador: identificador + '-' + Date.now(), // Adicionar timestamp para unicidade
+          dados: {},
         })
         .select()
         .single();
@@ -123,28 +123,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (orgError) throw orgError;
 
       // 4. Criar perfil do usuário
-      const { error: profileError } = await supabase
-        .from('profiles')
+      const { error: perfilError } = await supabase
+        .from('perfis')
         .insert({
           id: authData.user.id,
-          organization_id: orgData.id,
-          full_name: fullName,
-          role: 'admin', // Primeiro usuário é admin
+          id_organizacao: orgData.id,
+          nome_completo: fullName,
+          funcao: 'admin', // Primeiro usuário é admin
         });
 
-      if (profileError) throw profileError;
+      if (perfilError) throw perfilError;
 
-      // 5. Criar settings padrão para a organização
-      const { error: settingsError } = await supabase
-        .from('settings')
+      // 5. Criar configurações padrão para a organização
+      const { error: configError } = await supabase
+        .from('configuracoes')
         .insert({
-          organization_id: orgData.id,
-          clinic_name: organizationName,
-          doctor_name: fullName,
-          subscription_plan: 'premium',
+          id_organizacao: orgData.id,
+          nome_empresa: organizationName,
+          nome_responsavel: fullName,
+          plano_assinatura: 'premium',
         });
 
-      if (settingsError) throw settingsError;
+      if (configError) throw configError;
 
       toast.success('Cadastro realizado com sucesso! Faça login para continuar.');
     } catch (error: any) {
@@ -158,12 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       // Limpar estado local independente do erro
       setUser(null);
       setProfile(null);
       setOrganization(null);
-      
+
       // Se não for erro de sessão, mostrar erro
       if (error && error.message !== 'Auth session missing!') {
         console.error('Erro no logout:', error);
@@ -176,9 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setProfile(null);
       setOrganization(null);
-      
+
       console.error('Erro no logout:', error);
-      
+
       // Só mostrar erro se não for sessão ausente
       if (error.message !== 'Auth session missing!') {
         toast.error('Erro ao fazer logout');
@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     profile,
     organization,
-    isSuperAdmin: profile?.is_super_admin ?? false,
+    isSuperAdmin: profile?.super_admin ?? false,
     loading,
     signIn,
     signUp,
@@ -226,4 +226,3 @@ export function useAuth() {
   }
   return context;
 }
-

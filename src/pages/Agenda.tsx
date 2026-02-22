@@ -23,7 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
-import { usePatients } from "@/hooks/usePatients";
+import { useContacts } from "@/hooks/useContacts";
+import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { toast } from "sonner";
 import { toSaoPauloISO } from "@/lib/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,7 +38,7 @@ interface DaySchedule {
   fim_trabalho: string;
   inicio_almoco: string;
   fim_almoco: string;
-  is_active: boolean;
+  ativo: boolean;
 }
 
 interface WorkSchedule {
@@ -49,7 +50,7 @@ interface WorkSchedule {
   quinta: DaySchedule;
   sexta: DaySchedule;
   sabado: DaySchedule;
-  consultation_duration: number; // Duração da consulta em minutos (15-240)
+  duracao_atendimento: number; // Duração do atendimento em minutos (15-240)
 }
 
 const diasDaSemana = [
@@ -80,16 +81,17 @@ export default function Agenda() {
     start_time: "",
     end_date: "",
     end_time: "",
-    patient_id: "",
-    patient_name: "",
+    id_contato: "",
+    nome_contato: "",
     type: "",
-    status: "pending" as "confirmed" | "pending" | "completed",
-    observations: ""
+    situacao: "pendente" as "confirmado" | "pendente" | "concluido",
+    observacoes: ""
   });
 
-  // Buscar compromissos e pacientes
+  // Buscar compromissos e contatos
   const { data: allAppointments = [], isLoading, refetch } = useAppointments();
-  const { data: patients = [] } = usePatients();
+  const { data: contacts = [] } = useContacts();
+  const { singular, s } = useEntityLabel();
   const createAppointment = useCreateAppointment();
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
@@ -115,10 +117,10 @@ export default function Agenda() {
       console.log('🔍 Carregando horários do banco...');
       
       const { data, error } = await supabase
-        .from('work_schedules')
+        .from('horarios_trabalho')
         .select('*')
-        .eq('user_id', profile.id)
-        .eq('organization_id', organizationId)
+        .eq('id_usuario', profile.id)
+        .eq('id_organizacao', organizationId)
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado
@@ -132,55 +134,55 @@ export default function Agenda() {
         const schedule: WorkSchedule = {
           id: data.id,
           domingo: {
-            is_active: data.domingo_is_active,
+            ativo: data.domingo_ativo,
             inicio_trabalho: data.domingo_inicio_trabalho || "08:00",
             fim_trabalho: data.domingo_fim_trabalho || "18:00",
             inicio_almoco: data.domingo_inicio_almoco || "12:00",
             fim_almoco: data.domingo_fim_almoco || "13:00",
           },
           segunda: {
-            is_active: data.segunda_is_active,
+            ativo: data.segunda_ativo,
             inicio_trabalho: data.segunda_inicio_trabalho || "08:00",
             fim_trabalho: data.segunda_fim_trabalho || "18:00",
             inicio_almoco: data.segunda_inicio_almoco || "12:00",
             fim_almoco: data.segunda_fim_almoco || "13:00",
           },
           terca: {
-            is_active: data.terca_is_active,
+            ativo: data.terca_ativo,
             inicio_trabalho: data.terca_inicio_trabalho || "08:00",
             fim_trabalho: data.terca_fim_trabalho || "18:00",
             inicio_almoco: data.terca_inicio_almoco || "12:00",
             fim_almoco: data.terca_fim_almoco || "13:00",
           },
           quarta: {
-            is_active: data.quarta_is_active,
+            ativo: data.quarta_ativo,
             inicio_trabalho: data.quarta_inicio_trabalho || "08:00",
             fim_trabalho: data.quarta_fim_trabalho || "18:00",
             inicio_almoco: data.quarta_inicio_almoco || "12:00",
             fim_almoco: data.quarta_fim_almoco || "13:00",
           },
           quinta: {
-            is_active: data.quinta_is_active,
+            ativo: data.quinta_ativo,
             inicio_trabalho: data.quinta_inicio_trabalho || "08:00",
             fim_trabalho: data.quinta_fim_trabalho || "18:00",
             inicio_almoco: data.quinta_inicio_almoco || "12:00",
             fim_almoco: data.quinta_fim_almoco || "13:00",
           },
           sexta: {
-            is_active: data.sexta_is_active,
+            ativo: data.sexta_ativo,
             inicio_trabalho: data.sexta_inicio_trabalho || "08:00",
             fim_trabalho: data.sexta_fim_trabalho || "18:00",
             inicio_almoco: data.sexta_inicio_almoco || "12:00",
             fim_almoco: data.sexta_fim_almoco || "13:00",
           },
           sabado: {
-            is_active: data.sabado_is_active,
+            ativo: data.sabado_ativo,
             inicio_trabalho: data.sabado_inicio_trabalho || "08:00",
             fim_trabalho: data.sabado_fim_trabalho || "18:00",
             inicio_almoco: data.sabado_inicio_almoco || "12:00",
             fim_almoco: data.sabado_fim_almoco || "13:00",
           },
-          consultation_duration: data.consultation_duration || 30,
+          duracao_atendimento: data.duracao_atendimento || 30,
         };
         console.log('✅ Horários carregados do banco:', schedule);
         setWorkSchedule(schedule);
@@ -188,14 +190,14 @@ export default function Agenda() {
         // ❌ NÃO TEM DADOS NO BANCO: Criar horários padrão (segunda a sexta)
         console.log('⚠️ Nenhum horário no banco, criando padrão...');
         const defaultSchedule: WorkSchedule = {
-          domingo: { is_active: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          segunda: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          terca: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          quarta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          quinta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          sexta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          sabado: { is_active: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-          consultation_duration: 30,
+          domingo: { ativo: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          segunda: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          terca: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          quarta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          quinta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          sexta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          sabado: { ativo: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+          duracao_atendimento: 30,
         };
         console.log('📝 Horários padrão criados:', defaultSchedule);
         setWorkSchedule(defaultSchedule);
@@ -206,14 +208,14 @@ export default function Agenda() {
       
       // Em caso de erro, criar horários padrão
       const defaultSchedule: WorkSchedule = {
-        domingo: { is_active: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        segunda: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        terca: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        quarta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        quinta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        sexta: { is_active: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        sabado: { is_active: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
-        consultation_duration: 30,
+        domingo: { ativo: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        segunda: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        terca: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        quarta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        quinta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        sexta: { ativo: true, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        sabado: { ativo: false, inicio_trabalho: "08:00", fim_trabalho: "18:00", inicio_almoco: "12:00", fim_almoco: "13:00" },
+        duracao_atendimento: 30,
       };
       setWorkSchedule(defaultSchedule);
     } finally {
@@ -232,61 +234,61 @@ export default function Agenda() {
 
       // Converter estrutura da UI para banco
       const dataToSave = {
-        organization_id: organizationId,
-        user_id: profile.id,
+        id_organizacao: organizationId,
+        id_usuario: profile.id,
         // Domingo
-        domingo_is_active: workSchedule.domingo.is_active,
-        domingo_inicio_trabalho: workSchedule.domingo.is_active ? workSchedule.domingo.inicio_trabalho : null,
-        domingo_fim_trabalho: workSchedule.domingo.is_active ? workSchedule.domingo.fim_trabalho : null,
-        domingo_inicio_almoco: workSchedule.domingo.is_active ? workSchedule.domingo.inicio_almoco : null,
-        domingo_fim_almoco: workSchedule.domingo.is_active ? workSchedule.domingo.fim_almoco : null,
+        domingo_ativo: workSchedule.domingo.ativo,
+        domingo_inicio_trabalho: workSchedule.domingo.ativo ? workSchedule.domingo.inicio_trabalho : null,
+        domingo_fim_trabalho: workSchedule.domingo.ativo ? workSchedule.domingo.fim_trabalho : null,
+        domingo_inicio_almoco: workSchedule.domingo.ativo ? workSchedule.domingo.inicio_almoco : null,
+        domingo_fim_almoco: workSchedule.domingo.ativo ? workSchedule.domingo.fim_almoco : null,
         // Segunda
-        segunda_is_active: workSchedule.segunda.is_active,
-        segunda_inicio_trabalho: workSchedule.segunda.is_active ? workSchedule.segunda.inicio_trabalho : null,
-        segunda_fim_trabalho: workSchedule.segunda.is_active ? workSchedule.segunda.fim_trabalho : null,
-        segunda_inicio_almoco: workSchedule.segunda.is_active ? workSchedule.segunda.inicio_almoco : null,
-        segunda_fim_almoco: workSchedule.segunda.is_active ? workSchedule.segunda.fim_almoco : null,
+        segunda_ativo: workSchedule.segunda.ativo,
+        segunda_inicio_trabalho: workSchedule.segunda.ativo ? workSchedule.segunda.inicio_trabalho : null,
+        segunda_fim_trabalho: workSchedule.segunda.ativo ? workSchedule.segunda.fim_trabalho : null,
+        segunda_inicio_almoco: workSchedule.segunda.ativo ? workSchedule.segunda.inicio_almoco : null,
+        segunda_fim_almoco: workSchedule.segunda.ativo ? workSchedule.segunda.fim_almoco : null,
         // Terça
-        terca_is_active: workSchedule.terca.is_active,
-        terca_inicio_trabalho: workSchedule.terca.is_active ? workSchedule.terca.inicio_trabalho : null,
-        terca_fim_trabalho: workSchedule.terca.is_active ? workSchedule.terca.fim_trabalho : null,
-        terca_inicio_almoco: workSchedule.terca.is_active ? workSchedule.terca.inicio_almoco : null,
-        terca_fim_almoco: workSchedule.terca.is_active ? workSchedule.terca.fim_almoco : null,
+        terca_ativo: workSchedule.terca.ativo,
+        terca_inicio_trabalho: workSchedule.terca.ativo ? workSchedule.terca.inicio_trabalho : null,
+        terca_fim_trabalho: workSchedule.terca.ativo ? workSchedule.terca.fim_trabalho : null,
+        terca_inicio_almoco: workSchedule.terca.ativo ? workSchedule.terca.inicio_almoco : null,
+        terca_fim_almoco: workSchedule.terca.ativo ? workSchedule.terca.fim_almoco : null,
         // Quarta
-        quarta_is_active: workSchedule.quarta.is_active,
-        quarta_inicio_trabalho: workSchedule.quarta.is_active ? workSchedule.quarta.inicio_trabalho : null,
-        quarta_fim_trabalho: workSchedule.quarta.is_active ? workSchedule.quarta.fim_trabalho : null,
-        quarta_inicio_almoco: workSchedule.quarta.is_active ? workSchedule.quarta.inicio_almoco : null,
-        quarta_fim_almoco: workSchedule.quarta.is_active ? workSchedule.quarta.fim_almoco : null,
+        quarta_ativo: workSchedule.quarta.ativo,
+        quarta_inicio_trabalho: workSchedule.quarta.ativo ? workSchedule.quarta.inicio_trabalho : null,
+        quarta_fim_trabalho: workSchedule.quarta.ativo ? workSchedule.quarta.fim_trabalho : null,
+        quarta_inicio_almoco: workSchedule.quarta.ativo ? workSchedule.quarta.inicio_almoco : null,
+        quarta_fim_almoco: workSchedule.quarta.ativo ? workSchedule.quarta.fim_almoco : null,
         // Quinta
-        quinta_is_active: workSchedule.quinta.is_active,
-        quinta_inicio_trabalho: workSchedule.quinta.is_active ? workSchedule.quinta.inicio_trabalho : null,
-        quinta_fim_trabalho: workSchedule.quinta.is_active ? workSchedule.quinta.fim_trabalho : null,
-        quinta_inicio_almoco: workSchedule.quinta.is_active ? workSchedule.quinta.inicio_almoco : null,
-        quinta_fim_almoco: workSchedule.quinta.is_active ? workSchedule.quinta.fim_almoco : null,
+        quinta_ativo: workSchedule.quinta.ativo,
+        quinta_inicio_trabalho: workSchedule.quinta.ativo ? workSchedule.quinta.inicio_trabalho : null,
+        quinta_fim_trabalho: workSchedule.quinta.ativo ? workSchedule.quinta.fim_trabalho : null,
+        quinta_inicio_almoco: workSchedule.quinta.ativo ? workSchedule.quinta.inicio_almoco : null,
+        quinta_fim_almoco: workSchedule.quinta.ativo ? workSchedule.quinta.fim_almoco : null,
         // Sexta
-        sexta_is_active: workSchedule.sexta.is_active,
-        sexta_inicio_trabalho: workSchedule.sexta.is_active ? workSchedule.sexta.inicio_trabalho : null,
-        sexta_fim_trabalho: workSchedule.sexta.is_active ? workSchedule.sexta.fim_trabalho : null,
-        sexta_inicio_almoco: workSchedule.sexta.is_active ? workSchedule.sexta.inicio_almoco : null,
-        sexta_fim_almoco: workSchedule.sexta.is_active ? workSchedule.sexta.fim_almoco : null,
+        sexta_ativo: workSchedule.sexta.ativo,
+        sexta_inicio_trabalho: workSchedule.sexta.ativo ? workSchedule.sexta.inicio_trabalho : null,
+        sexta_fim_trabalho: workSchedule.sexta.ativo ? workSchedule.sexta.fim_trabalho : null,
+        sexta_inicio_almoco: workSchedule.sexta.ativo ? workSchedule.sexta.inicio_almoco : null,
+        sexta_fim_almoco: workSchedule.sexta.ativo ? workSchedule.sexta.fim_almoco : null,
         // Sábado
-        sabado_is_active: workSchedule.sabado.is_active,
-        sabado_inicio_trabalho: workSchedule.sabado.is_active ? workSchedule.sabado.inicio_trabalho : null,
-        sabado_fim_trabalho: workSchedule.sabado.is_active ? workSchedule.sabado.fim_trabalho : null,
-        sabado_inicio_almoco: workSchedule.sabado.is_active ? workSchedule.sabado.inicio_almoco : null,
-        sabado_fim_almoco: workSchedule.sabado.is_active ? workSchedule.sabado.fim_almoco : null,
-        // Duração da consulta
-        consultation_duration: workSchedule.consultation_duration,
+        sabado_ativo: workSchedule.sabado.ativo,
+        sabado_inicio_trabalho: workSchedule.sabado.ativo ? workSchedule.sabado.inicio_trabalho : null,
+        sabado_fim_trabalho: workSchedule.sabado.ativo ? workSchedule.sabado.fim_trabalho : null,
+        sabado_inicio_almoco: workSchedule.sabado.ativo ? workSchedule.sabado.inicio_almoco : null,
+        sabado_fim_almoco: workSchedule.sabado.ativo ? workSchedule.sabado.fim_almoco : null,
+        // Duração do atendimento
+        duracao_atendimento: workSchedule.duracao_atendimento,
       };
 
       console.log('💾 Salvando no banco:', dataToSave);
 
       // Upsert: insere se não existe, atualiza se existe
       const { error } = await supabase
-        .from('work_schedules')
+        .from('horarios_trabalho')
         .upsert(dataToSave, {
-          onConflict: 'organization_id,user_id'
+          onConflict: 'id_organizacao,id_usuario'
         });
 
       if (error) throw error;
@@ -324,21 +326,21 @@ export default function Agenda() {
       
       // Formatar eventos para enviar ao webhook
       const eventsToSync = allAppointments.map(apt => {
-        const patient = patients.find(p => p.id === apt.patient_id);
-        
+        const contact = contacts.find(c => c.id === apt.id_contato);
+
         // Usar start_datetime/end_datetime se disponível, senão criar a partir de date/time
-        const startDateTime = apt.start_datetime || `${apt.date}T${apt.time}:00-03:00`;
-        const endDateTime = apt.end_datetime || `${apt.date}T${apt.time}:00-03:00`;
-        
+        const startDateTime = apt.inicio || `${apt.data}T${apt.hora}:00-03:00`;
+        const endDateTime = apt.fim || `${apt.data}T${apt.hora}:00-03:00`;
+
         return {
           id: apt.id,
-          start_datetime: startDateTime,
-          end_datetime: endDateTime,
-          patient_name: apt.patient_name,
-          patient_email: patient?.email || '',
-          type: apt.type,
-          status: apt.status,
-          observations: apt.observations || ''
+          inicio: startDateTime,
+          fim: endDateTime,
+          nome_contato: apt.nome_contato,
+          contact_email: contact?.email || '',
+          tipo: apt.tipo,
+          situacao: apt.situacao,
+          observacoes: apt.observacoes || ''
         };
       });
 
@@ -441,35 +443,35 @@ export default function Agenda() {
     let date: Date;
     let time: string;
     
-    if (apt.start_datetime) {
+    if (apt.inicio) {
       // Extrair data/hora LITERAL do banco, sem conversão de timezone
-      const match = apt.start_datetime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      const match = apt.inicio.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
       if (match) {
         const [, year, month, day, hours, minutes] = match;
         date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
         time = `${hours}:${minutes}`;
       } else {
         // Fallback
-        date = new Date(apt.start_datetime);
+        date = new Date(apt.inicio);
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
         time = `${hours}:${minutes}`;
       }
     } else {
       // Fallback para dados antigos
-      const [hours, minutes] = apt.time.split(':');
-      date = new Date(apt.date);
+      const [hours, minutes] = apt.hora.split(':');
+      date = new Date(apt.data);
       date.setHours(parseInt(hours), parseInt(minutes));
-      time = apt.time;
+      time = apt.hora;
     }
     
     return {
       id: apt.id,
       date: date,
       time: time,
-      patient: apt.patient_name,
-      type: apt.type,
-      status: apt.status as "confirmed" | "pending" | "completed"
+      patient: apt.nome_contato,
+      tipo: apt.tipo,
+      situacao: apt.situacao as "confirmado" | "pendente" | "concluido"
     };
   };
 
@@ -563,23 +565,23 @@ export default function Agenda() {
       start_time: "09:00",
       end_date: todayStr,
       end_time: "10:00",
-      patient_id: "",
-      patient_name: "",
+      id_contato: "",
+      nome_contato: "",
       type: "",
-      status: "pending",
-      observations: ""
+      situacao: "pendente",
+      observacoes: ""
     });
     setIsCreateModalOpen(true);
   };
 
-  // Selecionar paciente
-  const handleSelectPatient = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
-    if (patient) {
+  // Selecionar contato
+  const handleSelectContact = (contactId: string) => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact) {
       setFormData(prev => ({
         ...prev,
-        patient_id: patientId,
-        patient_name: patient.name
+        id_contato: contactId,
+        nome_contato: contact.name
       }));
     }
   };
@@ -587,7 +589,7 @@ export default function Agenda() {
   // Criar compromisso
   const handleCreateAppointment = async () => {
     // Validação
-    if (!formData.start_date || !formData.start_time || !formData.end_date || !formData.end_time || !formData.patient_id || !formData.type) {
+    if (!formData.start_date || !formData.start_time || !formData.end_date || !formData.end_time || !formData.id_contato || !formData.type) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -603,10 +605,10 @@ export default function Agenda() {
 
     // Validar se já existe compromisso na mesma data e hora
     const hasConflict = allAppointments.some(apt => {
-      if (!apt.start_datetime || !apt.end_datetime) return false;
+      if (!apt.inicio || !apt.fim) return false;
       
-      const existingStart = new Date(apt.start_datetime);
-      const existingEnd = new Date(apt.end_datetime);
+      const existingStart = new Date(apt.inicio);
+      const existingEnd = new Date(apt.fim);
       const newStart = startDateTime;
       const newEnd = endDateTime;
       
@@ -662,35 +664,35 @@ export default function Agenda() {
 
       // 1. Criar no banco de dados
       const newAppointment = await createAppointment.mutateAsync({
-        organization_id: organizationId,
-        date: formData.start_date,
-        time: formData.start_time,
-        start_datetime: startISOForDB,
-        end_datetime: endISOForDB,
-        patient_id: formData.patient_id,
-        patient_name: formData.patient_name,
-        type: formData.type,
-        status: formData.status,
-        observations: formData.observations || null
+        id_organizacao: organizationId,
+        data: formData.start_date,
+        hora: formData.start_time,
+        inicio: startISOForDB,
+        fim: endISOForDB,
+        id_contato: formData.id_contato,
+        nome_contato: formData.nome_contato,
+        tipo: formData.type,
+        situacao: formData.situacao,
+        observacoes: formData.observacoes || null
       });
 
       // 2. Enviar para webhook N8N
       try {
-        const patient = patients.find(p => p.id === formData.patient_id);
-        
+        const contact = contacts.find(c => c.id === formData.id_contato);
+
         const webhookData = {
           id: newAppointment?.id,
-          organization_id: organizationId,
-          start_datetime: startISOForWebhook,
-          end_datetime: endISOForWebhook,
-          patient_id: formData.patient_id,
-          patient_name: formData.patient_name,
-          patient_email: patient?.email || '',
-          patient_phone: patient?.phone || '',
-          type: formData.type,
-          status: formData.status,
-          observations: formData.observations || '',
-          created_at: new Date().toISOString()
+          id_organizacao: organizationId,
+          inicio: startISOForWebhook,
+          fim: endISOForWebhook,
+          id_contato: formData.id_contato,
+          nome_contato: formData.nome_contato,
+          email_contato: contact?.email || '',
+          contact_phone: contact?.telefone || '',
+          tipo: formData.type,
+          situacao: formData.situacao,
+          observacoes: formData.observacoes || '',
+          criado_em: new Date().toISOString()
         };
 
         await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}criar-agenda`, {
@@ -718,16 +720,16 @@ export default function Agenda() {
   // Sincronizar agenda quando carregar os dados
   useEffect(() => {
     const doSync = async () => {
-      if (!isLoading && allAppointments.length > 0 && patients.length > 0) {
+      if (!isLoading && allAppointments.length > 0 && contacts.length > 0) {
         // Pequeno delay para garantir que todos os dados carregaram
         await new Promise(resolve => setTimeout(resolve, 500));
         await syncAgendaWithWebhook();
       }
     };
-    
+
     doSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, allAppointments.length, patients.length]);
+  }, [isLoading, allAppointments.length, contacts.length]);
 
   if (isLoading) {
     return (
@@ -851,15 +853,15 @@ export default function Agenda() {
                           key={apt.id}
                           className={cn(
                             "rounded-md p-2 text-xs md:text-sm border-l-4 transition-all hover:shadow-md cursor-pointer",
-                            apt.status === "confirmed" 
+                            apt.situacao === "confirmado" 
                               ? "bg-accent/10 border-accent" 
-                              : apt.status === "pending"
+                              : apt.situacao === "pendente"
                               ? "bg-muted border-muted-foreground"
                               : "bg-success/10 border-success"
                           )}
                         >
                           <div className="font-semibold text-foreground">{apt.time} - {apt.patient}</div>
-                          <div className="text-muted-foreground">{apt.type}</div>
+                          <div className="text-muted-foreground">{apt.tipo}</div>
             </div>
           ))}
                     </div>
@@ -923,16 +925,16 @@ export default function Agenda() {
                               key={apt.id}
                               className={cn(
                                 "rounded p-1 text-[10px] border-l-2 mb-1 truncate cursor-pointer hover:shadow-sm transition-all",
-                                apt.status === "confirmed" 
+                                apt.situacao === "confirmado" 
                                   ? "bg-accent/10 border-accent" 
-                                  : apt.status === "pending"
+                                  : apt.situacao === "pendente"
                                   ? "bg-muted border-muted-foreground"
                                   : "bg-success/10 border-success"
                               )}
-                              title={`${apt.time} - ${apt.patient} - ${apt.type}`}
+                              title={`${apt.time} - ${apt.patient} - ${apt.tipo}`}
                             >
                               <div className="font-semibold truncate">{apt.patient}</div>
-                              <div className="text-muted-foreground truncate">{apt.type}</div>
+                              <div className="text-muted-foreground truncate">{apt.tipo}</div>
                             </div>
                           ))}
                         </div>
@@ -992,7 +994,7 @@ export default function Agenda() {
                           key={apt.id}
                           className={cn(
                             "h-0.5 w-0.5 md:h-1 md:w-1 rounded-full",
-                            apt.status === "confirmed" ? "bg-accent" : "bg-muted-foreground/50"
+                            apt.situacao === "confirmado" ? "bg-accent" : "bg-muted-foreground/50"
                           )} 
                         />
                       ))}
@@ -1043,14 +1045,14 @@ export default function Agenda() {
                       <div
                         className={cn(
                           "ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium",
-                          appointment.status === "confirmed"
+                          appointment.situacao === "confirmado"
                             ? "bg-success/10 text-success"
-                            : appointment.status === "pending"
+                            : appointment.situacao === "pendente"
                             ? "bg-accent/10 text-accent"
                             : "bg-muted text-muted-foreground"
                         )}
                       >
-                        {appointment.status === "confirmed" ? "Confirmado" : appointment.status === "pending" ? "Pendente" : "Concluído"}
+                        {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
                       </div>
                     </div>
 
@@ -1061,7 +1063,7 @@ export default function Agenda() {
                           {appointment.patient}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {appointment.type}
+                          {appointment.tipo}
                         </p>
                 </div>
               </div>
@@ -1135,17 +1137,17 @@ export default function Agenda() {
               </div>
             </div>
 
-            {/* Paciente */}
+            {/* Contato */}
             <div className="space-y-2">
-              <Label htmlFor="patient">Paciente *</Label>
-              <Select value={formData.patient_id} onValueChange={handleSelectPatient}>
+              <Label htmlFor="contact">{singular} *</Label>
+              <Select value={formData.id_contato} onValueChange={handleSelectContact}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um paciente" />
+                  <SelectValue placeholder={`Selecione um ${s}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name}
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id}>
+                      {contact.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1172,14 +1174,14 @@ export default function Agenda() {
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}>
+              <Select value={formData.situacao} onValueChange={(value: any) => setFormData(prev => ({ ...prev, situacao: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1190,8 +1192,8 @@ export default function Agenda() {
               <Textarea
                 id="observations"
                 placeholder="Digite observações ou notas sobre o compromisso..."
-                value={formData.observations}
-                onChange={(e) => setFormData(prev => ({ ...prev, observations: e.target.value }))}
+                value={formData.observacoes}
+                onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                 className="min-h-[80px] resize-none"
               />
               <p className="text-xs text-muted-foreground">
@@ -1238,18 +1240,18 @@ export default function Agenda() {
                 <div className="card-luxury p-4 space-y-3 border-accent/30 border-2">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-5 w-5 text-accent" />
-                    <h3 className="font-semibold text-base">Duração da Consulta</h3>
+                    <h3 className="font-semibold text-base">Duração do Atendimento</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Defina o tempo padrão de cada consulta. O agente IA usará esse valor para calcular os horários disponíveis.
+                    Defina a duração padrão de cada atendimento. O agente IA usará esse valor para calcular os horários disponíveis.
                   </p>
                   <div className="space-y-2">
-                    <Label htmlFor="consultation_duration">Tempo de cada consulta</Label>
+                    <Label htmlFor="service_duration">Duração do atendimento</Label>
                     <Select
-                      value={String(workSchedule.consultation_duration)}
-                      onValueChange={(value) => setWorkSchedule(prev => prev ? { ...prev, consultation_duration: Number(value) } : prev)}
+                      value={String(workSchedule.duracao_atendimento)}
+                      onValueChange={(value) => setWorkSchedule(prev => prev ? { ...prev, duracao_atendimento: Number(value) } : prev)}
                     >
-                      <SelectTrigger id="consultation_duration" className="w-full">
+                      <SelectTrigger id="service_duration" className="w-full">
                         <SelectValue placeholder="Selecione a duração" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1284,16 +1286,16 @@ export default function Agenda() {
                         </Label>
                         <Switch
                           id={`working-${dia.key}`}
-                          checked={daySchedule.is_active}
+                          checked={daySchedule.ativo}
                           onCheckedChange={(checked) =>
-                            updateSchedule(dia.key, 'is_active', checked)
+                            updateSchedule(dia.key, 'ativo', checked)
                           }
                         />
                       </div>
                     </div>
 
-                    {/* Campos de Horário (só aparecem se is_active = true) */}
-                    {daySchedule.is_active && (
+                    {/* Campos de Horário (só aparecem se ativo = true) */}
+                    {daySchedule.ativo && (
                       <div className="space-y-3 animate-fade-in">
                         {/* Horário de Trabalho */}
                         <div className="grid grid-cols-2 gap-3">

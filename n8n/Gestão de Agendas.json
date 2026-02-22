@@ -1,0 +1,4699 @@
+{
+  "updatedAt": "2026-01-24T19:15:30.222Z",
+  "createdAt": "2026-01-05T19:40:05.661Z",
+  "id": "f2fbe7kGz9eD7C4GwCDZF",
+  "name": "Gestão de Agendas",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        944,
+        592
+      ],
+      "id": "b9698903-12ee-446d-b0ab-29e37414944a",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "consulta_horario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "705f955b-121c-43c0-8a77-2cce07ac21df"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consultar Horário do Médico"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "44aec236-3f37-450a-9957-dcd90dc68ced",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "consulta_disponibilidade",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consulta Disponibilidade de Horário"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "544cfdc2-44b3-4860-998c-12376d7aa75a",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "cadastro",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cadastro Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "271caf11-b57f-417e-8fd1-58e35f5738c9",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "agendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Agendar Consulta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "448640f6-0e98-4f11-8e5a-35ae2e475a46",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "reagendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reagendar Consulta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fe8c5096-dc5c-4165-b98b-855a5e856cca",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "cancelar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelar Consulta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "16da284c-526e-4735-95f3-126a1d7fdc61",
+                    "leftValue": "={{ $json.body.tipo }}",
+                    "rightValue": "atualizar_kanban",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Atualizar Kanban"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1264,
+        528
+      ],
+      "id": "9e328302-cbfa-4832-9132-26164d0e1434",
+      "name": "Roteador de Tipos de Operacao"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gestao-agenda",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1632,
+        608
+      ],
+      "id": "822a902f-ae1b-4c91-90e7-3d8921cc9407",
+      "name": "Webhook - Agendas",
+      "webhookId": "cd379b71-9c78-4df8-b33c-b8a8fb93fde4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "work_schedules",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.company }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -768
+      ],
+      "id": "5291139e-7715-4c2c-be6e-a34c82dcaa0d",
+      "name": "Busca horarios de trabalho",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada\nconst input = $('Webhook - Agendas').first().json.body;\nconst config = $('Busca horarios de trabalho').item.json;\n\nconst date = new Date(input.data_e_hora);\n\n// mapeamento de dias\nconst daysMap = [\n  \"domingo\",\n  \"segunda\",\n  \"terca\",\n  \"quarta\",\n  \"quinta\",\n  \"sexta\",\n  \"sabado\"\n];\n\nconst dayIndex = date.getDay();\nconst day = daysMap[dayIndex];\n\nconst formattedDate = date.toLocaleDateString(\"pt-BR\", {\n  timeZone: \"America/Sao_Paulo\",\n});\n\nconst hour = input.data_e_hora.split(\"T\")[1].slice(0, 5);\n\nconst isActive = config[`${day}_is_active`];\nconst start = config[`${day}_inicio_trabalho`];\nconst end = config[`${day}_fim_trabalho`];\nconst lunchStart = config[`${day}_inicio_almoco`];\nconst lunchEnd = config[`${day}_fim_almoco`];\n\nconst base = {\n  date: formattedDate,\n  hour,\n  weekday: day,\n};\n\n// ------- função de achar próximo dia válido -------\nfunction getNextAvailableDay() {\n  for (let i = 1; i <= 7; i++) {\n    const nextDate = new Date(date);\n    nextDate.setDate(date.getDate() + i);\n\n    const nextDayIndex = nextDate.getDay();\n    const nextDayName = daysMap[nextDayIndex];\n\n    if (config[`${nextDayName}_is_active`]) {\n      const nextStart = config[`${nextDayName}_inicio_trabalho`];\n\n      return {\n        nextAvailableDate: nextDate.toLocaleDateString(\"pt-BR\", {\n          timeZone: \"America/Sao_Paulo\",\n        }),\n        nextAvailableWeekday: nextDayName,\n        nextAvailableHour: nextStart\n      };\n    }\n  }\n  return null;\n}\n\n\n// ---------- VALIDAÇÕES ----------\n\nif (!isActive) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Dia não possui expediente.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\nif (hour < start || hour >= end) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Fora do horário de atendimento.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\nif (lunchStart && lunchEnd && hour >= lunchStart && hour < lunchEnd) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Horário de almoço.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\n\n// ---------- Se deu bom ----------\nreturn [{\n  json: {\n    valid: true,\n    reason: \"Horário dentro do expediente.\",\n    ...base\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -768
+      ],
+      "id": "4adaf702-f9a9-4165-80aa-103226ee1677",
+      "name": "Busca Horários de Trabalhos"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc57353b-cec9-48f8-8662-32a2c8575ecf",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        -768
+      ],
+      "id": "205c10ad-10b6-4318-bcdd-041e299d6cf5",
+      "name": "Se for Valido"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e1852d1-4b9c-44bf-9412-3b526f625df3",
+              "name": "response",
+              "value": "=Infelizmente dia {{ $json.date }} as {{ $json.hour }} não possuímos expediente, porém na {{ $json.nextAvailableWeekday }} dia {{ $json.nextAvailableDate }} temos expediente a partir das {{ $json.nextAvailableHour }}. Quer que eu verifique algum horario nesse dia pra você?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        -848
+      ],
+      "id": "cbc55ef4-9026-4567-a77d-80081aea3994",
+      "name": "Mensagem que não é horário valido"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+              "name": "response",
+              "value": "=temos a disponibilidade, pra confirmar o agendamento, vou preciso fazer o seu cadastro, tudo bem?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        -640
+      ],
+      "id": "df65a612-e0dd-415c-b2bb-208ffd307383",
+      "name": "Mensagem de Sucesso"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "work_schedules",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "keyValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -256
+      ],
+      "id": "85223d1b-f687-4bdb-a939-047ee33016d1",
+      "name": "Busca horarios de trabalho1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Roteador de Tipos de Operacao').item.json.body.company }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -256
+      ],
+      "id": "02c24bc5-1399-4ace-948f-35b9d984674e",
+      "name": "Busca agenda",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6901c1fc-d06a-4feb-a087-87185d64cf47",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -256
+      ],
+      "id": "f81df1d6-9ab6-4364-ade6-56f03a56372e",
+      "name": "Se estiver vazio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+              "name": "response",
+              "value": "=temos a disponibilidade, posso confirmar o agendamento?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -336
+      ],
+      "id": "9fe1dc12-a1d9-4324-a830-86d3f56e43b9",
+      "name": "Libera disponibilidade"
+    },
+    {
+      "parameters": {
+        "jsCode": "// -------- 1. CONFIGURAÇÃO E DURAÇÃO -------- //\nconst request = $('Webhook - Agendas').first().json.body;\nconst requestedISO = request.data_e_hora; // \"2025-12-20T14:01:00\"\n\n// Tenta pegar a duração da tabela work_schedules\nlet duration = 30; // Minutos padrão\ntry {\n  const scheduleConfig = $('Busca horarios de trabalho1').first().json;\n  if (scheduleConfig && scheduleConfig.duracao_atendimento) {\n    duration = parseInt(scheduleConfig.duracao_atendimento, 10);\n  }\n} catch (e) {}\n\n// Pega os agendamentos existentes\nconst scheduled = $items(\"Busca agenda\").map(e => e.json);\n\n// -------- 2. PREPARAR DADOS DO PEDIDO (Novo Agendamento) -------- //\nconst reqDate = new Date(requestedISO);\nconst reqStartMs = reqDate.getTime();\nconst reqEndMs = reqStartMs + (duration * 60 * 1000); // Soma duração em milissegundos\n\n// Strings para retorno\nconst requestedDate = requestedISO.slice(0, 10);\nconst requestedTime = requestedISO.slice(11, 16);\n\n// -------- 3. VERIFICAR CONFLITO DE INTERVALO (OVERLAP) -------- //\n// A regra de ouro de conflito é: (InicioA < FimB) && (FimA > InicioB)\n\nlet conflict = null;\n\nfor (const ev of scheduled) {\n  const evStart = new Date(ev.inicio).getTime();\n  const evEnd = new Date(ev.fim).getTime();\n\n  // Verifica se encavala\n  if (reqStartMs < evEnd && reqEndMs > evStart) {\n    conflict = ev; // Achou um conflito!\n    break; // Para de procurar\n  }\n}\n\n// -------- 4. SE NÃO TIVER CONFLITO -------- //\nif (!conflict) {\n  return [{\n    json: {\n      available: true,\n      status: \"livre\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      requested_iso: requestedISO,\n      duration_minutes: duration\n    }\n  }];\n}\n\n// -------- 5. SE ESTIVER OCUPADO -> BUSCAR PRÓXIMO SLOT -------- //\n// Aqui mantemos a lógica de procurar um espaço livre após o conflito\n// Começamos a busca a partir do final do agendamento que gerou o conflito\n\n// Pega a hora que termina o conflito para sugerir como início\nconst conflictEnd = new Date(conflict.fim);\nlet nextStartMs = conflictEnd.getTime();\nconst endOfDayLimitMs = new Date(requestedDate + \"T23:00:00\").getTime();\n\nlet nextFree = null;\nlet attempts = 0;\n\n// Tenta achar um buraco nos próximos horários\nwhile (nextStartMs < endOfDayLimitMs && attempts < 20) {\n  attempts++;\n  \n  const potentialEndMs = nextStartMs + (duration * 60 * 1000);\n  let isBlocked = false;\n\n  // Verifica se esse \"novo horário sugerido\" bate com algum outro agendamento\n  for (const ev of scheduled) {\n    const evStart = new Date(ev.inicio).getTime();\n    const evEnd = new Date(ev.fim).getTime();\n    \n    if (nextStartMs < evEnd && potentialEndMs > evStart) {\n      isBlocked = true;\n      // Se bateu, pula para o fim desse agendamento impeditivo\n      nextStartMs = evEnd; \n      break; \n    }\n  }\n\n  if (!isBlocked) {\n    // Achamos um horário livre!\n    const freeDate = new Date(nextStartMs);\n    // Ajuste fuso horário simples para exibir HH:mm (Gambi segura para BRT se o server for UTC)\n    // O ideal é usar .toISOString() e pegar o pedaço, mas ajustando o offset -3h\n    const freeDateBR = new Date(nextStartMs - (3 * 60 * 60 * 1000)); \n    \n    const h = String(freeDateBR.getUTCHours()).padStart(2, '0');\n    const m = String(freeDateBR.getUTCMinutes()).padStart(2, '0');\n    nextFree = `${h}:${m}`;\n    break;\n  }\n}\n\n// -------- 6. RETORNO DE OCUPADO -------- //\nif (nextFree) {\n  return [{\n    json: {\n      available: false,\n      status: \"ocupado\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      next_available_date: requestedDate,\n      next_available_time: nextFree,\n      next_available_iso: requestedDate + \"T\" + nextFree + \":00\",\n      conflict: conflict,\n      duration: duration + \" min\"\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    available: false,\n    status: \"ocupado\",\n    requested_date: requestedDate,\n    requested_time: requestedTime,\n    reason: \"Sem horários disponíveis hoje\",\n    conflict: conflict,\n    duration: duration + \" min\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -176
+      ],
+      "id": "827352d4-5dd5-41bc-b234-f2a669a38ab9",
+      "name": "Busca Slots"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "08ea01ba-1e08-49d5-88a8-31a3a7634b38",
+              "leftValue": "={{ $json.available }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -176
+      ],
+      "id": "2e1ed06c-66d6-4e2c-9c00-743deaaf99cc",
+      "name": "Se encontrou"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+              "name": "response",
+              "value": "o horário está livre, posso confirmar {{nome}} ?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -304
+      ],
+      "id": "fff129b4-7ada-46d3-9b7b-989e64e9e683",
+      "name": "Realiza Confirmacao"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+              "name": "response",
+              "value": "=o {data e hora} solicitado esta ocupado, porém o proximo horário disponível é as {{ $json.next_available_iso }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -112
+      ],
+      "id": "1a16453c-5a6d-423b-a82a-b569bb4c2ea1",
+      "name": "Avisa que esta ocupado e sugere um próximo horário"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        224
+      ],
+      "id": "56a9de3d-936f-4046-9501-a3190c5eb649",
+      "name": "Busca paciente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook - Agendas').item.json.body.telefone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.nome_paciente }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email_paciente }}"
+            },
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
+            },
+            {
+              "fieldId": "kanban_status",
+              "fieldValue": "agendado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        224
+      ],
+      "id": "d383c1da-5132-4420-8324-292c852f3d74",
+      "name": "Atualiza paciente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c4aad85f-1829-4dd0-b159-568c5ae9fe0e",
+              "name": "response",
+              "value": "Cliente criado com sucesso",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        224
+      ],
+      "id": "2e0fbec7-9501-49e6-9f13-e2b4a10cda13",
+      "name": "Mensagem paciente criado com sucesso"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.company }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        608
+      ],
+      "id": "6b3217dc-d63f-42ac-9fe2-c10bfefe3d8b",
+      "name": "Busca Agenda",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6901c1fc-d06a-4feb-a087-87185d64cf47",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        608
+      ],
+      "id": "e14cf767-330a-492f-a983-85512c0a6a6d",
+      "name": "Se estiver vazio1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $('Webhook - Agendas').last().json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        320,
+        592
+      ],
+      "id": "58950100-10a2-47e3-9bed-2f555c82dcbc",
+      "name": "Busca dados do paciente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "work_schedules",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "keyValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
+            }
+          ]
+        }
+      },
+      "id": "c5cdc641-6b06-402f-a128-6c14bde3458f",
+      "name": "Busca horários de trabalho",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        544,
+        592
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// -------- INPUTS REAIS -------- //\n\nconst request = $('Webhook - Agendas').first().json.body;\nconst requestedISO = request.data_e_hora;    // ex: \"2025-12-04T10:00:00\"\n\nconst scheduled = $items(\"Busca Agenda\").map(e => e.json);\n\n\n// -------- PARSE DO HORARIO SOLICITADO (SEM TIMEZONE) -------- //\n\nconst requestedDate = requestedISO.slice(0, 10);   // \"2025-12-04\"\nconst requestedTime = requestedISO.slice(11, 16);  // \"10:00\"\n\nconst requestedKey = requestedDate + \" \" + requestedTime;\n\n\n// -------- MAPA DE OCUPAÇÃO -------- //\n\nconst busy = {};\n\n// transforma cada evento em chave uniforme\nfor (const ev of scheduled) {\n\n  const d = ev.inicio.slice(0, 10);\n  const t = ev.inicio.slice(11, 16);\n\n  const key = d + \" \" + t;\n\n  busy[key] = ev;\n}\n\n\n// -------- CHECAR CONFLITO -------- //\n\nconst conflict = busy[requestedKey] || null;\n\nif (!conflict) {\n  return [\n    {\n      json: {\n        available: true,\n        status: \"livre\",\n        requested_date: requestedDate,\n        requested_time: requestedTime,\n        requested_iso: requestedISO\n      }\n    }\n  ];\n}\n\n\n// -------- SE ESTÁ OCUPADO → PROCURAR PROX HORARIO -------- //\n\nlet [h, m] = requestedTime.split(\":\");\nlet hour = parseInt(h, 10);\n\nlet nextFree = null;\n\nfor (let i = 1; i <= 12; i++) {\n\n  hour++;\n\n  if (hour >= 24) break;\n\n  const nextTime = String(hour).padStart(2, \"0\") + \":\" + m;\n\n  const key = requestedDate + \" \" + nextTime;\n\n  if (!busy[key]) {\n    nextFree = nextTime;\n    break;\n  }\n}\n\n\n// -------- RETORNO FINAL -------- //\n\nif (nextFree) {\n  return [\n    {\n      json: {\n        available: false,\n        status: \"ocupado\",\n        requested_date: requestedDate,\n        requested_time: requestedTime,\n        next_available_date: requestedDate,\n        next_available_time: nextFree,\n        next_available_iso: requestedDate + \"T\" + nextFree + \":00\",\n        conflict: conflict,\n        duration: \"1h\"\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      available: false,\n      status: \"ocupado\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      reason: \"Sem horários disponíveis no mesmo dia\",\n      conflict: conflict,\n      duration: \"1h\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        672
+      ],
+      "id": "882274e4-ea14-4f9f-aefd-f9625e32bfcb",
+      "name": "Horarios Disponiveis"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "08ea01ba-1e08-49d5-88a8-31a3a7634b38",
+              "leftValue": "={{ $json.available }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        672
+      ],
+      "id": "b6314cc3-90b6-4d0f-b43e-077b5b62b616",
+      "name": "Se estiver disponivel"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36475117-b4e1-4eb1-b864-67346ab26b13",
+              "name": "response",
+              "value": "=Esse horário jacabou de ser agendado por outro paciente, porém temos as {{ $json.next_available_time }}, o que acha?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        752
+      ],
+      "id": "64453a63-9519-4353-a9c7-7e9796edea55",
+      "name": "Mensagem que não tem disponível se deseja outro horário"
+    },
+    {
+      "parameters": {
+        "tableId": "appointments",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ $json.time }}"
+            },
+            {
+              "fieldId": "contact_id",
+              "fieldValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
+            },
+            {
+              "fieldId": "contact_name",
+              "fieldValue": "={{ $json.nome_contato }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "={{ $('Webhook - Agendas').last().json.body.tipo_atendimento }}"
+            },
+            {
+              "fieldId": "start_datetime",
+              "fieldValue": "={{ $json.inicio }}"
+            },
+            {
+              "fieldId": "end_datetime",
+              "fieldValue": "={{ $json.fim }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        592
+      ],
+      "id": "25ef6ca0-70f8-4569-9350-4706ef6644f1",
+      "name": "Grava na agenda",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "kanban_status",
+              "fieldValue": "agendado"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Webhook - Agendas').last().json.body.email_paciente }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Webhook - Agendas').last().json.body.nome_paciente }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        592
+      ],
+      "id": "d3439a34-7cf4-4841-8b55-75ef89d10a2a",
+      "name": "Atualiza email e nome do paciente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "organizations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        592
+      ],
+      "id": "9d2b9dc2-17b4-4f84-ba2b-6421c61ca2e1",
+      "name": "Busca dados organizacao",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Atualiza email e nome do paciente').last().json.email }}",
+        "subject": "={{ $('Grava na agenda').last().json.type }} Agendado",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: white;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #28a745;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Confirmação de Agendamento</h1>\n        </div>\n        \n        <p>Olá {{ $('Atualiza email e nome do paciente').item.json.name }},</p>\n\n        <p>Estamos escrevendo para confirmar sua consulta na {{ $('Busca dados organizacao').item.json.name }}.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Data:</strong> {{ $('Grava na agenda').item.json.date.split('-').reverse().join('/') }}\n</p>\n            <p><strong>Hora:</strong> {{ $('Grava na agenda').item.json.time }}</p>\n        </div>\n\n        <p>Se você precisar fazer qualquer alteração, entre em contato conosco o mais rápido possível.</p>\n\n        <p>Estamos ansiosos para receber você.</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $('Busca dados organizacao').item.json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Flow Clinic"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1728,
+        592
+      ],
+      "id": "46be8858-7754-4e64-a309-2a3b32ccd11a",
+      "name": "Envia email de agendamento",
+      "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xP3swAUCHrHVDAjB",
+          "name": "Gmail Ric"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_reschedule",
+              "name": "response",
+              "value": "Agendado com sucesso!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "27c1ebd6-859e-4a3a-b7e6-51ae3f3633ef",
+      "name": "Responde Agendamento com sucesso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_reschedule",
+              "name": "response",
+              "value": "email incorreto",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4830e73d-e240-4b39-919c-fe6c599b84eb",
+      "name": "Responde com email incorreto",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    organization_id: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    start_datetime: `${datePart}T${timePart}:00-03:00`,\n    end_datetime: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        592
+      ],
+      "id": "f2248552-e2e5-498f-9ec1-f5da4e1a3cd4",
+      "name": "Formata datas"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "id": "ea579b40-dd9d-47c3-8001-d11dfec4940c",
+      "name": "Busca Paciente - Reagendamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        1088
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "id": "a366cd23-08f8-4bac-8062-d48f2bd1d305",
+      "name": "Busca Organizacao",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        1088
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "work_schedules",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "id": "48700aaf-245d-446b-9dba-82cd5083db5d",
+      "name": "Busca dados da agenda",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        1088
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// -------- 1. DADOS DE ENTRADA -------- //\nconst inputISO = $('Webhook - Agendas').first().json.body.data_e_hora;\n// Ex: 2025-12-05T15:00:00\n\n// -------- 2. PEGAR DURAÇÃO DINÂMICA -------- //\nlet duration = 30; // Padrão de segurança\n\ntry {\n  // Tenta ler do nó anterior que acabamos de adicionar\n  const orgData = $('Busca dados da agenda').first().json;\n  if (orgData && orgData.duracao_atendimento) {\n    duration = parseInt(orgData.duracao_atendimento, 10);\n  }\n} catch (e) {\n  // Mantém 30 se falhar\n}\n\n// -------- 3. CÁLCULO MATEMÁTICO (SEM LUXON) -------- //\nconst datePart = inputISO.split('T')[0];\nconst timePart = inputISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criar objeto data base para somar minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formata Hora de Término\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimeStr = `${endH}:${endM}:00`;\n\n// -------- 4. MONTAR DATAS FINAIS -------- //\n// Adiciona timezone -03:00 fixo para o Supabase\nconst newStart = `${datePart}T${timePart}:00-03:00`;\nconst newEnd = `${datePart}T${endTimeStr}-03:00`;\n\nreturn [{\n  json: {\n    new_date: datePart,\n    new_time: timePart,\n    new_start: newStart,\n    new_end: newEnd,\n    duration_applied: duration // Para debug\n  }\n}]"
+      },
+      "id": "7fb745d2-4c7d-4e7a-a241-f72ffaea85b4",
+      "name": "Calcula novas datas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Busca Organizacao').item.json.id }}"
+            },
+            {
+              "keyName": "contact_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $json.new_date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ $json.new_time }}"
+            },
+            {
+              "fieldId": "start_datetime",
+              "fieldValue": "={{ $json.new_start }}"
+            },
+            {
+              "fieldId": "end_datetime",
+              "fieldValue": "={{ $json.new_end }}"
+            },
+            {
+              "fieldId": "observations"
+            }
+          ]
+        }
+      },
+      "id": "b9b3e9e9-ef9f-4f1c-af94-7a9cf35f2a43",
+      "name": "Atualiza o agendamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        304,
+        1088
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "organizations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        528,
+        1088
+      ],
+      "id": "b39058c4-4491-4749-b85a-1a938dd15349",
+      "name": "Busca",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook - Agendas').item.json.body.email }}",
+        "subject": "={{ $('Busca Organizacao').item.json.type }} Reagendado",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: #000;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #17a2b8;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Reagendamento Confirmado</h1>\n        </div>\n        \n        <p>Olá {{ $('Atualiza o agendamento').item.json.nome_contato }},</p>\n\n        <p>Sua consulta na {{ $json.name }} foi reagendada com sucesso.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Nova Data:</strong> {{ $('Atualiza o agendamento').item.json.date.split('-').reverse().join('/') }}</p>\n            <p><strong>Novo Horário:</strong> {{ $('Atualiza o agendamento').item.json.time }}</p>\n        </div>\n\n        <p>Qualquer imprevisto, estamos à disposição para te ajudar!</p>\n\n        <p>Continuamos ansiosos para te receber 😊</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Flow Clinic"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        1008
+      ],
+      "id": "87345462-47fb-49e3-8d2f-584def3630de",
+      "name": "Envia Email de Reagendamento",
+      "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xP3swAUCHrHVDAjB",
+          "name": "Gmail Ric"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_reschedule",
+              "name": "response",
+              "value": "Agendamento reagendado com sucesso!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "97bc055d-8af3-46d9-a3a0-2212f96fe8bf",
+      "name": "Envia resposta de reagendamento com sucesso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_reschedule",
+              "name": "response",
+              "value": "email incorreto",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e967ced-908c-4635-8d74-355fabf72068",
+      "name": "Responde com erro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "id": "b7f10d16-a326-4258-81ab-562a4da3e81f",
+      "name": "Busca Paciente - Cancelamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        1552
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "id": "70bda496-58ac-486d-af94-d33917236c76",
+      "name": "Busca Organização",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        1552
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "d961792c-c5e6-4f90-b1e8-a3b1e1af1765",
+      "name": "Exclui o agendamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1552
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "organizations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        1552
+      ],
+      "id": "a78dcb6c-d9c9-4a73-9d51-abdfbb670f6a",
+      "name": "Busca organizacao",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Exclui o agendamento').item.json.id_contato }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "kanban_status",
+              "fieldValue": "consulta_cancelado"
+            },
+            {
+              "fieldId": "observations",
+              "fieldValue": "=Cliente cancelou a consulta em {{$now.format('dd/LL/yyyy hh:mm:ss')}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        160,
+        1552
+      ],
+      "id": "5edcc1e0-330d-4e9b-8f9b-dc7dab53e5f9",
+      "name": "Atualiza Kanban",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook - Agendas').item.json.body.email }}",
+        "subject": "=Agendamento Cancelado",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: white;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #6c757d;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Consulta Cancelada</h1>\n        </div>\n        \n        <p>Olá {{ $('Exclui o agendamento').item.json.nome_contato }},</p>\n\n        <p>Sua consulta na {{ $json.name }} foi cancelada conforme solicitado.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Data original:</strong> {{ new Date($('Exclui o agendamento').item.json.date).toLocaleDateString('pt-BR')}}</p>\n            <p><strong>Horário:</strong> {{ $('Exclui o agendamento').item.json.date.split('-').reverse().join('/') }}</p>\n        </div>\n\n        <p>Se desejar marcar uma nova consulta, estaremos aqui para ajudar! 💙</p>\n\n        <p>Qualquer dúvida, nos envie uma mensagem.</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        1552
+      ],
+      "id": "1484cb88-4d0d-49d0-8f8f-a92e54b68606",
+      "name": "Envia Email de Cancelamento",
+      "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xP3swAUCHrHVDAjB",
+          "name": "Gmail Ric"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_cancel",
+              "name": "response",
+              "value": "Seu agendamento foi cancelado com sucesso.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44df8f3c-8eb2-48c2-90ea-d1ba83bfece3",
+      "name": "Responde com cancelamento executado com sucesso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp_reschedule",
+              "name": "response",
+              "value": "email incorreto",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f5fc221d-ba77-49ca-b3e1-2ba6307816e3",
+      "name": "Responde com erro1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        1680
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Roteador de operaçòes",
+        "height": 480,
+        "width": 832
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1728,
+        416
+      ],
+      "id": "a4d8457b-6874-4084-8dae-a8bea4e48229",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Consulta de horários de trabalho dos funcionários",
+        "height": 480,
+        "width": 944,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -944
+      ],
+      "id": "c3df5e0c-6326-478a-a2de-b4b3cc2d9d92",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Consulta de horários disponíveis na agenda",
+        "height": 480,
+        "width": 1136,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -416
+      ],
+      "id": "0dfdbf10-22d4-4acc-882d-6865f4954a44",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Cadastra/Atualiza dados dos do cliente",
+        "height": 336,
+        "width": 784,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        96
+      ],
+      "id": "2c7a1dad-4081-4cf1-8514-217747e67405",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Agenda Consulta do paciente",
+        "height": 464,
+        "width": 3056,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        464
+      ],
+      "id": "2096e248-5b58-4fe3-837f-31b09ed29a96",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Reagenda Consulta do paciente",
+        "height": 432,
+        "width": 1856,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        960
+      ],
+      "id": "3b9a4cb9-df38-41fb-9eda-9baa006fade2",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Cancela Consulta do paciente",
+        "height": 464,
+        "width": 1424,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        1424
+      ],
+      "id": "eae73f99-6801-4648-83c1-41af27de0e8f",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.sessionId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "kanban_status",
+              "fieldValue": "={{ $('Webhook - Agendas').item.json.body.status_kanban }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Webhook - Agendas').item.json.body.nome_paciente }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Webhook - Agendas').item.json.body.email_paciente }}"
+            },
+            {
+              "fieldId": "observations",
+              "fieldValue": "={{ $('Webhook - Agendas').item.json.body[\"observações\"] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        2096
+      ],
+      "id": "5bc957b6-c116-4042-b963-6becaab1e57c",
+      "name": "Atualiza Dados gerais",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Atualiza dados no CRM",
+        "height": 464,
+        "width": 304,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        1920
+      ],
+      "id": "f1596508-2c9a-4f0b-b3cf-f1e52bc6c1b1",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 176,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1552,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "9751a82f-d311-4d75-b908-c7c81351ba2a",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "kanban_status",
+              "fieldValue": "agendado"
+            },
+            {
+              "fieldId": "observations",
+              "fieldValue": "=Cliente reagendou a consulta em {{$now.format('dd/LL/yyyy hh:mm:ss')}} para o dia: {{ $('Atualiza o agendamento').item.json.date.split('-').reverse().join('/') }} as {{ $('Atualiza o agendamento').item.json.time }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        736,
+        1216
+      ],
+      "id": "0bda468b-6e4a-4344-93da-baf30f677105",
+      "name": "Atualiza o  Kanban e Observações",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Grava na agenda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteador de Tipos de Operacao": {
+      "main": [
+        [
+          {
+            "node": "Busca horarios de trabalho",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca horarios de trabalho1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca paciente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca Agenda",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca Paciente - Reagendamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca Paciente - Cancelamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Atualiza Dados gerais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Agendas": {
+      "main": [
+        [
+          {
+            "node": "Roteador de Tipos de Operacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca horarios de trabalho": {
+      "main": [
+        [
+          {
+            "node": "Busca Horários de Trabalhos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Horários de Trabalhos": {
+      "main": [
+        [
+          {
+            "node": "Se for Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se for Valido": {
+      "main": [
+        [
+          {
+            "node": "Mensagem que não é horário valido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem de Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca horarios de trabalho1": {
+      "main": [
+        [
+          {
+            "node": "Busca agenda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca agenda": {
+      "main": [
+        [
+          {
+            "node": "Se estiver vazio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se estiver vazio": {
+      "main": [
+        [
+          {
+            "node": "Libera disponibilidade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Slots": {
+      "main": [
+        [
+          {
+            "node": "Se encontrou",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se encontrou": {
+      "main": [
+        [
+          {
+            "node": "Realiza Confirmacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisa que esta ocupado e sugere um próximo horário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca paciente": {
+      "main": [
+        [
+          {
+            "node": "Atualiza paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza paciente": {
+      "main": [
+        [
+          {
+            "node": "Mensagem paciente criado com sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Agenda": {
+      "main": [
+        [
+          {
+            "node": "Se estiver vazio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se estiver vazio1": {
+      "main": [
+        [
+          {
+            "node": "Busca dados do paciente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Horarios Disponiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca dados do paciente": {
+      "main": [
+        [
+          {
+            "node": "Busca horários de trabalho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca horários de trabalho": {
+      "main": [
+        [
+          {
+            "node": "Formata datas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Horarios Disponiveis": {
+      "main": [
+        [
+          {
+            "node": "Se estiver disponivel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se estiver disponivel": {
+      "main": [
+        [
+          {
+            "node": "Busca dados do paciente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem que não tem disponível se deseja outro horário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grava na agenda": {
+      "main": [
+        [
+          {
+            "node": "Atualiza email e nome do paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza email e nome do paciente": {
+      "main": [
+        [
+          {
+            "node": "Busca dados organizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca dados organizacao": {
+      "main": [
+        [
+          {
+            "node": "Envia email de agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia email de agendamento": {
+      "main": [
+        [
+          {
+            "node": "Responde Agendamento com sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde com email incorreto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formata datas": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Paciente - Reagendamento": {
+      "main": [
+        [
+          {
+            "node": "Busca Organizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Organizacao": {
+      "main": [
+        [
+          {
+            "node": "Busca dados da agenda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca dados da agenda": {
+      "main": [
+        [
+          {
+            "node": "Calcula novas datas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcula novas datas": {
+      "main": [
+        [
+          {
+            "node": "Atualiza o agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza o agendamento": {
+      "main": [
+        [
+          {
+            "node": "Busca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca": {
+      "main": [
+        [
+          {
+            "node": "Envia Email de Reagendamento",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Atualiza o  Kanban e Observações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia Email de Reagendamento": {
+      "main": [
+        [
+          {
+            "node": "Envia resposta de reagendamento com sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde com erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Paciente - Cancelamento": {
+      "main": [
+        [
+          {
+            "node": "Busca Organização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Organização": {
+      "main": [
+        [
+          {
+            "node": "Exclui o agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exclui o agendamento": {
+      "main": [
+        [
+          {
+            "node": "Busca organizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca organizacao": {
+      "main": [
+        [
+          {
+            "node": "Atualiza Kanban",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza Kanban": {
+      "main": [
+        [
+          {
+            "node": "Envia Email de Cancelamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia Email de Cancelamento": {
+      "main": [
+        [
+          {
+            "node": "Responde com cancelamento executado com sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde com erro1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Y9lBbeWF7diBSsTX"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook - Agendas": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.agentes-n8n.com.br",
+            "user-agent": "axios/1.12.0",
+            "content-length": "228",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "webhook.agentes-n8n.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fa64cd99b179",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "tipo": "reagendar",
+            "data_e_hora": "2026-01-27T14:00:00",
+            "company": "e88b2f3e-480b-466e-9426-926232f98f8d",
+            "sessionId": "dadb0b0c-6896-4612-b207-278992e4c7a5",
+            "phone": "551152863018@s.whatsapp.net",
+            "email": "Ricardo.neves@ed.dev.br"
+          },
+          "webhookUrl": "https://webhook.agentes-n8n.com.br/webhook/gestao-agenda",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "d10a2154-798e-448c-8bf0-64e528f68e55",
+  "activeVersionId": "cb488860-d477-44a9-aa10-d0dfe8d43ed7",
+  "versionCounter": 110,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-05T19:40:05.661Z",
+      "createdAt": "2026-01-05T19:40:05.661Z",
+      "role": "workflow:owner",
+      "workflowId": "f2fbe7kGz9eD7C4GwCDZF",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-23T15:12:27.665Z",
+    "createdAt": "2026-01-23T15:12:21.294Z",
+    "versionId": "cb488860-d477-44a9-aa10-d0dfe8d43ed7",
+    "workflowId": "f2fbe7kGz9eD7C4GwCDZF",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          944,
+          592
+        ],
+        "id": "b9698903-12ee-446d-b0ab-29e37414944a",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "consulta_horario",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "705f955b-121c-43c0-8a77-2cce07ac21df"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Consultar Horário do Médico"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "44aec236-3f37-450a-9957-dcd90dc68ced",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "consulta_disponibilidade",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Consulta Disponibilidade de Horário"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "544cfdc2-44b3-4860-998c-12376d7aa75a",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "cadastro",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Cadastro Lead"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "271caf11-b57f-417e-8fd1-58e35f5738c9",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "agendar",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Agendar Consulta"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "448640f6-0e98-4f11-8e5a-35ae2e475a46",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "reagendar",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Reagendar Consulta"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "fe8c5096-dc5c-4165-b98b-855a5e856cca",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "cancelar",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Cancelar Consulta"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "16da284c-526e-4735-95f3-126a1d7fdc61",
+                      "leftValue": "={{ $json.body.tipo }}",
+                      "rightValue": "atualizar_kanban",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Atualizar Kanban"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          -1264,
+          528
+        ],
+        "id": "9e328302-cbfa-4832-9132-26164d0e1434",
+        "name": "Roteador de Tipos de Operacao"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "gestao-agenda",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1632,
+          608
+        ],
+        "id": "822a902f-ae1b-4c91-90e7-3d8921cc9407",
+        "name": "Webhook - Agendas",
+        "webhookId": "cd379b71-9c78-4df8-b33c-b8a8fb93fde4"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "work_schedules",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.body.company }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -544,
+          -768
+        ],
+        "id": "5291139e-7715-4c2c-be6e-a34c82dcaa0d",
+        "name": "Busca horarios de trabalho",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Entrada\nconst input = $('Webhook - Agendas').first().json.body;\nconst config = $('Busca horarios de trabalho').item.json;\n\nconst date = new Date(input.data_e_hora);\n\n// mapeamento de dias\nconst daysMap = [\n  \"domingo\",\n  \"segunda\",\n  \"terca\",\n  \"quarta\",\n  \"quinta\",\n  \"sexta\",\n  \"sabado\"\n];\n\nconst dayIndex = date.getDay();\nconst day = daysMap[dayIndex];\n\nconst formattedDate = date.toLocaleDateString(\"pt-BR\", {\n  timeZone: \"America/Sao_Paulo\",\n});\n\nconst hour = input.data_e_hora.split(\"T\")[1].slice(0, 5);\n\nconst isActive = config[`${day}_is_active`];\nconst start = config[`${day}_inicio_trabalho`];\nconst end = config[`${day}_fim_trabalho`];\nconst lunchStart = config[`${day}_inicio_almoco`];\nconst lunchEnd = config[`${day}_fim_almoco`];\n\nconst base = {\n  date: formattedDate,\n  hour,\n  weekday: day,\n};\n\n// ------- função de achar próximo dia válido -------\nfunction getNextAvailableDay() {\n  for (let i = 1; i <= 7; i++) {\n    const nextDate = new Date(date);\n    nextDate.setDate(date.getDate() + i);\n\n    const nextDayIndex = nextDate.getDay();\n    const nextDayName = daysMap[nextDayIndex];\n\n    if (config[`${nextDayName}_is_active`]) {\n      const nextStart = config[`${nextDayName}_inicio_trabalho`];\n\n      return {\n        nextAvailableDate: nextDate.toLocaleDateString(\"pt-BR\", {\n          timeZone: \"America/Sao_Paulo\",\n        }),\n        nextAvailableWeekday: nextDayName,\n        nextAvailableHour: nextStart\n      };\n    }\n  }\n  return null;\n}\n\n\n// ---------- VALIDAÇÕES ----------\n\nif (!isActive) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Dia não possui expediente.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\nif (hour < start || hour >= end) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Fora do horário de atendimento.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\nif (lunchStart && lunchEnd && hour >= lunchStart && hour < lunchEnd) {\n  return [{\n    json: {\n      valid: false,\n      reason: \"Horário de almoço.\",\n      ...base,\n      ...getNextAvailableDay()\n    }\n  }];\n}\n\n\n// ---------- Se deu bom ----------\nreturn [{\n  json: {\n    valid: true,\n    reason: \"Horário dentro do expediente.\",\n    ...base\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          -768
+        ],
+        "id": "4adaf702-f9a9-4165-80aa-103226ee1677",
+        "name": "Busca Horários de Trabalhos"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cc57353b-cec9-48f8-8662-32a2c8575ecf",
+                "leftValue": "={{ $json.valid }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -112,
+          -768
+        ],
+        "id": "205c10ad-10b6-4318-bcdd-041e299d6cf5",
+        "name": "Se for Valido"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2e1852d1-4b9c-44bf-9412-3b526f625df3",
+                "name": "response",
+                "value": "=Infelizmente dia {{ $json.date }} as {{ $json.hour }} não possuímos expediente, porém na {{ $json.nextAvailableWeekday }} dia {{ $json.nextAvailableDate }} temos expediente a partir das {{ $json.nextAvailableHour }}. Quer que eu verifique algum horario nesse dia pra você?",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          112,
+          -848
+        ],
+        "id": "cbc55ef4-9026-4567-a77d-80081aea3994",
+        "name": "Mensagem que não é horário valido"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+                "name": "response",
+                "value": "=temos a disponibilidade, pra confirmar o agendamento, vou preciso fazer o seu cadastro, tudo bem?",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          112,
+          -640
+        ],
+        "id": "df65a612-e0dd-415c-b2bb-208ffd307383",
+        "name": "Mensagem de Sucesso"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "work_schedules",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "keyValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -592,
+          -256
+        ],
+        "id": "85223d1b-f687-4bdb-a939-047ee33016d1",
+        "name": "Busca horarios de trabalho1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "appointments",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Roteador de Tipos de Operacao').item.json.body.company }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -400,
+          -256
+        ],
+        "id": "02c24bc5-1399-4ace-948f-35b9d984674e",
+        "name": "Busca agenda",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "6901c1fc-d06a-4feb-a087-87185d64cf47",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -240,
+          -256
+        ],
+        "id": "f81df1d6-9ab6-4364-ade6-56f03a56372e",
+        "name": "Se estiver vazio"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+                "name": "response",
+                "value": "=temos a disponibilidade, posso confirmar o agendamento?",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -64,
+          -336
+        ],
+        "id": "9fe1dc12-a1d9-4324-a830-86d3f56e43b9",
+        "name": "Libera disponibilidade"
+      },
+      {
+        "parameters": {
+          "jsCode": "// -------- 1. CONFIGURAÇÃO E DURAÇÃO -------- //\nconst request = $('Webhook - Agendas').first().json.body;\nconst requestedISO = request.data_e_hora; // \"2025-12-20T14:01:00\"\n\n// Tenta pegar a duração da tabela work_schedules\nlet duration = 30; // Minutos padrão\ntry {\n  const scheduleConfig = $('Busca horarios de trabalho1').first().json;\n  if (scheduleConfig && scheduleConfig.duracao_atendimento) {\n    duration = parseInt(scheduleConfig.duracao_atendimento, 10);\n  }\n} catch (e) {}\n\n// Pega os agendamentos existentes\nconst scheduled = $items(\"Busca agenda\").map(e => e.json);\n\n// -------- 2. PREPARAR DADOS DO PEDIDO (Novo Agendamento) -------- //\nconst reqDate = new Date(requestedISO);\nconst reqStartMs = reqDate.getTime();\nconst reqEndMs = reqStartMs + (duration * 60 * 1000); // Soma duração em milissegundos\n\n// Strings para retorno\nconst requestedDate = requestedISO.slice(0, 10);\nconst requestedTime = requestedISO.slice(11, 16);\n\n// -------- 3. VERIFICAR CONFLITO DE INTERVALO (OVERLAP) -------- //\n// A regra de ouro de conflito é: (InicioA < FimB) && (FimA > InicioB)\n\nlet conflict = null;\n\nfor (const ev of scheduled) {\n  const evStart = new Date(ev.inicio).getTime();\n  const evEnd = new Date(ev.fim).getTime();\n\n  // Verifica se encavala\n  if (reqStartMs < evEnd && reqEndMs > evStart) {\n    conflict = ev; // Achou um conflito!\n    break; // Para de procurar\n  }\n}\n\n// -------- 4. SE NÃO TIVER CONFLITO -------- //\nif (!conflict) {\n  return [{\n    json: {\n      available: true,\n      status: \"livre\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      requested_iso: requestedISO,\n      duration_minutes: duration\n    }\n  }];\n}\n\n// -------- 5. SE ESTIVER OCUPADO -> BUSCAR PRÓXIMO SLOT -------- //\n// Aqui mantemos a lógica de procurar um espaço livre após o conflito\n// Começamos a busca a partir do final do agendamento que gerou o conflito\n\n// Pega a hora que termina o conflito para sugerir como início\nconst conflictEnd = new Date(conflict.fim);\nlet nextStartMs = conflictEnd.getTime();\nconst endOfDayLimitMs = new Date(requestedDate + \"T23:00:00\").getTime();\n\nlet nextFree = null;\nlet attempts = 0;\n\n// Tenta achar um buraco nos próximos horários\nwhile (nextStartMs < endOfDayLimitMs && attempts < 20) {\n  attempts++;\n  \n  const potentialEndMs = nextStartMs + (duration * 60 * 1000);\n  let isBlocked = false;\n\n  // Verifica se esse \"novo horário sugerido\" bate com algum outro agendamento\n  for (const ev of scheduled) {\n    const evStart = new Date(ev.inicio).getTime();\n    const evEnd = new Date(ev.fim).getTime();\n    \n    if (nextStartMs < evEnd && potentialEndMs > evStart) {\n      isBlocked = true;\n      // Se bateu, pula para o fim desse agendamento impeditivo\n      nextStartMs = evEnd; \n      break; \n    }\n  }\n\n  if (!isBlocked) {\n    // Achamos um horário livre!\n    const freeDate = new Date(nextStartMs);\n    // Ajuste fuso horário simples para exibir HH:mm (Gambi segura para BRT se o server for UTC)\n    // O ideal é usar .toISOString() e pegar o pedaço, mas ajustando o offset -3h\n    const freeDateBR = new Date(nextStartMs - (3 * 60 * 60 * 1000)); \n    \n    const h = String(freeDateBR.getUTCHours()).padStart(2, '0');\n    const m = String(freeDateBR.getUTCMinutes()).padStart(2, '0');\n    nextFree = `${h}:${m}`;\n    break;\n  }\n}\n\n// -------- 6. RETORNO DE OCUPADO -------- //\nif (nextFree) {\n  return [{\n    json: {\n      available: false,\n      status: \"ocupado\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      next_available_date: requestedDate,\n      next_available_time: nextFree,\n      next_available_iso: requestedDate + \"T\" + nextFree + \":00\",\n      conflict: conflict,\n      duration: duration + \" min\"\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    available: false,\n    status: \"ocupado\",\n    requested_date: requestedDate,\n    requested_time: requestedTime,\n    reason: \"Sem horários disponíveis hoje\",\n    conflict: conflict,\n    duration: duration + \" min\"\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -64,
+          -176
+        ],
+        "id": "827352d4-5dd5-41bc-b234-f2a669a38ab9",
+        "name": "Busca Slots"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "08ea01ba-1e08-49d5-88a8-31a3a7634b38",
+                "leftValue": "={{ $json.available }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          96,
+          -176
+        ],
+        "id": "2e1ed06c-66d6-4e2c-9c00-743deaaf99cc",
+        "name": "Se encontrou"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+                "name": "response",
+                "value": "o horário está livre, posso confirmar {{nome}} ?",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          272,
+          -304
+        ],
+        "id": "fff129b4-7ada-46d3-9b7b-989e64e9e683",
+        "name": "Realiza Confirmacao"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62b76789-1bd6-4fe7-81dc-f91ba79a6acd",
+                "name": "response",
+                "value": "=o {data e hora} solicitado esta ocupado, porém o proximo horário disponível é as {{ $json.next_available_iso }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          272,
+          -112
+        ],
+        "id": "1a16453c-5a6d-423b-a82a-b569bb4c2ea1",
+        "name": "Avisa que esta ocupado e sugere um próximo horário"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $json.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -560,
+          224
+        ],
+        "id": "56a9de3d-936f-4046-9501-a3190c5eb649",
+        "name": "Busca paciente",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook - Agendas').item.json.body.telefone }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "name",
+                "fieldValue": "={{ $json.nome_paciente }}"
+              },
+              {
+                "fieldId": "email",
+                "fieldValue": "={{ $json.email_paciente }}"
+              },
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
+              },
+              {
+                "fieldId": "kanban_status",
+                "fieldValue": "agendado"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -336,
+          224
+        ],
+        "id": "d383c1da-5132-4420-8324-292c852f3d74",
+        "name": "Atualiza paciente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c4aad85f-1829-4dd0-b159-568c5ae9fe0e",
+                "name": "response",
+                "value": "Cliente criado com sucesso",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -128,
+          224
+        ],
+        "id": "2e0fbec7-9501-49e6-9f13-e2b4a10cda13",
+        "name": "Mensagem paciente criado com sucesso"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "appointments",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.body.company }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -560,
+          608
+        ],
+        "id": "6b3217dc-d63f-42ac-9fe2-c10bfefe3d8b",
+        "name": "Busca Agenda",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "6901c1fc-d06a-4feb-a087-87185d64cf47",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -352,
+          608
+        ],
+        "id": "e14cf767-330a-492f-a983-85512c0a6a6d",
+        "name": "Se estiver vazio1"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $('Webhook - Agendas').last().json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          320,
+          592
+        ],
+        "id": "58950100-10a2-47e3-9bed-2f555c82dcbc",
+        "name": "Busca dados do paciente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "work_schedules",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "keyValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
+              }
+            ]
+          }
+        },
+        "id": "c5cdc641-6b06-402f-a128-6c14bde3458f",
+        "name": "Busca horários de trabalho",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          544,
+          592
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// -------- INPUTS REAIS -------- //\n\nconst request = $('Webhook - Agendas').first().json.body;\nconst requestedISO = request.data_e_hora;    // ex: \"2025-12-04T10:00:00\"\n\nconst scheduled = $items(\"Busca Agenda\").map(e => e.json);\n\n\n// -------- PARSE DO HORARIO SOLICITADO (SEM TIMEZONE) -------- //\n\nconst requestedDate = requestedISO.slice(0, 10);   // \"2025-12-04\"\nconst requestedTime = requestedISO.slice(11, 16);  // \"10:00\"\n\nconst requestedKey = requestedDate + \" \" + requestedTime;\n\n\n// -------- MAPA DE OCUPAÇÃO -------- //\n\nconst busy = {};\n\n// transforma cada evento em chave uniforme\nfor (const ev of scheduled) {\n\n  const d = ev.inicio.slice(0, 10);\n  const t = ev.inicio.slice(11, 16);\n\n  const key = d + \" \" + t;\n\n  busy[key] = ev;\n}\n\n\n// -------- CHECAR CONFLITO -------- //\n\nconst conflict = busy[requestedKey] || null;\n\nif (!conflict) {\n  return [\n    {\n      json: {\n        available: true,\n        status: \"livre\",\n        requested_date: requestedDate,\n        requested_time: requestedTime,\n        requested_iso: requestedISO\n      }\n    }\n  ];\n}\n\n\n// -------- SE ESTÁ OCUPADO → PROCURAR PROX HORARIO -------- //\n\nlet [h, m] = requestedTime.split(\":\");\nlet hour = parseInt(h, 10);\n\nlet nextFree = null;\n\nfor (let i = 1; i <= 12; i++) {\n\n  hour++;\n\n  if (hour >= 24) break;\n\n  const nextTime = String(hour).padStart(2, \"0\") + \":\" + m;\n\n  const key = requestedDate + \" \" + nextTime;\n\n  if (!busy[key]) {\n    nextFree = nextTime;\n    break;\n  }\n}\n\n\n// -------- RETORNO FINAL -------- //\n\nif (nextFree) {\n  return [\n    {\n      json: {\n        available: false,\n        status: \"ocupado\",\n        requested_date: requestedDate,\n        requested_time: requestedTime,\n        next_available_date: requestedDate,\n        next_available_time: nextFree,\n        next_available_iso: requestedDate + \"T\" + nextFree + \":00\",\n        conflict: conflict,\n        duration: \"1h\"\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      available: false,\n      status: \"ocupado\",\n      requested_date: requestedDate,\n      requested_time: requestedTime,\n      reason: \"Sem horários disponíveis no mesmo dia\",\n      conflict: conflict,\n      duration: \"1h\"\n    }\n  }\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -160,
+          672
+        ],
+        "id": "882274e4-ea14-4f9f-aefd-f9625e32bfcb",
+        "name": "Horarios Disponiveis"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "08ea01ba-1e08-49d5-88a8-31a3a7634b38",
+                "leftValue": "={{ $json.available }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          16,
+          672
+        ],
+        "id": "b6314cc3-90b6-4d0f-b43e-077b5b62b616",
+        "name": "Se estiver disponivel"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "36475117-b4e1-4eb1-b864-67346ab26b13",
+                "name": "response",
+                "value": "=Esse horário jacabou de ser agendado por outro paciente, porém temos as {{ $json.next_available_time }}, o que acha?",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          320,
+          752
+        ],
+        "id": "64453a63-9519-4353-a9c7-7e9796edea55",
+        "name": "Mensagem que não tem disponível se deseja outro horário"
+      },
+      {
+        "parameters": {
+          "tableId": "appointments",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
+              },
+              {
+                "fieldId": "date",
+                "fieldValue": "={{ $json.date }}"
+              },
+              {
+                "fieldId": "time",
+                "fieldValue": "={{ $json.time }}"
+              },
+              {
+                "fieldId": "contact_id",
+                "fieldValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
+              },
+              {
+                "fieldId": "contact_name",
+                "fieldValue": "={{ $json.nome_contato }}"
+              },
+              {
+                "fieldId": "type",
+                "fieldValue": "={{ $('Webhook - Agendas').last().json.body.tipo_atendimento }}"
+              },
+              {
+                "fieldId": "start_datetime",
+                "fieldValue": "={{ $json.inicio }}"
+              },
+              {
+                "fieldId": "end_datetime",
+                "fieldValue": "={{ $json.fim }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          592
+        ],
+        "id": "25ef6ca0-70f8-4569-9350-4706ef6644f1",
+        "name": "Grava na agenda",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "kanban_status",
+                "fieldValue": "agendado"
+              },
+              {
+                "fieldId": "email",
+                "fieldValue": "={{ $('Webhook - Agendas').last().json.body.email_paciente }}"
+              },
+              {
+                "fieldId": "name",
+                "fieldValue": "={{ $('Webhook - Agendas').last().json.body.nome_paciente }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1312,
+          592
+        ],
+        "id": "d3439a34-7cf4-4841-8b55-75ef89d10a2a",
+        "name": "Atualiza email e nome do paciente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "organizations",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1520,
+          592
+        ],
+        "id": "9d2b9dc2-17b4-4f84-ba2b-6421c61ca2e1",
+        "name": "Busca dados organizacao",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Atualiza email e nome do paciente').last().json.email }}",
+          "subject": "={{ $('Grava na agenda').last().json.type }} Agendado",
+          "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: white;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #28a745;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Confirmação de Agendamento</h1>\n        </div>\n        \n        <p>Olá {{ $('Atualiza email e nome do paciente').item.json.name }},</p>\n\n        <p>Estamos escrevendo para confirmar sua consulta na {{ $('Busca dados organizacao').item.json.name }}.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Data:</strong> {{ $('Grava na agenda').item.json.date.split('-').reverse().join('/') }}\n</p>\n            <p><strong>Hora:</strong> {{ $('Grava na agenda').item.json.time }}</p>\n        </div>\n\n        <p>Se você precisar fazer qualquer alteração, entre em contato conosco o mais rápido possível.</p>\n\n        <p>Estamos ansiosos para receber você.</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $('Busca dados organizacao').item.json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+          "options": {
+            "appendAttribution": false,
+            "senderName": "Flow Clinic"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          1728,
+          592
+        ],
+        "id": "46be8858-7754-4e64-a309-2a3b32ccd11a",
+        "name": "Envia email de agendamento",
+        "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xP3swAUCHrHVDAjB",
+            "name": "Gmail Ric"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_reschedule",
+                "name": "response",
+                "value": "Agendado com sucesso!",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "27c1ebd6-859e-4a3a-b7e6-51ae3f3633ef",
+        "name": "Responde Agendamento com sucesso",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1968,
+          496
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_reschedule",
+                "name": "response",
+                "value": "email incorreto",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "4830e73d-e240-4b39-919c-fe6c599b84eb",
+        "name": "Responde com email incorreto",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1968,
+          672
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    organization_id: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    start_datetime: `${datePart}T${timePart}:00-03:00`,\n    end_datetime: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          768,
+          592
+        ],
+        "id": "f2248552-e2e5-498f-9ec1-f5da4e1a3cd4",
+        "name": "Formata datas"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "id": "ea579b40-dd9d-47c3-8001-d11dfec4940c",
+        "name": "Busca Paciente - Reagendamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -544,
+          1088
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "appointments",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "id": "a366cd23-08f8-4bac-8062-d48f2bd1d305",
+        "name": "Busca Organizacao",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -352,
+          1088
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "work_schedules",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "id": "48700aaf-245d-446b-9dba-82cd5083db5d",
+        "name": "Busca dados da agenda",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -160,
+          1088
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// -------- 1. DADOS DE ENTRADA -------- //\nconst inputISO = $('Webhook - Agendas').first().json.body.data_e_hora;\n// Ex: 2025-12-05T15:00:00\n\n// -------- 2. PEGAR DURAÇÃO DINÂMICA -------- //\nlet duration = 30; // Padrão de segurança\n\ntry {\n  // Tenta ler do nó anterior que acabamos de adicionar\n  const orgData = $('Busca dados da agenda').first().json;\n  if (orgData && orgData.duracao_atendimento) {\n    duration = parseInt(orgData.duracao_atendimento, 10);\n  }\n} catch (e) {\n  // Mantém 30 se falhar\n}\n\n// -------- 3. CÁLCULO MATEMÁTICO (SEM LUXON) -------- //\nconst datePart = inputISO.split('T')[0];\nconst timePart = inputISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criar objeto data base para somar minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formata Hora de Término\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimeStr = `${endH}:${endM}:00`;\n\n// -------- 4. MONTAR DATAS FINAIS -------- //\n// Adiciona timezone -03:00 fixo para o Supabase\nconst newStart = `${datePart}T${timePart}:00-03:00`;\nconst newEnd = `${datePart}T${endTimeStr}-03:00`;\n\nreturn [{\n  json: {\n    new_date: datePart,\n    new_time: timePart,\n    new_start: newStart,\n    new_end: newEnd,\n    duration_applied: duration // Para debug\n  }\n}]"
+        },
+        "id": "7fb745d2-4c7d-4e7a-a241-f72ffaea85b4",
+        "name": "Calcula novas datas",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          80,
+          1088
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "appointments",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Busca Organizacao').item.json.id }}"
+              },
+              {
+                "keyName": "contact_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "date",
+                "fieldValue": "={{ $json.new_date }}"
+              },
+              {
+                "fieldId": "time",
+                "fieldValue": "={{ $json.new_time }}"
+              },
+              {
+                "fieldId": "start_datetime",
+                "fieldValue": "={{ $json.new_start }}"
+              },
+              {
+                "fieldId": "end_datetime",
+                "fieldValue": "={{ $json.new_end }}"
+              },
+              {
+                "fieldId": "observations"
+              }
+            ]
+          }
+        },
+        "id": "b9b3e9e9-ef9f-4f1c-af94-7a9cf35f2a43",
+        "name": "Atualiza o agendamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          304,
+          1088
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "organizations",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          528,
+          1088
+        ],
+        "id": "b39058c4-4491-4749-b85a-1a938dd15349",
+        "name": "Busca",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Webhook - Agendas').item.json.body.email }}",
+          "subject": "={{ $('Busca Organizacao').item.json.type }} Reagendado",
+          "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: #000;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #17a2b8;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Reagendamento Confirmado</h1>\n        </div>\n        \n        <p>Olá {{ $('Atualiza o agendamento').item.json.nome_contato }},</p>\n\n        <p>Sua consulta na {{ $json.name }} foi reagendada com sucesso.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Nova Data:</strong> {{ $('Atualiza o agendamento').item.json.date.split('-').reverse().join('/') }}</p>\n            <p><strong>Novo Horário:</strong> {{ $('Atualiza o agendamento').item.json.time }}</p>\n        </div>\n\n        <p>Qualquer imprevisto, estamos à disposição para te ajudar!</p>\n\n        <p>Continuamos ansiosos para te receber 😊</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+          "options": {
+            "appendAttribution": false,
+            "senderName": "Flow Clinic"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          736,
+          1008
+        ],
+        "id": "87345462-47fb-49e3-8d2f-584def3630de",
+        "name": "Envia Email de Reagendamento",
+        "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xP3swAUCHrHVDAjB",
+            "name": "Gmail Ric"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_reschedule",
+                "name": "response",
+                "value": "Agendamento reagendado com sucesso!",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "97bc055d-8af3-46d9-a3a0-2212f96fe8bf",
+        "name": "Envia resposta de reagendamento com sucesso",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1008,
+          992
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_reschedule",
+                "name": "response",
+                "value": "email incorreto",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "4e967ced-908c-4635-8d74-355fabf72068",
+        "name": "Responde com erro",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1024,
+          1184
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "id": "b7f10d16-a326-4258-81ab-562a4da3e81f",
+        "name": "Busca Paciente - Cancelamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -576,
+          1552
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "appointments",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "organization_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "id": "70bda496-58ac-486d-af94-d33917236c76",
+        "name": "Busca Organização",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -400,
+          1552
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "tableId": "appointments",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          }
+        },
+        "id": "d961792c-c5e6-4f90-b1e8-a3b1e1af1765",
+        "name": "Exclui o agendamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          1552
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "organizations",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -16,
+          1552
+        ],
+        "id": "a78dcb6c-d9c9-4a73-9d51-abdfbb670f6a",
+        "name": "Busca organizacao",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Exclui o agendamento').item.json.id_contato }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "kanban_status",
+                "fieldValue": "consulta_cancelado"
+              },
+              {
+                "fieldId": "observations",
+                "fieldValue": "=Cliente cancelou a consulta em {{$now.format('dd/LL/yyyy hh:mm:ss')}}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          160,
+          1552
+        ],
+        "id": "5edcc1e0-330d-4e9b-8f9b-dc7dab53e5f9",
+        "name": "Atualiza Kanban",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Webhook - Agendas').item.json.body.email }}",
+          "subject": "=Agendamento Cancelado",
+          "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            color: #555;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: auto;\n        }\n        .header {\n            background-color: #f8f9fa;\n            color: white;\n            padding: 10px;\n            text-align: center;\n        }\n        .appointment-details {\n            background-color: #f8f9fa;\n            border: 1px solid #dee2e6;\n            padding: 20px;\n            margin: 10px 0;\n        }\n        .footer {\n            background-color: #6c757d;\n            color: white;\n            text-align: center;\n            padding: 10px;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>Consulta Cancelada</h1>\n        </div>\n        \n        <p>Olá {{ $('Exclui o agendamento').item.json.nome_contato }},</p>\n\n        <p>Sua consulta na {{ $json.name }} foi cancelada conforme solicitado.</p>\n\n        <div class=\"appointment-details\">\n            <p><strong>Data original:</strong> {{ new Date($('Exclui o agendamento').item.json.date).toLocaleDateString('pt-BR')}}</p>\n            <p><strong>Horário:</strong> {{ $('Exclui o agendamento').item.json.date.split('-').reverse().join('/') }}</p>\n        </div>\n\n        <p>Se desejar marcar uma nova consulta, estaremos aqui para ajudar! 💙</p>\n\n        <p>Qualquer dúvida, nos envie uma mensagem.</p>\n\n        <p>Atenciosamente,</p>\n        <p>Equipe {{ $json.name }}</p>\n\n        <div class=\"footer\">\n            <p></p>\n        </div>\n    </div>\n</body>\n</html>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          352,
+          1552
+        ],
+        "id": "1484cb88-4d0d-49d0-8f8f-a92e54b68606",
+        "name": "Envia Email de Cancelamento",
+        "webhookId": "49027e1f-1546-4c3f-b882-efcf509a79d3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xP3swAUCHrHVDAjB",
+            "name": "Gmail Ric"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_cancel",
+                "name": "response",
+                "value": "Seu agendamento foi cancelado com sucesso.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "44df8f3c-8eb2-48c2-90ea-d1ba83bfece3",
+        "name": "Responde com cancelamento executado com sucesso",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          544,
+          1536
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "resp_reschedule",
+                "name": "response",
+                "value": "email incorreto",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f5fc221d-ba77-49ca-b3e1-2ba6307816e3",
+        "name": "Responde com erro1",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          544,
+          1728
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Roteador de operaçòes",
+          "height": 480,
+          "width": 832
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1728,
+          416
+        ],
+        "id": "a4d8457b-6874-4084-8dae-a8bea4e48229",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "## Consulta de horários de trabalho dos funcionários",
+          "height": 480,
+          "width": 944,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          -944
+        ],
+        "id": "c3df5e0c-6326-478a-a2de-b4b3cc2d9d92",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## Consulta de horários disponíveis na agenda",
+          "height": 480,
+          "width": 1136,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          -416
+        ],
+        "id": "0dfdbf10-22d4-4acc-882d-6865f4954a44",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "content": "## Cadastra/Atualiza dados dos do cliente",
+          "height": 336,
+          "width": 784,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          96
+        ],
+        "id": "2c7a1dad-4081-4cf1-8514-217747e67405",
+        "name": "Sticky Note3"
+      },
+      {
+        "parameters": {
+          "content": "## Agenda Consulta do paciente",
+          "height": 464,
+          "width": 3056,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          464
+        ],
+        "id": "2096e248-5b58-4fe3-837f-31b09ed29a96",
+        "name": "Sticky Note4"
+      },
+      {
+        "parameters": {
+          "content": "## Reagenda Consulta do paciente",
+          "height": 432,
+          "width": 1856,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          960
+        ],
+        "id": "3b9a4cb9-df38-41fb-9eda-9baa006fade2",
+        "name": "Sticky Note5"
+      },
+      {
+        "parameters": {
+          "content": "## Cancela Consulta do paciente",
+          "height": 464,
+          "width": 1424,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          1424
+        ],
+        "id": "eae73f99-6801-4648-83c1-41af27de0e8f",
+        "name": "Sticky Note6"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.body.sessionId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "kanban_status",
+                "fieldValue": "={{ $('Webhook - Agendas').item.json.body.status_kanban }}"
+              },
+              {
+                "fieldId": "name",
+                "fieldValue": "={{ $('Webhook - Agendas').item.json.body.nome_paciente }}"
+              },
+              {
+                "fieldId": "email",
+                "fieldValue": "={{ $('Webhook - Agendas').item.json.body.email_paciente }}"
+              },
+              {
+                "fieldId": "observations",
+                "fieldValue": "={{ $('Webhook - Agendas').item.json.body[\"observações\"] }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -528,
+          2096
+        ],
+        "id": "5bc957b6-c116-4042-b963-6becaab1e57c",
+        "name": "Atualiza Dados gerais",
+        "alwaysOutputData": false,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Atualiza dados no CRM",
+          "height": 464,
+          "width": 304,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          1920
+        ],
+        "id": "f1596508-2c9a-4f0b-b3cf-f1e52bc6c1b1",
+        "name": "Sticky Note7"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "height": 176,
+          "width": 448,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1552,
+          112
+        ],
+        "typeVersion": 1,
+        "id": "9751a82f-d311-4d75-b908-c7c81351ba2a",
+        "name": "Sticky Note29"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "kanban_status",
+                "fieldValue": "agendado"
+              },
+              {
+                "fieldId": "observations",
+                "fieldValue": "=Cliente reagendou a consulta em {{$now.format('dd/LL/yyyy hh:mm:ss')}} para o dia: {{ $('Atualiza o agendamento').item.json.date.split('-').reverse().join('/') }} as {{ $('Atualiza o agendamento').item.json.time }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          736,
+          1216
+        ],
+        "id": "0bda468b-6e4a-4344-93da-baf30f677105",
+        "name": "Atualiza Kanban1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Grava na agenda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Roteador de Tipos de Operacao": {
+        "main": [
+          [
+            {
+              "node": "Busca horarios de trabalho",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca horarios de trabalho1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca paciente",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca Agenda",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca Paciente - Reagendamento",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca Paciente - Cancelamento",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualiza Dados gerais",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook - Agendas": {
+        "main": [
+          [
+            {
+              "node": "Roteador de Tipos de Operacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca horarios de trabalho": {
+        "main": [
+          [
+            {
+              "node": "Busca Horários de Trabalhos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Horários de Trabalhos": {
+        "main": [
+          [
+            {
+              "node": "Se for Valido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se for Valido": {
+        "main": [
+          [
+            {
+              "node": "Mensagem que não é horário valido",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem de Sucesso",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca horarios de trabalho1": {
+        "main": [
+          [
+            {
+              "node": "Busca agenda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca agenda": {
+        "main": [
+          [
+            {
+              "node": "Se estiver vazio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se estiver vazio": {
+        "main": [
+          [
+            {
+              "node": "Libera disponibilidade",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Busca Slots",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Slots": {
+        "main": [
+          [
+            {
+              "node": "Se encontrou",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se encontrou": {
+        "main": [
+          [
+            {
+              "node": "Realiza Confirmacao",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Avisa que esta ocupado e sugere um próximo horário",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca paciente": {
+        "main": [
+          [
+            {
+              "node": "Atualiza paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza paciente": {
+        "main": [
+          [
+            {
+              "node": "Mensagem paciente criado com sucesso",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Agenda": {
+        "main": [
+          [
+            {
+              "node": "Se estiver vazio1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se estiver vazio1": {
+        "main": [
+          [
+            {
+              "node": "Busca dados do paciente",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Horarios Disponiveis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca dados do paciente": {
+        "main": [
+          [
+            {
+              "node": "Busca horários de trabalho",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca horários de trabalho": {
+        "main": [
+          [
+            {
+              "node": "Formata datas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Horarios Disponiveis": {
+        "main": [
+          [
+            {
+              "node": "Se estiver disponivel",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se estiver disponivel": {
+        "main": [
+          [
+            {
+              "node": "Busca dados do paciente",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem que não tem disponível se deseja outro horário",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grava na agenda": {
+        "main": [
+          [
+            {
+              "node": "Atualiza email e nome do paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza email e nome do paciente": {
+        "main": [
+          [
+            {
+              "node": "Busca dados organizacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca dados organizacao": {
+        "main": [
+          [
+            {
+              "node": "Envia email de agendamento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia email de agendamento": {
+        "main": [
+          [
+            {
+              "node": "Responde Agendamento com sucesso",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responde com email incorreto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formata datas": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Paciente - Reagendamento": {
+        "main": [
+          [
+            {
+              "node": "Busca Organizacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Organizacao": {
+        "main": [
+          [
+            {
+              "node": "Busca dados da agenda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca dados da agenda": {
+        "main": [
+          [
+            {
+              "node": "Calcula novas datas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calcula novas datas": {
+        "main": [
+          [
+            {
+              "node": "Atualiza o agendamento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza o agendamento": {
+        "main": [
+          [
+            {
+              "node": "Busca",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca": {
+        "main": [
+          [
+            {
+              "node": "Envia Email de Reagendamento",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Atualiza Kanban1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia Email de Reagendamento": {
+        "main": [
+          [
+            {
+              "node": "Envia resposta de reagendamento com sucesso",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responde com erro",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Paciente - Cancelamento": {
+        "main": [
+          [
+            {
+              "node": "Busca Organização",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Organização": {
+        "main": [
+          [
+            {
+              "node": "Exclui o agendamento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Exclui o agendamento": {
+        "main": [
+          [
+            {
+              "node": "Busca organizacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca organizacao": {
+        "main": [
+          [
+            {
+              "node": "Atualiza Kanban",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza Kanban": {
+        "main": [
+          [
+            {
+              "node": "Envia Email de Cancelamento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia Email de Cancelamento": {
+        "main": [
+          [
+            {
+              "node": "Responde com cancelamento executado com sucesso",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responde com erro1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 5",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-23T15:12:27.661Z",
+        "id": 232,
+        "workflowId": "f2fbe7kGz9eD7C4GwCDZF",
+        "versionId": "cb488860-d477-44a9-aa10-d0dfe8d43ed7",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

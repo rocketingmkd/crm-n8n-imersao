@@ -2,7 +2,8 @@ import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSqua
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
-import { usePatients, useCreatePatient } from "@/hooks/usePatients";
+import { useContacts, useCreateContact } from "@/hooks/useContacts";
+import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { formatTime, isToday } from "@/lib/dateUtils";
@@ -35,27 +36,28 @@ interface AppointmentFormData {
   start_time: string;
   end_date: string;
   end_time: string;
-  patient_id: string;
-  type: string;
-  observations: string;
+  id_contato: string;
+  tipo: string;
+  observacoes: string;
 }
 
 interface PatientFormData {
-  name: string;
+  nome: string;
   email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  observations: string;
+  telefone: string;
+  situacao: 'ativo' | 'inativo';
+  observacoes: string;
 }
 
 export default function Dashboard() {
   const { data: allAppointments = [], isLoading: loadingAppointments } = useAppointments();
-  const { data: patients = [], isLoading: loadingPatients } = usePatients();
+  const { data: contacts = [], isLoading: loadingContacts } = useContacts();
   const { data: chatMetrics, isLoading: loadingChats } = useChatMetrics();
   const { features } = usePlanFeatures();
   const { profile } = useAuth();
   const createAppointment = useCreateAppointment();
-  const createPatient = useCreatePatient();
+  const createContact = useCreateContact();
+  const { singular, plural, s } = useEntityLabel();
 
   // Verificar recursos do plano
   const hasAgendamento = features.agendamento_automatico;
@@ -76,23 +78,23 @@ export default function Dashboard() {
     },
   });
 
-  // Filtrar compromissos de hoje usando start_datetime
+  // Filtrar compromissos de hoje usando inicio
   const today = new Date();
   const todayAppointments = allAppointments.filter(apt => {
-    if (apt.start_datetime) {
-      return isToday(apt.start_datetime);
+    if (apt.inicio) {
+      return isToday(apt.inicio);
     }
     return apt.date === today.toISOString().split('T')[0];
   });
 
   // Estatísticas
-  const activePatients = patients.filter(p => p.status === 'active').length;
-  const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmed').length;
-  const totalVisits = patients.reduce((sum, p) => sum + p.total_visits, 0);
+  const activeContacts = contacts.filter(c => c.situacao === 'ativo').length;
+  const confirmedToday = todayAppointments.filter(apt => apt.situacao === 'confirmado').length;
+  const totalInteractions = contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0);
 
   // Submit handlers
   const onSubmitAppointment = async (data: AppointmentFormData) => {
-    if (!profile?.organization_id) {
+    if (!profile?.id_organizacao) {
       toast.error('Erro: organização não identificada');
       return;
     }
@@ -101,14 +103,14 @@ export default function Dashboard() {
       await createAppointment.mutateAsync({
         date: data.start_date,
         time: data.start_time,
-        start_datetime: `${data.start_date}T${data.start_time}:00-03:00`,
-        end_datetime: `${data.end_date}T${data.end_time}:00-03:00`,
-        patient_id: data.patient_id,
-        patient_name: patients.find(p => p.id === data.patient_id)?.name || '',
-        type: data.type,
-        status: 'pending',
-        observations: data.observations,
-        organization_id: profile.organization_id,
+        inicio: `${data.start_date}T${data.start_time}:00-03:00`,
+        fim: `${data.end_date}T${data.end_time}:00-03:00`,
+        id_contato: data.id_contato,
+        nome_contato: contacts.find(c => c.id === data.id_contato)?.name || '',
+        tipo: data.type,
+        situacao: 'pendente',
+        observacoes: data.observations,
+        id_organizacao: profile.id_organizacao,
       });
 
       toast.success('Compromisso criado com sucesso!');
@@ -121,32 +123,32 @@ export default function Dashboard() {
   };
 
   const onSubmitPatient = async (data: PatientFormData) => {
-    if (!profile?.organization_id) {
+    if (!profile?.id_organizacao) {
       toast.error('Erro: organização não identificada');
       return;
     }
 
     try {
-      await createPatient.mutateAsync({
-        name: data.name,
+      await createContact.mutateAsync({
+        nome: data.name,
         email: data.email,
-        phone: data.phone,
-        status: data.status,
-        observations: data.observations || null,
-        organization_id: profile.organization_id,
-        total_visits: 0,
+        telefone: data.phone,
+        situacao: data.status,
+        observacoes: data.observations || null,
+        id_organizacao: profile.id_organizacao,
+        total_interacoes: 0,
       });
 
-      toast.success('Paciente cadastrado com sucesso!');
+      toast.success(`${singular} cadastrado com sucesso!`);
       setIsPatientModalOpen(false);
       patientForm.reset();
     } catch (error: any) {
-      console.error('Erro ao criar paciente:', error);
-      toast.error(error.message || 'Erro ao cadastrar paciente');
+      console.error('Erro ao criar contato:', error);
+      toast.error(error.message || `Erro ao cadastrar ${s}`);
     }
   };
 
-  const isLoading = loadingAppointments || loadingPatients || loadingChats;
+  const isLoading = loadingAppointments || loadingContacts || loadingChats;
 
   if (isLoading) {
     return (
@@ -164,7 +166,7 @@ export default function Dashboard() {
       {/* Welcome Header */}
       <div className="animate-fade-in">
         <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground mb-2">
-          Bem-vindo, {profile?.full_name || 'Usuário'}
+          Bem-vindo, {profile?.nome_completo || 'Usuário'}
         </h1>
         <p className="text-base md:text-lg text-muted-foreground">
           {hasAgendamento 
@@ -219,13 +221,13 @@ export default function Dashboard() {
             <div className="space-y-3 md:space-y-4">
               {todayAppointments
                 .sort((a, b) => {
-                  const timeA = a.start_datetime ? new Date(a.start_datetime).getTime() : a.time;
-                  const timeB = b.start_datetime ? new Date(b.start_datetime).getTime() : b.time;
+                  const timeA = a.inicio ? new Date(a.inicio).getTime() : a.time;
+                  const timeB = b.inicio ? new Date(b.inicio).getTime() : b.time;
                   return timeA > timeB ? 1 : -1;
                 })
                 .map((appointment, index) => {
-                  const displayTime = appointment.start_datetime 
-                    ? formatTime(appointment.start_datetime)
+                  const displayTime = appointment.inicio 
+                    ? formatTime(appointment.inicio)
                     : appointment.time;
                   const [hours, minutes] = displayTime.split(":");
                   
@@ -241,7 +243,7 @@ export default function Dashboard() {
                         <span className="text-2xl md:text-3xl font-bold text-accent">{minutes}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.patient_name}</h4>
+                        <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.nome_contato}</h4>
                         <p className="text-sm text-muted-foreground">{appointment.type}</p>
                         {appointment.observations && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{appointment.observations}</p>
@@ -345,7 +347,7 @@ export default function Dashboard() {
               <KPICard
                 title="Próximos 7 Dias"
                 value={allAppointments.filter(apt => {
-                  const aptDate = apt.start_datetime ? new Date(apt.start_datetime) : new Date(apt.date);
+                  const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.date);
                   const nextWeek = new Date(today);
                   nextWeek.setDate(today.getDate() + 7);
                   return aptDate >= today && aptDate <= nextWeek;
@@ -359,15 +361,15 @@ export default function Dashboard() {
           </>
         )}
 
-        {/* Métricas de Pacientes (sempre visível) */}
-        <div 
+        {/* Métricas de Contatos (sempre visível) */}
+        <div
           onClick={() => window.location.href = '/app/clientes/crm'}
           className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
         >
           <KPICard
-            title="Pacientes Totais"
-            value={patients.length}
-            change={`${activePatients} ativos`}
+            title={`${plural} Totais`}
+            value={contacts.length}
+            change={`${activeContacts} ativos`}
             changeType="positive"
             icon={Users}
             description="Base de contatos"
@@ -581,13 +583,13 @@ export default function Dashboard() {
             ) : (
               todayAppointments
                 .sort((a, b) => {
-                  const timeA = a.start_datetime ? new Date(a.start_datetime).getTime() : a.time;
-                  const timeB = b.start_datetime ? new Date(b.start_datetime).getTime() : b.time;
+                  const timeA = a.inicio ? new Date(a.inicio).getTime() : a.time;
+                  const timeB = b.inicio ? new Date(b.inicio).getTime() : b.time;
                   return timeA > timeB ? 1 : -1;
                 })
                 .map((appointment) => {
-                  const displayTime = appointment.start_datetime 
-                    ? formatTime(appointment.start_datetime)
+                  const displayTime = appointment.inicio 
+                    ? formatTime(appointment.inicio)
                     : appointment.time;
                   
                   return (
@@ -599,7 +601,7 @@ export default function Dashboard() {
                         <span className="text-xl font-bold text-accent">{displayTime}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate">{appointment.patient_name}</h4>
+                        <h4 className="font-semibold text-foreground truncate">{appointment.nome_contato}</h4>
                         <p className="text-sm text-muted-foreground">{appointment.type}</p>
                       </div>
                       <div
@@ -627,29 +629,29 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle>Novo Compromisso</DialogTitle>
             <DialogDescription>
-              Agende um novo atendimento para um paciente.
+              Agende um novo atendimento para um {s}.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment as any)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="patient_id">Paciente *</Label>
+              <Label htmlFor="id_contato">{singular} *</Label>
               <Select
-                value={appointmentForm.watch('patient_id')}
-                onValueChange={(value) => appointmentForm.setValue('patient_id', value)}
+                value={appointmentForm.watch('id_contato')}
+                onValueChange={(value) => appointmentForm.setValue('id_contato', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um paciente" />
+                  <SelectValue placeholder={`Selecione um ${s}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name || 'Sem nome'}
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id}>
+                      {contact.name || 'Sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {appointmentForm.formState.errors.patient_id && (
-                <p className="text-xs text-red-500">{appointmentForm.formState.errors.patient_id.message}</p>
+              {appointmentForm.formState.errors.id_contato && (
+                <p className="text-xs text-red-500">{appointmentForm.formState.errors.id_contato.message}</p>
               )}
             </div>
 
@@ -820,8 +822,8 @@ export default function Dashboard() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createPatient.isPending}>
-                {createPatient.isPending ? 'Criando...' : 'Adicionar Contato'}
+              <Button type="submit" disabled={createContact.isPending}>
+                {createContact.isPending ? 'Criando...' : `Adicionar ${singular}`}
               </Button>
             </DialogFooter>
           </form>
@@ -834,7 +836,7 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle>Relatórios e Estatísticas</DialogTitle>
             <DialogDescription>
-              Visão geral do seu {hasAgendamento ? 'consultório' : 'atendimento'}
+              Visão geral do seu {hasAgendamento ? 'empresa' : 'atendimento'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -888,27 +890,27 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Métricas de Pacientes */}
+            {/* Métricas de Contatos */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Base de Contatos</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Base de {plural}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg border border-border/50 bg-background p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="h-4 w-4 text-accent" />
-                    <h4 className="font-semibold text-sm">Total de Contatos</h4>
+                    <h4 className="font-semibold text-sm">Total de {plural}</h4>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{patients.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{contacts.length}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {activePatients} ativos
+                    {activeContacts} ativos
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-border/50 bg-background p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4 text-accent" />
-                    <h4 className="font-semibold text-sm">Total de Visitas</h4>
+                    <h4 className="font-semibold text-sm">Total de Interações</h4>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{totalVisits}</p>
+                  <p className="text-2xl font-bold text-foreground">{totalInteractions}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Histórico completo
                   </p>

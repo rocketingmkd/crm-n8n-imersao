@@ -1,0 +1,724 @@
+{
+  "updatedAt": "2026-01-14T14:38:24.750Z",
+  "createdAt": "2026-01-08T00:19:20.900Z",
+  "id": "5lkyqPIh_Zfy-kN00lytT",
+  "name": "Debounce",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "amount": "={{ $('Executa Fluxo').item.json.waitTime}}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        -16
+      ],
+      "id": "f016f512-0dc5-44f4-af08-c9774c14860d",
+      "name": "Espera",
+      "webhookId": "c47a2378-6f2c-433f-8bc2-8ad53292e20f"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.remotejId }}",
+        "messageData": "={{ $json.text }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "1ff9b17a-d02b-4289-88ac-7363dedaae54",
+      "name": "Grava na Memória Volátil",
+      "credentials": {
+        "redis": {
+          "id": "mG96KO4qIJc2Z5cp",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "mensagem",
+        "key": "={{ $json.remotejId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "eff0c8af-cd53-4720-bff2-40ff38048219",
+      "name": "Busca na memória volátil",
+      "credentials": {
+        "redis": {
+          "id": "mG96KO4qIJc2Z5cp",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2cc7f956-3315-4900-880f-f2efb62d21af",
+              "leftValue": "={{ $json.mensagem.last() }}",
+              "rightValue": "={{ $('Executa Fluxo').item.json.lastMessage}}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "9180fdc2-fa8c-4f54-ba34-6a016b3f2f3f",
+      "name": "Se última mensagem igual a que vem"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Executa Fluxo').item.json.remotejId }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -128
+      ],
+      "id": "703308f9-5b6d-4d1f-a2b3-8a1ff8726c39",
+      "name": "Limpa memória Volátil",
+      "credentials": {
+        "redis": {
+          "id": "mG96KO4qIJc2Z5cp",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "remotejId"
+            },
+            {
+              "name": "text"
+            },
+            {
+              "name": "waitTime",
+              "type": "number"
+            },
+            {
+              "name": "lastMessage"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "6f2b7b0b-4067-49b7-8281-a7d006d8f7e3",
+      "name": "Executa Fluxo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "81855e10-051d-4f74-8bac-14e7d6e7dc2b",
+              "name": "mensagem",
+              "value": "={{ $('Busca na memória volátil').item.json.mensagem.join('\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "538aecce-eae0-4d8b-a2c0-3c55525a6996",
+              "name": "retorno",
+              "value": "agente",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "f152fef8-71fb-4220-9706-c9bfc86aff4e",
+      "name": "Retorna Mensagem"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "538aecce-eae0-4d8b-a2c0-3c55525a6996",
+              "name": "retorno",
+              "value": "aguardar",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        64
+      ],
+      "id": "cd4b0ad4-fb02-44a3-959f-58e7cf563321",
+      "name": "Retorna Aguardar"
+    },
+    {
+      "parameters": {
+        "content": "## Guarda conversas e espera x segundos para fazer o cache",
+        "height": 416,
+        "width": 832
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -192
+      ],
+      "id": "b4852994-ac04-45e4-9d58-c89e37403ba2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Valida se já foi expirado o tempo e a última mensagem é igual e retorna para o fluxo",
+        "height": 416,
+        "width": 832,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -192
+      ],
+      "id": "b7191a72-43a9-4cda-b81c-acda018d56d3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 176,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -432,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "59d3ead0-d6b9-4a4e-895a-b7bb69b34f09",
+      "name": "Sticky Note29"
+    }
+  ],
+  "connections": {
+    "Espera": {
+      "main": [
+        [
+          {
+            "node": "Busca na memória volátil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grava na Memória Volátil": {
+      "main": [
+        [
+          {
+            "node": "Espera",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca na memória volátil": {
+      "main": [
+        [
+          {
+            "node": "Se última mensagem igual a que vem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se última mensagem igual a que vem": {
+      "main": [
+        [
+          {
+            "node": "Limpa memória Volátil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retorna Aguardar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executa Fluxo": {
+      "main": [
+        [
+          {
+            "node": "Grava na Memória Volátil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpa memória Volátil": {
+      "main": [
+        [
+          {
+            "node": "Retorna Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Executa Fluxo": [
+      {
+        "json": {
+          "remotejId": "551152863018@s.whatsapp.net",
+          "text": "Olá tudo bem ?",
+          "waitTime": 7,
+          "lastMessage": "Olá tudo bem ?"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "74932bd6-56f7-4854-8126-62a59e242f82",
+  "activeVersionId": "74932bd6-56f7-4854-8126-62a59e242f82",
+  "versionCounter": 64,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-08T00:19:20.900Z",
+      "createdAt": "2026-01-08T00:19:20.900Z",
+      "role": "workflow:owner",
+      "workflowId": "5lkyqPIh_Zfy-kN00lytT",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-14T14:38:30.700Z",
+    "createdAt": "2026-01-14T14:38:24.752Z",
+    "versionId": "74932bd6-56f7-4854-8126-62a59e242f82",
+    "workflowId": "5lkyqPIh_Zfy-kN00lytT",
+    "nodes": [
+      {
+        "parameters": {
+          "amount": "={{ $('Executa Fluxo').item.json.waitTime}}"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          16,
+          -16
+        ],
+        "id": "f016f512-0dc5-44f4-af08-c9774c14860d",
+        "name": "Espera",
+        "webhookId": "c47a2378-6f2c-433f-8bc2-8ad53292e20f"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $json.remotejId }}",
+          "messageData": "={{ $json.text }}",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          -16
+        ],
+        "id": "1ff9b17a-d02b-4289-88ac-7363dedaae54",
+        "name": "Grava na Memória Volátil",
+        "credentials": {
+          "redis": {
+            "id": "mG96KO4qIJc2Z5cp",
+            "name": "Redis"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "propertyName": "mensagem",
+          "key": "={{ $json.remotejId }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          224,
+          -16
+        ],
+        "id": "eff0c8af-cd53-4720-bff2-40ff38048219",
+        "name": "Busca na memória volátil",
+        "credentials": {
+          "redis": {
+            "id": "mG96KO4qIJc2Z5cp",
+            "name": "Redis"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "2cc7f956-3315-4900-880f-f2efb62d21af",
+                "leftValue": "={{ $json.mensagem.last() }}",
+                "rightValue": "={{ $('Executa Fluxo').item.json.lastMessage}}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          448,
+          -16
+        ],
+        "id": "9180fdc2-fa8c-4f54-ba34-6a016b3f2f3f",
+        "name": "Se última mensagem igual a que vem"
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "key": "={{ $('Executa Fluxo').item.json.remotejId }}"
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          688,
+          -128
+        ],
+        "id": "703308f9-5b6d-4d1f-a2b3-8a1ff8726c39",
+        "name": "Limpa memória Volátil",
+        "credentials": {
+          "redis": {
+            "id": "mG96KO4qIJc2Z5cp",
+            "name": "Redis"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "remotejId"
+              },
+              {
+                "name": "text"
+              },
+              {
+                "name": "waitTime",
+                "type": "number"
+              },
+              {
+                "name": "lastMessage"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -384,
+          -16
+        ],
+        "id": "6f2b7b0b-4067-49b7-8281-a7d006d8f7e3",
+        "name": "Executa Fluxo"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "81855e10-051d-4f74-8bac-14e7d6e7dc2b",
+                "name": "mensagem",
+                "value": "={{ $('Busca na memória volátil').item.json.mensagem.join('\\n') }}",
+                "type": "string"
+              },
+              {
+                "id": "538aecce-eae0-4d8b-a2c0-3c55525a6996",
+                "name": "retorno",
+                "value": "agente",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          896,
+          -128
+        ],
+        "id": "f152fef8-71fb-4220-9706-c9bfc86aff4e",
+        "name": "Retorna Mensagem"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "538aecce-eae0-4d8b-a2c0-3c55525a6996",
+                "name": "retorno",
+                "value": "aguardar",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          688,
+          64
+        ],
+        "id": "cd4b0ad4-fb02-44a3-959f-58e7cf563321",
+        "name": "Retorna Aguardar"
+      },
+      {
+        "parameters": {
+          "content": "## Guarda conversas e espera x segundos para fazer o cache",
+          "height": 416,
+          "width": 832
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -432,
+          -192
+        ],
+        "id": "b4852994-ac04-45e4-9d58-c89e37403ba2",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "## Valida se já foi expirado o tempo e a última mensagem é igual e retorna para o fluxo",
+          "height": 416,
+          "width": 832,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          416,
+          -192
+        ],
+        "id": "b7191a72-43a9-4cda-b81c-acda018d56d3",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "height": 176,
+          "width": 448,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -432,
+          -384
+        ],
+        "typeVersion": 1,
+        "id": "59d3ead0-d6b9-4a4e-895a-b7bb69b34f09",
+        "name": "Sticky Note29"
+      }
+    ],
+    "connections": {
+      "Espera": {
+        "main": [
+          [
+            {
+              "node": "Busca na memória volátil",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grava na Memória Volátil": {
+        "main": [
+          [
+            {
+              "node": "Espera",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca na memória volátil": {
+        "main": [
+          [
+            {
+              "node": "Se última mensagem igual a que vem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se última mensagem igual a que vem": {
+        "main": [
+          [
+            {
+              "node": "Limpa memória Volátil",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Retorna Aguardar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executa Fluxo": {
+        "main": [
+          [
+            {
+              "node": "Grava na Memória Volátil",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limpa memória Volátil": {
+        "main": [
+          [
+            {
+              "node": "Retorna Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 5",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-14T14:38:30.698Z",
+        "id": 207,
+        "workflowId": "5lkyqPIh_Zfy-kN00lytT",
+        "versionId": "74932bd6-56f7-4854-8126-62a59e242f82",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

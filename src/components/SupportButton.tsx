@@ -10,8 +10,8 @@ export default function SupportButton() {
     queryKey: ['global-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('global_settings')
-        .select('support_whatsapp')
+        .from('configuracoes_globais')
+        .select('whatsapp_suporte')
         .single();
 
       if (error) throw error;
@@ -20,13 +20,13 @@ export default function SupportButton() {
   });
 
   // Não mostrar se não houver número de suporte configurado
-  if (!globalSettings?.support_whatsapp) {
+  if (!globalSettings?.whatsapp_suporte) {
     return null;
   }
 
   const handleWhatsAppClick = () => {
     // Remover todos os caracteres não numéricos
-    const cleanNumber = globalSettings.support_whatsapp.replace(/\D/g, '');
+    const cleanNumber = globalSettings.whatsapp_suporte.replace(/\D/g, '');
     
     // Abrir WhatsApp Web/App
     const whatsappUrl = `https://wa.me/${cleanNumber}?text=Olá, preciso de suporte!`;

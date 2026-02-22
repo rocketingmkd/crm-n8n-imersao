@@ -20,16 +20,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface Organization {
-  id: string; name: string; slug: string; is_active: boolean; created_at: string; settings: any;
-  subscription_plan?: string | null; contact_email?: string | null;
+  id: string; nome: string; identificador: string; ativo: boolean; criado_em: string; settings: any;
+  plano_assinatura?: string | null; email_contato?: string | null;
 }
 
 const PAGE_SIZES = [10, 20, 50];
-
-const PLAN_LABELS: Record<string, string> = {
-  plano_a: "Atendimento",
-  plano_b: "Atendimento + Conhecimento",
-};
 
 export default function Organizations() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,15 +38,35 @@ export default function Organizations() {
   const { data: organizations, isLoading } = useQuery<Organization[]>({
     queryKey: ["super-admin-organizations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("organizacoes").select("*").order("criado_em", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
+  const { data: plans = [] } = useQuery({
+    queryKey: ["subscription-plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("planos_assinatura")
+        .select("id_plano, nome_plano")
+        .order("id_plano", { ascending: true });
+      if (error) throw error;
+      return data as { id_plano: string; nome_plano: string }[];
+    },
+  });
+
+  const planNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of plans) {
+      map[p.id_plano] = p.nome_plano;
+    }
+    return map;
+  }, [plans]);
+
   const toggleStatus = useMutation({
     mutationFn: async ({ orgId, newStatus }: { orgId: string; newStatus: boolean }) => {
-      const { error } = await supabase.from("organizations").update({ is_active: newStatus }).eq("id", orgId);
+      const { error } = await supabase.from("organizacoes").update({ ativo: newStatus }).eq("id", orgId);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success("Status atualizado!"); setToggleOrgId(null); },
@@ -60,7 +75,7 @@ export default function Organizations() {
 
   const deleteOrganization = useMutation({
     mutationFn: async (orgId: string) => {
-      const { error } = await supabase.from("organizations").delete().eq("id", orgId);
+      const { error } = await supabase.from("organizacoes").delete().eq("id", orgId);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success("Organização excluída!"); setDeleteOrgId(null); },
@@ -72,7 +87,7 @@ export default function Organizations() {
     if (!searchQuery.trim()) return organizations;
     const q = searchQuery.toLowerCase();
     return organizations.filter((org) =>
-      org.name.toLowerCase().includes(q) || org.id.toLowerCase().includes(q)
+      org.nome.toLowerCase().includes(q) || org.id.toLowerCase().includes(q)
     );
   }, [organizations, searchQuery]);
 
@@ -163,19 +178,19 @@ export default function Organizations() {
               ) : (
                 paginatedOrgs.map((org) => (
                   <TableRow key={org.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-medium text-foreground">{org.name}</TableCell>
+                    <TableCell className="font-medium text-foreground">{org.nome}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{org.id.slice(0, 8)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
-                        {org.subscription_plan ? (PLAN_LABELS[org.subscription_plan] || org.subscription_plan) : "—"}
+                        {org.plano_assinatura ? (planNameById[org.plano_assinatura] || org.plano_assinatura) : "—"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {new Date(org.created_at).toLocaleDateString("pt-BR")}
+                      {new Date(org.criado_em).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={org.is_active ? "default" : "secondary"} className={org.is_active ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20" : ""}>
-                        {org.is_active ? "Ativa" : "Inativa"}
+                      <Badge variant={org.ativo ? "default" : "secondary"} className={org.ativo ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20" : ""}>
+                        {org.ativo ? "Ativa" : "Inativa"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -183,8 +198,8 @@ export default function Organizations() {
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)} title="Editar">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setToggleOrgId(org.id)} title={org.is_active ? "Desativar" : "Ativar"}>
-                          {org.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                        <Button variant="ghost" size="icon" onClick={() => setToggleOrgId(org.id)} title={org.ativo ? "Desativar" : "Ativar"}>
+                          {org.ativo ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => setDeleteOrgId(org.id)} title="Excluir" className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
@@ -244,14 +259,14 @@ export default function Organizations() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Ação</AlertDialogTitle>
             <AlertDialogDescription>
-              {organizations?.find((o) => o.id === toggleOrgId)?.is_active
+              {organizations?.find((o) => o.id === toggleOrgId)?.ativo
                 ? "Desativar esta empresa impedirá o acesso de todos os usuários."
                 : "Ativar esta empresa permitirá o acesso de todos os usuários."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { const org = organizations?.find((o) => o.id === toggleOrgId); if (org) toggleStatus.mutate({ orgId: org.id, newStatus: !org.is_active }); }} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <AlertDialogAction onClick={() => { const org = organizations?.find((o) => o.id === toggleOrgId); if (org) toggleStatus.mutate({ orgId: org.id, newStatus: !org.ativo }); }} className="bg-primary text-primary-foreground hover:bg-primary/90">
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -267,7 +282,7 @@ export default function Organizations() {
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p className="font-semibold text-destructive">⚠️ ATENÇÃO: Esta ação é irreversível!</p>
-              <p>Ao excluir "<strong className="text-foreground">{organizations?.find((o) => o.id === deleteOrgId)?.name}</strong>", todos os dados serão apagados.</p>
+              <p>Ao excluir "<strong className="text-foreground">{organizations?.find((o) => o.id === deleteOrgId)?.nome}</strong>", todos os dados serão apagados.</p>
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>Todos os usuários/perfis</li>
                 <li>Todos os clientes</li>

@@ -5,7 +5,7 @@ export function useOrganization() {
 
   return {
     organization,
-    organizationId: profile?.organization_id ?? null,
+    organizationId: profile?.id_organizacao ?? null,
     loading,
   };
 }

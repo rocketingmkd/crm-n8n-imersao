@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./useAuth";
 
-// Função para converter slug da organização para nome da tabela de chats
-function slugToChatsTable(slug: string): string {
+// Função para converter identificador da organização para nome da tabela de conversas
+function identificadorParaTabela(identificador: string): string {
   // Remover o número do final (timestamp)
-  const parts = slug.split('-');
+  const parts = identificador.split('-');
   
   // Remover o último elemento se for um número grande (timestamp)
   if (parts.length > 1) {
@@ -16,7 +16,7 @@ function slugToChatsTable(slug: string): string {
   }
   
   // Juntar com underscore e adicionar _chats
-  return parts.join('_') + '_chats';
+  return parts.join('_') + '_conversas';
 }
 
 interface ChatMessage {
@@ -45,9 +45,9 @@ export function useChatMetrics() {
   const { organization } = useAuth();
 
   return useQuery({
-    queryKey: ['chat-metrics', organization?.slug],
+    queryKey: ['chat-metrics', organization?.identificador],
     queryFn: async (): Promise<ChatMetrics> => {
-      if (!organization?.slug) {
+      if (!organization?.identificador) {
         return {
           totalConversations: 0,
           totalMessages: 0,
@@ -61,7 +61,7 @@ export function useChatMetrics() {
         };
       }
 
-      const tableName = slugToChatsTable(organization.slug);
+      const tableName = identificadorParaTabela(organization.identificador);
       
       // Datas para filtros
       const now = new Date();
@@ -170,7 +170,7 @@ export function useChatMetrics() {
         };
       }
     },
-    enabled: !!organization?.slug,
+    enabled: !!organization?.identificador,
     staleTime: 30000, // Cache por 30 segundos
   });
 }

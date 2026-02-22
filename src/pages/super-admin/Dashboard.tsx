@@ -35,14 +35,14 @@ export default function SuperAdminDashboard() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["super-admin-stats"],
     queryFn: async () => {
-      const { count: totalOrgs } = await supabase.from("organizations").select("*", { count: "exact", head: true });
-      const { count: activeOrgs } = await supabase.from("organizations").select("*", { count: "exact", head: true }).eq("is_active", true);
-      const { count: totalUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_super_admin", false);
-      const { count: totalPatients } = await supabase.from("patients").select("*", { count: "exact", head: true });
-      const { count: totalAppointments } = await supabase.from("appointments").select("*", { count: "exact", head: true });
-      const { data: tokenData } = await supabase.from("token_usage").select("total_tokens, cost_reais");
+      const { count: totalOrgs } = await supabase.from("organizacoes").select("*", { count: "exact", head: true });
+      const { count: activeOrgs } = await supabase.from("organizacoes").select("*", { count: "exact", head: true }).eq("ativo", true);
+      const { count: totalUsers } = await supabase.from("perfis").select("*", { count: "exact", head: true }).eq("super_admin", false);
+      const { count: totalPatients } = await supabase.from("contatos").select("*", { count: "exact", head: true });
+      const { count: totalAppointments } = await supabase.from("agendamentos").select("*", { count: "exact", head: true });
+      const { data: tokenData } = await supabase.from("uso_tokens").select("total_tokens, custo_reais");
       const totalTokens = tokenData?.reduce((sum, item) => sum + (item.total_tokens || 0), 0) || 0;
-      const totalCost = tokenData?.reduce((sum, item) => sum + (Number(item.cost_reais) || 0), 0) || 0;
+      const totalCost = tokenData?.reduce((sum, item) => sum + (Number(item.custo_reais) || 0), 0) || 0;
       return {
         totalOrganizations: totalOrgs || 0, activeOrganizations: activeOrgs || 0,
         totalUsers: totalUsers || 0, totalPatients: totalPatients || 0,
@@ -54,26 +54,26 @@ export default function SuperAdminDashboard() {
   const { data: tokenUsageData, isLoading: loadingTokens } = useQuery({
     queryKey: ["token-usage-charts"],
     queryFn: async () => {
-      const { data: allTokens, error } = await supabase.from("token_usage").select("organization_id, total_tokens, cost_reais, created_at").order("created_at", { ascending: true });
+      const { data: allTokens, error } = await supabase.from("uso_tokens").select("id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true });
       if (error) throw error;
-      const { data: orgs } = await supabase.from("organizations").select("id, name");
-      const orgsMap = new Map(orgs?.map(o => [o.id, o.name]) || []);
+      const { data: orgs } = await supabase.from("organizacoes").select("id, nome");
+      const orgsMap = new Map(orgs?.map(o => [o.id, o.nome]) || []);
       const now = new Date();
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       const dailyData: Record<string, { tokens: number; cost: number }> = {};
       const orgData: Record<string, { tokens: number; cost: number }> = {};
       allTokens?.forEach((item) => {
-        const date = new Date(item.created_at);
+        const date = new Date(item.criado_em);
         if (date >= thirtyDaysAgo) {
           const dateKey = date.toISOString().split('T')[0];
           if (!dailyData[dateKey]) dailyData[dateKey] = { tokens: 0, cost: 0 };
           dailyData[dateKey].tokens += item.total_tokens || 0;
-          dailyData[dateKey].cost += Number(item.cost_reais) || 0;
+          dailyData[dateKey].cost += Number(item.custo_reais) || 0;
         }
-        const orgName = orgsMap.get(item.organization_id) || 'Desconhecida';
+        const orgName = orgsMap.get(item.id_organizacao) || 'Desconhecida';
         if (!orgData[orgName]) orgData[orgName] = { tokens: 0, cost: 0 };
         orgData[orgName].tokens += item.total_tokens || 0;
-        orgData[orgName].cost += Number(item.cost_reais) || 0;
+        orgData[orgName].cost += Number(item.custo_reais) || 0;
       });
       const dailyChartData: TokenUsageData[] = Object.entries(dailyData)
         .map(([date, data]) => ({ date: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }), tokens: data.tokens, cost: Number(data.cost.toFixed(8)) }))
@@ -88,7 +88,7 @@ export default function SuperAdminDashboard() {
   const { data: recentOrgs } = useQuery({
     queryKey: ["recent-organizations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false }).limit(5);
+      const { data, error } = await supabase.from("organizacoes").select("*").order("criado_em", { ascending: false }).limit(5);
       if (error) throw error;
       return data;
     },
@@ -273,18 +273,18 @@ export default function SuperAdminDashboard() {
                     <Building2 className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{org.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{org.slug}</p>
+                    <p className="text-sm font-medium text-foreground">{org.nome}</p>
+                    <p className="text-[10px] text-muted-foreground">{org.identificador}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    org.is_active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-muted text-muted-foreground ring-1 ring-border"
+                    org.ativo ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-muted text-muted-foreground ring-1 ring-border"
                   }`}>
-                    {org.is_active ? "Ativa" : "Inativa"}
+                    {org.ativo ? "Ativa" : "Inativa"}
                   </span>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {new Date(org.created_at).toLocaleDateString("pt-BR")}
+                    {new Date(org.criado_em).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
               </div>

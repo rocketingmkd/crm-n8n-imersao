@@ -1,0 +1,712 @@
+{
+  "updatedAt": "2026-01-16T12:41:15.985Z",
+  "createdAt": "2026-01-08T17:35:55.578Z",
+  "id": "eajfugs5Fk5NXBC57QOlr",
+  "name": "Insere Followup Cliente",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        16
+      ],
+      "id": "c7ec6b57-e2a4-445f-a694-2ce6e0584f31",
+      "name": "Busca Paciente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "clientes_followup",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "numero",
+              "keyValue": "={{ $json.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        16
+      ],
+      "id": "d75624bc-ebaf-4a4d-bdd1-7ac9327cd2a4",
+      "name": "Busca Follow do Paciente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f2e62cba-db3e-4d8f-8f64-5c4a6ca6feb1",
+              "leftValue": "={{ $json.numero }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        16
+      ],
+      "id": "9ced84a8-a2ee-4975-8420-101077b42d86",
+      "name": "Se encontrou linha na tabela"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clientes_followup",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "numero",
+              "condition": "eq",
+              "keyValue": "={{ $json.numero }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "followup",
+              "fieldValue": "={{ (() => {     const followUp = $json['follow-up'];     return followUp === \"encerrado\" ? \"encerrado\" : 0; })() }}"
+            },
+            {
+              "fieldId": "ultima_atividade",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
+            },
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Busca Paciente').last().json.id_organizacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -96
+      ],
+      "id": "e37dd6de-1fc3-4300-b7e3-cef5d5e7425f",
+      "name": "Atualiza Follow Up",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "clientes_followup",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "numero",
+              "fieldValue": "={{ $('Executa Fluxo').item.json.telefone }}"
+            },
+            {
+              "fieldId": "ultima_atividade",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "sessionid",
+              "fieldValue": "={{ $('Executa Fluxo').item.json.sessionId }}"
+            },
+            {
+              "fieldId": "followup",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Executa Fluxo').item.json.company_id }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        96
+      ],
+      "id": "6f3bf2c5-a9a8-4f28-9306-88a44c89af3c",
+      "name": "Cria Followup",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "telefone"
+            },
+            {
+              "name": "sessionId"
+            },
+            {
+              "name": "company_id"
+            },
+            {
+              "name": "mensagem_agent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1040,
+        16
+      ],
+      "id": "20212b7b-613a-4119-97dd-52c633bcb9c2",
+      "name": "Executa Fluxo"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 208,
+        "width": 480,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "82302680-c061-439e-bcfa-67447f48854b",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "content": "## Insere dados na tabela de follow up para controle das conversas",
+        "height": 672,
+        "width": 1152,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        -352
+      ],
+      "id": "6ac4243d-7d6f-4ee2-a0d2-eff52cfc0853",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Busca Paciente": {
+      "main": [
+        [
+          {
+            "node": "Busca Follow do Paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Follow do Paciente": {
+      "main": [
+        [
+          {
+            "node": "Se encontrou linha na tabela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se encontrou linha na tabela": {
+      "main": [
+        [
+          {
+            "node": "Atualiza Follow Up",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cria Followup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Followup": {
+      "main": [
+        [
+          {
+            "node": "Se encontrou linha na tabela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executa Fluxo": {
+      "main": [
+        [
+          {
+            "node": "Busca Paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Executa Fluxo": [
+      {
+        "json": {
+          "telefone": "5511982561489@s.whatsapp.net",
+          "sessionId": "464e1856-2b1e-4745-8475-27b5955704a7",
+          "company_id": "8563f374-e64b-4dd1-a3f5-9ddeac096f29"
+        }
+      }
+    ]
+  },
+  "versionId": "6fd604f9-5255-4487-964d-59790a5b0ca3",
+  "activeVersionId": "6fd604f9-5255-4487-964d-59790a5b0ca3",
+  "versionCounter": 55,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-08T17:35:55.578Z",
+      "createdAt": "2026-01-08T17:35:55.578Z",
+      "role": "workflow:owner",
+      "workflowId": "eajfugs5Fk5NXBC57QOlr",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-14T14:39:21.648Z",
+    "createdAt": "2026-01-14T14:39:18.098Z",
+    "versionId": "6fd604f9-5255-4487-964d-59790a5b0ca3",
+    "workflowId": "eajfugs5Fk5NXBC57QOlr",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "contacts",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "phone",
+                "keyValue": "={{ $json.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -848,
+          16
+        ],
+        "id": "c7ec6b57-e2a4-445f-a694-2ce6e0584f31",
+        "name": "Busca Paciente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "clientes_followup",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "numero",
+                "keyValue": "={{ $json.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -656,
+          16
+        ],
+        "id": "d75624bc-ebaf-4a4d-bdd1-7ac9327cd2a4",
+        "name": "Busca Follow do Paciente",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "f2e62cba-db3e-4d8f-8f64-5c4a6ca6feb1",
+                "leftValue": "={{ $json.numero }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -464,
+          16
+        ],
+        "id": "9ced84a8-a2ee-4975-8420-101077b42d86",
+        "name": "Se encontrou linha na tabela"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "clientes_followup",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "numero",
+                "condition": "eq",
+                "keyValue": "={{ $json.numero }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "followup",
+                "fieldValue": "={{ (() => {     const followUp = $json['follow-up'];     return followUp === \"encerrado\" ? \"encerrado\" : 0; })() }}"
+              },
+              {
+                "fieldId": "ultima_atividade",
+                "fieldValue": "={{ $now.toISO() }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
+              },
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Busca Paciente').last().json.id_organizacao }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -256,
+          -96
+        ],
+        "id": "e37dd6de-1fc3-4300-b7e3-cef5d5e7425f",
+        "name": "Atualiza Follow Up",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "clientes_followup",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "numero",
+                "fieldValue": "={{ $('Executa Fluxo').item.json.telefone }}"
+              },
+              {
+                "fieldId": "ultima_atividade",
+                "fieldValue": "={{ $now.toISO() }}"
+              },
+              {
+                "fieldId": "sessionid",
+                "fieldValue": "={{ $('Executa Fluxo').item.json.sessionId }}"
+              },
+              {
+                "fieldId": "followup",
+                "fieldValue": "0"
+              },
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Executa Fluxo').item.json.company_id }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -256,
+          96
+        ],
+        "id": "6f3bf2c5-a9a8-4f28-9306-88a44c89af3c",
+        "name": "Cria Followup",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "telefone"
+              },
+              {
+                "name": "sessionId"
+              },
+              {
+                "name": "company_id"
+              },
+              {
+                "name": "mensagem_agent"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -1040,
+          16
+        ],
+        "id": "20212b7b-613a-4119-97dd-52c633bcb9c2",
+        "name": "Executa Fluxo"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "height": 208,
+          "width": 480,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1056,
+          -240
+        ],
+        "typeVersion": 1,
+        "id": "82302680-c061-439e-bcfa-67447f48854b",
+        "name": "Sticky Note29"
+      },
+      {
+        "parameters": {
+          "content": "## Insere dados na tabela de follow up para controle das conversas",
+          "height": 672,
+          "width": 1152,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1168,
+          -352
+        ],
+        "id": "6ac4243d-7d6f-4ee2-a0d2-eff52cfc0853",
+        "name": "Sticky Note"
+      }
+    ],
+    "connections": {
+      "Busca Paciente": {
+        "main": [
+          [
+            {
+              "node": "Busca Follow do Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Follow do Paciente": {
+        "main": [
+          [
+            {
+              "node": "Se encontrou linha na tabela",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se encontrou linha na tabela": {
+        "main": [
+          [
+            {
+              "node": "Atualiza Follow Up",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Cria Followup",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cria Followup": {
+        "main": [
+          [
+            {
+              "node": "Se encontrou linha na tabela",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executa Fluxo": {
+        "main": [
+          [
+            {
+              "node": "Busca Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 3",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-14T14:39:21.646Z",
+        "id": 208,
+        "workflowId": "eajfugs5Fk5NXBC57QOlr",
+        "versionId": "6fd604f9-5255-4487-964d-59790a5b0ca3",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

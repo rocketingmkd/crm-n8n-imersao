@@ -38,13 +38,13 @@ interface WhatsAppInstance {
 
 interface DBInstance {
   id: string;
-  instance_id: string;
+  id_instancia: string;
   token: string;
-  instance_name: string;
+  nome_instancia: string;
   admin_field_01: string;
   phone: string;
-  status: string;
-  webhook_created: string | null;
+  situacao: string;
+  webhook_criado: string | null;
   qr_code: string | null;
   pairing_code: string | null;
 }
@@ -83,16 +83,16 @@ export default function Integrations() {
 
   // Carregar detalhes da instância automaticamente se já estiver conectado
   useEffect(() => {
-    if (dbInstance?.status === "connected" && !instanceDetails) {
+    if (dbInstance?.situacao === "conectado" && !instanceDetails) {
       console.log("Instância já conectada, carregando detalhes...");
       handleListInstance();
     }
-  }, [dbInstance?.status]);
+  }, [dbInstance?.situacao]);
 
   // Verificar conexão automaticamente a cada 2 segundos quando tiver QR ou Pairing Code
   useEffect(() => {
     if (!dbInstance) return;
-    if (dbInstance.status === "connected") return;
+    if (dbInstance.situacao === "conectado") return;
     if (!dbInstance.qr_code && !dbInstance.pairing_code) return;
 
     console.log("Iniciando verificação automática de conexão...");
@@ -103,13 +103,13 @@ export default function Integrations() {
         console.log("Verificando conexão...");
         
         const payload = {
-          instanceId: dbInstance.instance_id,
+          instanceId: dbInstance.id_instancia,
           token: dbInstance.token,
-          instanceName: dbInstance.instance_name,
+          instanceName: dbInstance.nome_instancia,
           adminField01: dbInstance.admin_field_01,
           phone: dbInstance.phone,
           organizationId: organization?.id,
-          organizationName: organization?.name,
+          organizationName: organization?.nome,
         };
 
         const response = await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}verificar-conexao`, {
@@ -142,23 +142,23 @@ export default function Integrations() {
 
         if (isConnected) {
           console.log("✅ WhatsApp conectado com sucesso!");
-          
+
           // Atualizar status no banco
           const { error: updateError } = await supabase
-            .from("whatsapp_instances")
-            .update({ status: "connected" })
+            .from("instancias_whatsapp")
+            .update({ situacao: "conectado" })
             .eq("id", dbInstance.id);
 
           if (updateError) {
             console.error("Erro ao atualizar status:", updateError);
           } else {
-            console.log("Status atualizado no banco para 'connected'");
+            console.log("Status atualizado no banco para 'conectado'");
           }
 
           // Atualizar estado local
           setDbInstance({
             ...dbInstance,
-            status: "connected",
+            situacao: "conectado",
           });
 
           setIsCheckingConnection(false);
@@ -183,7 +183,7 @@ export default function Integrations() {
       clearInterval(interval);
       setIsCheckingConnection(false);
     };
-  }, [dbInstance?.id, dbInstance?.status, dbInstance?.qr_code, dbInstance?.pairing_code, organization?.id]);
+  }, [dbInstance?.id, dbInstance?.situacao, dbInstance?.qr_code, dbInstance?.pairing_code, organization?.id]);
 
   const loadExistingInstance = async () => {
     if (!organization?.id) {
@@ -194,13 +194,13 @@ export default function Integrations() {
 
     try {
       setIsLoadingInstance(true);
-      console.log("Buscando instância para organization_id:", organization.id);
+      console.log("Buscando instância para id_organizacao:", organization.id);
       
       const { data, error } = await supabase
-        .from("whatsapp_instances")
+        .from("instancias_whatsapp")
         .select("*")
-        .eq("organization_id", organization.id)
-        .order("created_at", { ascending: false })
+        .eq("id_organizacao", organization.id)
+        .order("criado_em", { ascending: false })
         .limit(1)
         .single();
 
@@ -215,12 +215,12 @@ export default function Integrations() {
         
         // Converter dados do banco para o formato da interface
         const instance: WhatsAppInstance = {
-          id: data.instance_id,
+          id: data.id_instancia,
           token: data.token,
-          name: data.instance_name,
+          name: data.nome_instancia,
           adminField01: data.admin_field_01,
           phone: data.phone,
-          created: data.webhook_created || data.created_at,
+          created: data.webhook_criado || data.criado_em,
         };
         
         console.log("Instance data convertida:", instance);
@@ -238,8 +238,8 @@ export default function Integrations() {
 
   // Preencher nome da empresa quando abrir o modal
   useEffect(() => {
-    if (isModalOpen && organization?.name) {
-      const formattedName = organization.name
+    if (isModalOpen && organization?.nome) {
+      const formattedName = organization.nome
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -258,16 +258,16 @@ export default function Integrations() {
   const saveToDatabase = async (instance: WhatsAppInstance) => {
     try {
       const { error } = await supabase
-        .from("whatsapp_instances")
+        .from("instancias_whatsapp")
         .insert({
-          organization_id: organization?.id,
-          instance_id: instance.id,
+          id_organizacao: organization?.id,
+          id_instancia: instance.id,
           token: instance.token,
-          instance_name: instance.name,
+          nome_instancia: instance.name,
           admin_field_01: instance.adminField01,
           phone: instance.phone,
-          webhook_created: instance.created,
-          status: "pending",
+          webhook_criado: instance.created,
+          situacao: "pendente",
         });
 
       if (error) throw error;
@@ -308,7 +308,7 @@ export default function Integrations() {
           companyName: formData.companyName,
           phone: formData.phone,
           organizationId: organization?.id,
-          organizationName: organization?.name,
+          organizationName: organization?.nome,
         }),
       });
 
@@ -370,13 +370,13 @@ export default function Integrations() {
       setIsDeletingInstance(true);
       
       const payload = {
-        instanceId: dbInstance.instance_id,
+        instanceId: dbInstance.id_instancia,
         token: dbInstance.token,
-        instanceName: dbInstance.instance_name,
+        instanceName: dbInstance.nome_instancia,
         adminField01: dbInstance.admin_field_01,
         phone: dbInstance.phone,
         organizationId: organization?.id,
-        organizationName: organization?.name,
+        organizationName: organization?.nome,
       };
       
       console.log("Apagando instância, payload:", payload);
@@ -399,7 +399,7 @@ export default function Integrations() {
       
       // Deletar do banco de dados local
       const { error: deleteError } = await supabase
-        .from("whatsapp_instances")
+        .from("instancias_whatsapp")
         .delete()
         .eq("id", dbInstance.id);
 
@@ -436,13 +436,13 @@ export default function Integrations() {
       setIsListingInstance(true);
       
       const payload = {
-        instanceId: dbInstance.instance_id,
+        instanceId: dbInstance.id_instancia,
         token: dbInstance.token,
-        instanceName: dbInstance.instance_name,
+        instanceName: dbInstance.nome_instancia,
         adminField01: dbInstance.admin_field_01,
         phone: dbInstance.phone,
         organizationId: organization?.id,
-        organizationName: organization?.name,
+        organizationName: organization?.nome,
       };
       
       console.log("Listando instância, payload:", payload);
@@ -496,13 +496,13 @@ export default function Integrations() {
       setIsGeneratingQR(true);
       
       const payload = {
-        instanceId: dbInstance.instance_id,
+        instanceId: dbInstance.id_instancia,
         token: dbInstance.token,
-        instanceName: dbInstance.instance_name,
+        instanceName: dbInstance.nome_instancia,
         adminField01: dbInstance.admin_field_01,
         phone: dbInstance.phone,
         organizationId: organization?.id,
-        organizationName: organization?.name,
+        organizationName: organization?.nome,
       };
       
       console.log("Payload enviado:", payload);
@@ -539,7 +539,7 @@ export default function Integrations() {
       if (qrCode || pairingCode) {
         // Atualizar no banco de dados
         const { error: updateError } = await supabase
-          .from("whatsapp_instances")
+          .from("instancias_whatsapp")
           .update({
             qr_code: qrCode,
             pairing_code: pairingCode,
@@ -591,7 +591,7 @@ export default function Integrations() {
   }
 
   // Se tiver detalhes da instância, mostra card detalhado
-  if (instanceDetails && dbInstance?.status === "connected") {
+  if (instanceDetails && dbInstance?.situacao === "conectado") {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -726,9 +726,9 @@ export default function Integrations() {
 
   // Tela de pareamento - mostra se já existe instância no banco
   if (showPairingCard && instanceData && dbInstance) {
-    const statusColor = dbInstance.status === "connected" ? "text-green-500" : "text-yellow-500";
-    const statusBg = dbInstance.status === "connected" ? "bg-green-500" : "bg-yellow-500";
-    const statusText = dbInstance.status === "connected" ? "Conectado" : "Aguardando Pareamento";
+    const statusColor = dbInstance.situacao === "conectado" ? "text-green-500" : "text-yellow-500";
+    const statusBg = dbInstance.situacao === "conectado" ? "bg-green-500" : "bg-yellow-500";
+    const statusText = dbInstance.situacao === "conectado" ? "Conectado" : "Aguardando Pareamento";
 
     return (
       <div className="flex items-center justify-center min-h-screen p-4 md:p-6 lg:p-8">
@@ -743,10 +743,10 @@ export default function Integrations() {
 
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                {dbInstance.status === "connected" ? "WhatsApp Conectado" : "Conecte seu WhatsApp"}
+                {dbInstance.situacao === "conectado" ? "WhatsApp Conectado" : "Conecte seu WhatsApp"}
               </h2>
               <p className="text-muted-foreground">
-                {dbInstance.status === "connected" 
+                {dbInstance.situacao === "conectado"
                   ? "Sua instância está conectada e funcionando"
                   : "Escaneie o QR Code ou use o código de pareamento abaixo"
                 }
@@ -777,13 +777,13 @@ export default function Integrations() {
               <div className="flex items-center justify-between border-t border-border/50 pt-4">
                 <span className="text-sm text-muted-foreground">Instance ID</span>
                 <span className="text-xs font-mono text-foreground">
-                  {dbInstance.instance_id}
+                  {dbInstance.id_instancia}
                 </span>
               </div>
             </div>
 
             {/* Instruções - só mostra se não estiver conectado */}
-            {dbInstance.status !== "connected" && (
+            {dbInstance.situacao !== "conectado" && (
               <>
                 <div className="bg-accent/5 border border-accent/20 rounded-lg p-6 space-y-4 text-left">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -896,7 +896,7 @@ export default function Integrations() {
 
             {/* Botões */}
             <div className="flex flex-col gap-3 items-center pt-4">
-              {dbInstance.status === "connected" ? (
+              {dbInstance.situacao === "conectado" ? (
                 // Nenhum botão quando conectado - detalhes carregam automaticamente
                 null
               ) : (

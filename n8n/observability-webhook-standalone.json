@@ -12,7 +12,10 @@
       "name": "Webhook GET",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "observability-standalone"
     },
     {
@@ -24,7 +27,10 @@
       "name": "Coletar métricas do servidor",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [460, 200],
+      "position": [
+        460,
+        200
+      ],
       "notesInFlow": true,
       "notes": "Coleta CPU, RAM, disco e info do host via Node.js"
     },
@@ -42,7 +48,10 @@
       "name": "Buscar execuções n8n (running)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 450],
+      "position": [
+        460,
+        450
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "CONFIGURE_AQUI",
@@ -55,13 +64,16 @@
     },
     {
       "parameters": {
-        "jsCode": "const serverItem = $('Coletar métricas do servidor').first();\nconst execItem = $('Buscar execuções n8n (running)').first();\n\n// Parse server metrics from stdout\nlet serverData;\ntry {\n  const raw = serverItem.json.stdout || '';\n  serverData = JSON.parse(raw.trim());\n} catch (e) {\n  serverData = { metrics: { cpu: { percent: 0 }, memory: { usedMb: 0, totalMb: 0, percent: 0 }, disk: { usedGb: 0, totalGb: 0, percent: 0 }, n8nWorkers: { active: 0, idle: 0, busy: 0, total: 0 } }, workers: [], history: [] };\n}\n\n// Parse n8n executions\nlet runningCount = 0;\ntry {\n  const execData = execItem.json;\n  if (execData && execData.data && Array.isArray(execData.data)) {\n    runningCount = execData.data.filter(e => e.status === 'running').length;\n  }\n} catch (e) {}\n\n// Update workers info\nserverData.metrics.n8nWorkers = {\n  active: runningCount > 0 ? 1 : 1,\n  idle: runningCount > 0 ? 0 : 1,\n  busy: runningCount > 0 ? 1 : 0,\n  total: 1\n};\n\n// Update worker currentJobs\nif (serverData.workers && serverData.workers.length > 0) {\n  serverData.workers[0].currentJobs = runningCount;\n  serverData.workers[0].n8nVersion = $env.N8N_VERSION || '';\n}\n\nreturn [{ json: serverData }];"
+        "jsCode": "const serverItem = $('Coletar métricas do servidor').first();\nconst execItem = $('Buscar execuções n8n (running)').first();\n\n// Parse server metrics from stdout\nlet serverData;\ntry {\n  const raw = serverItem.json.stdout || '';\n  serverData = JSON.parse(raw.trim());\n} catch (e) {\n  serverData = { metrics: { cpu: { percent: 0 }, memory: { usedMb: 0, totalMb: 0, percent: 0 }, disk: { usedGb: 0, totalGb: 0, percent: 0 }, n8nWorkers: { active: 0, idle: 0, busy: 0, total: 0 } }, workers: [], history: [] };\n}\n\n// Parse n8n executions\nlet runningCount = 0;\ntry {\n  const execData = execItem.json;\n  if (execData && execData.data && Array.isArray(execData.data)) {\n    runningCount = execData.data.filter(e => e.situacao === 'running').length;\n  }\n} catch (e) {}\n\n// Update workers info\nserverData.metrics.n8nWorkers = {\n  active: runningCount > 0 ? 1 : 1,\n  idle: runningCount > 0 ? 0 : 1,\n  busy: runningCount > 0 ? 1 : 0,\n  total: 1\n};\n\n// Update worker currentJobs\nif (serverData.workers && serverData.workers.length > 0) {\n  serverData.workers[0].currentJobs = runningCount;\n  serverData.workers[0].n8nVersion = $env.N8N_VERSION || '';\n}\n\nreturn [{ json: serverData }];"
       },
       "id": "code-merge",
       "name": "Combinar métricas + workers",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 300]
+      "position": [
+        700,
+        300
+      ]
     },
     {
       "parameters": {
@@ -73,7 +85,10 @@
       "name": "Responder com JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [920, 300]
+      "position": [
+        920,
+        300
+      ]
     }
   ],
   "connections": {

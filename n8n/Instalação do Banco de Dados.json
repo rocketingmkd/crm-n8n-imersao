@@ -1,0 +1,1060 @@
+{
+  "updatedAt": "2026-01-16T12:44:13.057Z",
+  "createdAt": "2026-01-05T19:39:55.146Z",
+  "id": "gh7gewCSIB3jT9sHb4SSi",
+  "name": "Instalação do Banco de Dados",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Create patients table\nCREATE TABLE IF NOT EXISTS contacts (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,\n  name TEXT NOT NULL,\n  email TEXT NOT NULL UNIQUE,\n  phone TEXT NOT NULL,\n  status TEXT DEFAULT 'ativo' CHECK (status IN ('ativo', 'inativo')),\n  last_interaction TIMESTAMP WITH TIME ZONE,\n  total_interactions INTEGER DEFAULT 0\n);\n\n-- Create appointments table\nCREATE TABLE IF NOT EXISTS appointments (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,\n  date DATE NOT NULL,\n  time TEXT NOT NULL,\n  contact_id UUID REFERENCES contacts(id) ON DELETE CASCADE,\n  contact_name TEXT NOT NULL,\n  type TEXT NOT NULL,\n  status TEXT DEFAULT 'pendente' CHECK (status IN ('confirmado', 'pendente', 'concluido', 'cancelado')),\n  notes TEXT\n);\n\n-- Create settings table\nCREATE TABLE IF NOT EXISTS settings (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,\n  company_name TEXT NOT NULL,\n  owner_name TEXT NOT NULL,\n  subscription_plan TEXT DEFAULT 'premium',\n  subscription_renews_at TIMESTAMP WITH TIME ZONE\n);\n\n-- Create indexes for better performance\nCREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);\nCREATE INDEX IF NOT EXISTS idx_appointments_patient_id ON appointments(contact_id);\nCREATE INDEX IF NOT EXISTS idx_patients_email ON contacts(email);\nCREATE INDEX IF NOT EXISTS idx_patients_status ON contacts(status);\n\n-- Enable Row Level Security\nALTER TABLE contacts ENABLE ROW LEVEL SECURITY;\nALTER TABLE appointments ENABLE ROW LEVEL SECURITY;\nALTER TABLE settings ENABLE ROW LEVEL SECURITY;\n\n-- Create policies (permitir acesso público por enquanto - ajuste conforme necessário)\nCREATE POLICY \"Enable read access for all users\" ON contacts FOR SELECT USING (true);\nCREATE POLICY \"Enable insert for all users\" ON contacts FOR INSERT WITH CHECK (true);\nCREATE POLICY \"Enable update for all users\" ON contacts FOR UPDATE USING (true);\nCREATE POLICY \"Enable delete for all users\" ON contacts FOR DELETE USING (true);\n\nCREATE POLICY \"Enable read access for all users\" ON appointments FOR SELECT USING (true);\nCREATE POLICY \"Enable insert for all users\" ON appointments FOR INSERT WITH CHECK (true);\nCREATE POLICY \"Enable update for all users\" ON appointments FOR UPDATE USING (true);\nCREATE POLICY \"Enable delete for all users\" ON appointments FOR DELETE USING (true);\n\nCREATE POLICY \"Enable read access for all users\" ON settings FOR SELECT USING (true);\nCREATE POLICY \"Enable insert for all users\" ON settings FOR INSERT WITH CHECK (true);\nCREATE POLICY \"Enable update for all users\" ON settings FOR UPDATE USING (true);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        32,
+        -576
+      ],
+      "id": "af677438-7d4e-4923-ab9d-66e3824ceb29",
+      "name": "1",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Seed data para desenvolvimento\n-- Execute este arquivo no SQL Editor do Supabase para popular o banco com dados de exemplo\n\n-- Inserir configurações\nINSERT INTO settings (clinic_name, doctor_name, subscription_plan, subscription_renews_at)\nVALUES ('LuxClinic', 'Dr. Silva', 'premium', '2024-02-15T00:00:00Z')\nON CONFLICT DO NOTHING;\n\n-- Inserir pacientes\nINSERT INTO contacts (name, email, phone, status, last_visit, total_visits) VALUES\n  ('Maria Santos', 'maria.santos@email.com', '+351 912 345 678', 'ativo', '2024-01-15', 12),\n  ('João Silva', 'joao.silva@email.com', '+351 913 456 789', 'ativo', '2024-01-18', 8),\n  ('Ana Costa', 'ana.costa@email.com', '+351 914 567 890', 'ativo', '2023-12-20', 5),\n  ('Pedro Oliveira', 'pedro.oliveira@email.com', '+351 915 678 901', 'ativo', '2024-01-20', 15),\n  ('Rita Mendes', 'rita.mendes@email.com', '+351 916 789 012', 'ativo', '2024-01-10', 6),\n  ('Carlos Lima', 'carlos.lima@email.com', '+351 917 890 123', 'ativo', '2024-01-12', 9),\n  ('Luisa Fernandes', 'luisa.fernandes@email.com', '+351 918 901 234', 'ativo', '2024-01-08', 4),\n  ('Marco Paulo', 'marco.paulo@email.com', '+351 919 012 345', 'inativo', '2023-11-22', 3),\n  ('Sofia Rodrigues', 'sofia.rodrigues@email.com', '+351 920 123 456', 'ativo', '2024-01-19', 11)\nON CONFLICT (email) DO NOTHING;\n\n-- Inserir compromissos (ajuste as datas conforme necessário)\n-- Usando IDs dos pacientes já inseridos\nDO $$\nDECLARE\n  maria_id UUID;\n  ana_id UUID;\n  joao_id UUID;\n  pedro_id UUID;\n  rita_id UUID;\n  carlos_id UUID;\n  luisa_id UUID;\n  marco_id UUID;\n  sofia_id UUID;\nBEGIN\n  SELECT id INTO maria_id FROM contacts WHERE email = 'maria.santos@email.com';\n  SELECT id INTO ana_id FROM contacts WHERE email = 'ana.costa@email.com';\n  SELECT id INTO joao_id FROM contacts WHERE email = 'joao.silva@email.com';\n  SELECT id INTO pedro_id FROM contacts WHERE email = 'pedro.oliveira@email.com';\n  SELECT id INTO rita_id FROM contacts WHERE email = 'rita.mendes@email.com';\n  SELECT id INTO carlos_id FROM contacts WHERE email = 'carlos.lima@email.com';\n  SELECT id INTO luisa_id FROM contacts WHERE email = 'luisa.fernandes@email.com';\n  SELECT id INTO marco_id FROM contacts WHERE email = 'marco.paulo@email.com';\n  SELECT id INTO sofia_id FROM contacts WHERE email = 'sofia.rodrigues@email.com';\n\n  INSERT INTO appointments (date, time, contact_id, patient_name, type, status, notes) VALUES\n    ('2024-11-15', '09:00', maria_id, 'Maria Santos', 'Consulta', 'confirmado', 'Primeira consulta'),\n    ('2024-11-15', '14:00', ana_id, 'Ana Costa', 'Tratamento', 'confirmado', 'Sessão de tratamento'),\n    ('2024-11-16', '10:30', joao_id, 'João Silva', 'Retorno', 'confirmado', 'Retorno pós-tratamento'),\n    ('2024-11-16', '15:00', pedro_id, 'Pedro Oliveira', 'Consulta', 'pendente', 'Aguardando confirmação'),\n    ('2024-11-18', '11:00', rita_id, 'Rita Mendes', 'Avaliação', 'confirmado', 'Avaliação inicial'),\n    ('2024-11-18', '16:30', carlos_id, 'Carlos Lima', 'Tratamento', 'confirmado', 'Continuação do tratamento'),\n    ('2024-11-22', '09:30', luisa_id, 'Luisa Fernandes', 'Consulta', 'confirmado', 'Nova paciente'),\n    ('2024-11-22', '14:30', marco_id, 'Marco Paulo', 'Retorno', 'pendente', 'Verificar disponibilidade'),\n    ('2024-11-25', '10:00', sofia_id, 'Sofia Rodrigues', 'Tratamento', 'confirmado', 'Sessão programada');\nEND $$;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        -576
+      ],
+      "id": "fe3b5c60-6b7f-4e9c-b982-717878b0b22b",
+      "name": "2",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar campos de data/hora início e fim na tabela appointments\n\n-- 1. Adicionar novas colunas\nALTER TABLE appointments \nADD COLUMN start_datetime TIMESTAMP WITH TIME ZONE,\nADD COLUMN end_datetime TIMESTAMP WITH TIME ZONE;\n\n-- 2. Migrar dados existentes (date + time -> start_datetime)\n-- Assumindo que os compromissos duram 1 hora por padrão\nUPDATE appointments \nSET \n  start_datetime = (date || ' ' || time)::timestamp AT TIME ZONE 'America/Sao_Paulo',\n  end_datetime = (date || ' ' || time)::timestamp AT TIME ZONE 'America/Sao_Paulo' + interval '1 hour'\nWHERE start_datetime IS NULL;\n\n-- 3. Criar índices para melhor performance\nCREATE INDEX IF NOT EXISTS idx_appointments_start_datetime ON appointments(start_datetime);\nCREATE INDEX IF NOT EXISTS idx_appointments_end_datetime ON appointments(end_datetime);\n\n-- 4. Comentários para documentação\nCOMMENT ON COLUMN appointments.inicio IS 'Data e hora de início do compromisso (timezone-aware)';\nCOMMENT ON COLUMN appointments.fim IS 'Data e hora de fim do compromisso (timezone-aware)';\n\n-- 5. OPCIONAL: Remover campos antigos date e time após confirmar que tudo funciona\n-- Descomente estas linhas quando estiver 100% certo que os novos campos funcionam\n-- ALTER TABLE appointments DROP COLUMN date;\n-- ALTER TABLE appointments DROP COLUMN time;\n\n-- Por enquanto, vamos manter date e time para compatibilidade\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        -576
+      ],
+      "id": "754b6fc1-a4c9-461e-a565-5af166f17662",
+      "name": "3",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar campo de observações na tabela appointments\n\n-- Verificar se a coluna já existe (notes)\nDO $$ \nBEGIN\n  -- Se já existe coluna 'notes', renomear para 'observations' (mais claro)\n  IF EXISTS (\n    SELECT 1 FROM information_schema.columns \n    WHERE table_name = 'agendamentos' AND column_name = 'notes'\n  ) THEN\n    ALTER TABLE appointments RENAME COLUMN notes TO observations;\n  END IF;\nEND $$;\n\n-- Adicionar coluna observations se não existir\nALTER TABLE appointments \nADD COLUMN IF NOT EXISTS observations TEXT;\n\n-- Adicionar índice para busca\nCREATE INDEX IF NOT EXISTS idx_appointments_observations ON appointments USING gin(to_tsvector('portuguese', coalesce(observations, '')));\n\n-- Comentário para documentação\nCOMMENT ON COLUMN appointments.observacoes IS 'Observações e notas sobre o compromisso';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        -576
+      ],
+      "id": "79be698e-9427-47bd-812f-32ad69ff41f3",
+      "name": "4",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Mudar tipo das colunas de TIMESTAMP para TEXT\n-- Isso permite armazenar o formato ISO8601 literal com timezone\n\n-- 1. Criar colunas temporárias do tipo TEXT\nALTER TABLE appointments \nADD COLUMN start_datetime_text TEXT,\nADD COLUMN end_datetime_text TEXT;\n\n-- 2. Migrar dados existentes para formato ISO8601 com timezone São Paulo\nUPDATE appointments \nSET \n  start_datetime_text = TO_CHAR(start_datetime AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD\"T\"HH24:MI:SS\"-03:00\"'),\n  end_datetime_text = TO_CHAR(end_datetime AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD\"T\"HH24:MI:SS\"-03:00\"')\nWHERE start_datetime IS NOT NULL;\n\n-- 3. Remover colunas antigas\nALTER TABLE appointments \nDROP COLUMN IF EXISTS start_datetime,\nDROP COLUMN IF EXISTS end_datetime;\n\n-- 4. Renomear colunas novas\nALTER TABLE appointments \nRENAME COLUMN start_datetime_text TO start_datetime;\n\nALTER TABLE appointments \nRENAME COLUMN end_datetime_text TO end_datetime;\n\n-- 5. Adicionar constraint de validação (formato ISO8601)\nALTER TABLE appointments \nADD CONSTRAINT check_start_datetime_format \nCHECK (start_datetime IS NULL OR start_datetime ~ '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$');\n\nALTER TABLE appointments \nADD CONSTRAINT check_end_datetime_format \nCHECK (end_datetime IS NULL OR end_datetime ~ '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$');\n\n-- 6. Criar índices para performance\nCREATE INDEX IF NOT EXISTS idx_appointments_start_datetime_text ON appointments(start_datetime);\nCREATE INDEX IF NOT EXISTS idx_appointments_end_datetime_text ON appointments(end_datetime);\n\n-- 7. Comentários\nCOMMENT ON COLUMN appointments.inicio IS 'Data/hora início no formato ISO8601 com timezone (TEXT): 2025-11-25T09:00:00-03:00';\nCOMMENT ON COLUMN appointments.fim IS 'Data/hora fim no formato ISO8601 com timezone (TEXT): 2025-11-25T09:00:00-03:00';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        -576
+      ],
+      "id": "035ab554-87ea-43d5-85e3-c8e373cd412f",
+      "name": "5",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 005: Multi-Tenant Setup\n-- =====================================================\n-- Criar estrutura para múltiplas organizações (clínicas)\n-- Cada organização terá seus próprios dados isolados\n\n-- 1. CRIAR TABELA DE ORGANIZAÇÕES\nCREATE TABLE IF NOT EXISTS organizations (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  name TEXT NOT NULL,\n  identificador TEXT UNIQUE NOT NULL,\n  settings JSONB DEFAULT '{}'::jsonb,\n  is_active BOOLEAN DEFAULT true\n);\n\n-- Comentário\nCOMMENT ON TABLE organizations IS 'Organizações (clínicas/consultórios) do sistema';\nCOMMENT ON COLUMN organizations.slug IS 'Identificador único amigável da organização';\n\n-- Índice\nCREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(identificador);\n\n-- 2. CRIAR TABELA DE PERFIS (vinculada ao auth.users)\nCREATE TABLE IF NOT EXISTS profiles (\n  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,\n  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  full_name TEXT NOT NULL,\n  role TEXT NOT NULL DEFAULT 'profissional',\n  avatar_url TEXT,\n  is_active BOOLEAN DEFAULT true,\n  CONSTRAINT profiles_role_check CHECK (role IN ('admin', 'profissional', 'assistente'))\n);\n\n-- Comentários\nCOMMENT ON TABLE profiles IS 'Perfis de usuários vinculados às organizações';\nCOMMENT ON COLUMN profiles.id IS 'Referência ao auth.users do Supabase';\nCOMMENT ON COLUMN profiles.funcao IS 'Papel do usuário: admin, doctor ou assistant';\n\n-- Índices\nCREATE INDEX IF NOT EXISTS idx_profiles_organization_id ON profiles(organization_id);\nCREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);\n\n-- 3. DELETAR DADOS EXISTENTES (conforme solicitado)\nTRUNCATE TABLE appointments CASCADE;\nTRUNCATE TABLE contacts CASCADE;\nTRUNCATE TABLE settings CASCADE;\n\n-- 4. ADICIONAR organization_id NAS TABELAS EXISTENTES\n\n-- Tabela patients\nALTER TABLE contacts \nADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE;\n\n-- Tornar organization_id obrigatório após migração\nALTER TABLE contacts \nALTER COLUMN organization_id SET NOT NULL;\n\n-- Índice\nCREATE INDEX IF NOT EXISTS idx_patients_organization_id ON contacts(organization_id);\n\n-- Tabela appointments\nALTER TABLE appointments \nADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE;\n\n-- Tornar organization_id obrigatório\nALTER TABLE appointments \nALTER COLUMN organization_id SET NOT NULL;\n\n-- Índices\nCREATE INDEX IF NOT EXISTS idx_appointments_organization_id ON appointments(organization_id);\n\n-- Tabela settings\nALTER TABLE settings \nADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE;\n\n-- Tornar organization_id obrigatório e único por organização\nALTER TABLE settings \nALTER COLUMN organization_id SET NOT NULL;\n\n-- Constraint: apenas um settings por organização\nALTER TABLE settings \nADD CONSTRAINT settings_organization_unique UNIQUE(organization_id);\n\n-- Índice\nCREATE INDEX IF NOT EXISTS idx_settings_organization_id ON settings(organization_id);\n\n-- 5. FUNÇÃO HELPER: Obter organization_id do usuário atual\nCREATE OR REPLACE FUNCTION get_user_organization_id()\nRETURNS UUID AS $$\n  SELECT organization_id \n  FROM profiles \n  WHERE id = auth.uid()\n  LIMIT 1;\n$$ LANGUAGE sql SECURITY DEFINER STABLE;\n\n-- Comentário\nCOMMENT ON FUNCTION get_user_organization_id() IS 'Retorna o organization_id do usuário autenticado';\n\n-- 6. FUNÇÃO: Criar slug a partir do nome (sem dependência de extensões)\nCREATE OR REPLACE FUNCTION gerar_identificador(name TEXT)\nRETURNS TEXT AS $$\n  SELECT lower(\n    regexp_replace(\n      regexp_replace(\n        trim(name), \n        '[^a-zA-Z0-9\\s-]', '', 'g'\n      ),\n      '\\s+', '-', 'g'\n    )\n  );\n$$ LANGUAGE sql IMMUTABLE;\n\n-- Comentário\nCOMMENT ON FUNCTION gerar_identificador(TEXT) IS 'Gera slug URL-friendly a partir de um nome';\n\n-- 7. SEED: Criar organização de demonstração\nINSERT INTO organizations (name, identificador, settings)\nVALUES (\n  'Clínica Demo',\n  'clinica-demo',\n  '{\"theme\": \"light\", \"locale\": \"pt-BR\"}'::jsonb\n)\nON CONFLICT (identificador) DO NOTHING;\n\n-- Nota: O primeiro usuário será criado via interface de cadastro\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -576
+      ],
+      "id": "88ccbff6-e27b-4cfc-86a0-2e161e21c610",
+      "name": "6",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 006: Enable Row Level Security (RLS)\n-- =====================================================\n-- Configurar políticas de segurança para isolamento de dados por organização\n\n-- 1. HABILITAR RLS EM TODAS AS TABELAS\n\nALTER TABLE organizations ENABLE ROW LEVEL SECURITY;\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;\nALTER TABLE contacts ENABLE ROW LEVEL SECURITY;\nALTER TABLE appointments ENABLE ROW LEVEL SECURITY;\nALTER TABLE settings ENABLE ROW LEVEL SECURITY;\n\n-- 2. POLICIES PARA ORGANIZATIONS\n\n-- Usuários podem ver apenas sua própria organização\nCREATE POLICY \"Users can view their organization\"\n  ON organizations FOR SELECT\n  USING (id = get_user_organization_id());\n\n-- Apenas admins podem atualizar\nCREATE POLICY \"Admins can update their organization\"\n  ON organizations FOR UPDATE\n  USING (\n    id = get_user_organization_id() \n    AND EXISTS (\n      SELECT 1 FROM profiles \n      WHERE profiles.id = auth.uid() \n      AND profiles.funcao = 'admin'\n    )\n  );\n\n-- 3. POLICIES PARA PROFILES\n\n-- Usuários podem ver perfis da mesma organização\nCREATE POLICY \"Users can view profiles in their organization\"\n  ON profiles FOR SELECT\n  USING (organization_id = get_user_organization_id());\n\n-- Usuários podem ver seu próprio perfil\nCREATE POLICY \"Users can view own profile\"\n  ON profiles FOR SELECT\n  USING (id = auth.uid());\n\n-- Usuários podem atualizar seu próprio perfil\nCREATE POLICY \"Users can update own profile\"\n  ON profiles FOR UPDATE\n  USING (id = auth.uid());\n\n-- Sistema pode inserir perfis (usado no cadastro)\nCREATE POLICY \"System can insert profiles\"\n  ON profiles FOR INSERT\n  WITH CHECK (true);\n\n-- 4. POLICIES PARA PATIENTS\n\n-- Ver apenas pacientes da mesma organização\nCREATE POLICY \"Users can view patients in their organization\"\n  ON contacts FOR SELECT\n  USING (organization_id = get_user_organization_id());\n\n-- Inserir pacientes na própria organização\nCREATE POLICY \"Users can insert patients in their organization\"\n  ON contacts FOR INSERT\n  WITH CHECK (organization_id = get_user_organization_id());\n\n-- Atualizar pacientes da própria organização\nCREATE POLICY \"Users can update patients in their organization\"\n  ON contacts FOR UPDATE\n  USING (organization_id = get_user_organization_id());\n\n-- Deletar pacientes da própria organização\nCREATE POLICY \"Users can delete patients in their organization\"\n  ON contacts FOR DELETE\n  USING (organization_id = get_user_organization_id());\n\n-- 5. POLICIES PARA APPOINTMENTS\n\n-- Ver apenas compromissos da mesma organização\nCREATE POLICY \"Users can view appointments in their organization\"\n  ON appointments FOR SELECT\n  USING (organization_id = get_user_organization_id());\n\n-- Inserir compromissos na própria organização\nCREATE POLICY \"Users can insert appointments in their organization\"\n  ON appointments FOR INSERT\n  WITH CHECK (organization_id = get_user_organization_id());\n\n-- Atualizar compromissos da própria organização\nCREATE POLICY \"Users can update appointments in their organization\"\n  ON appointments FOR UPDATE\n  USING (organization_id = get_user_organization_id());\n\n-- Deletar compromissos da própria organização\nCREATE POLICY \"Users can delete appointments in their organization\"\n  ON appointments FOR DELETE\n  USING (organization_id = get_user_organization_id());\n\n-- 6. POLICIES PARA SETTINGS\n\n-- Ver configurações da própria organização\nCREATE POLICY \"Users can view their organization settings\"\n  ON settings FOR SELECT\n  USING (organization_id = get_user_organization_id());\n\n-- Apenas admins podem atualizar\nCREATE POLICY \"Admins can update settings\"\n  ON settings FOR UPDATE\n  USING (\n    organization_id = get_user_organization_id()\n    AND EXISTS (\n      SELECT 1 FROM profiles \n      WHERE profiles.id = auth.uid() \n      AND profiles.funcao = 'admin'\n    )\n  );\n\n-- Inserir settings (usado no cadastro da organização)\nCREATE POLICY \"System can insert settings\"\n  ON settings FOR INSERT\n  WITH CHECK (organization_id = get_user_organization_id());\n\n-- 7. GRANT PERMISSIONS\n\n-- Dar permissões para usuários autenticados\nGRANT USAGE ON SCHEMA public TO authenticated;\nGRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;\nGRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;\nGRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;\n\n-- Nota: RLS agora protege todos os dados por organização\n-- Cada usuário só consegue acessar dados de sua própria organização\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1328,
+        -576
+      ],
+      "id": "e2bdde48-795b-4118-988e-500b655bd457",
+      "name": "7",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Remover policies antigas de patients\nDROP POLICY IF EXISTS \"Enable delete for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON contacts;\n\n-- Remover policies antigas de appointments\nDROP POLICY IF EXISTS \"Enable delete for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON appointments;\n\n-- Remover policies antigas de settings\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON settings;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON settings;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON settings;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1552,
+        -560
+      ],
+      "id": "a8ee37bb-5cc2-475d-870a-d0fa5dd1b5cd",
+      "name": "8",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 007: Remover Policies Antigas\n-- =====================================================\n-- Remove policies antigas que permitem acesso total,\n-- garantindo que apenas as policies multi-tenant sejam usadas\n\n-- Remover policies antigas de patients\nDROP POLICY IF EXISTS \"Enable delete for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON contacts;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON contacts;\n\n-- Remover policies antigas de appointments\nDROP POLICY IF EXISTS \"Enable delete for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON appointments;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON appointments;\n\n-- Remover policies antigas de settings\nDROP POLICY IF EXISTS \"Enable insert for all users\" ON settings;\nDROP POLICY IF EXISTS \"Enable read access for all users\" ON settings;\nDROP POLICY IF EXISTS \"Enable update for all users\" ON settings;\n\nCOMMENT ON TABLE contacts IS 'Tabela de pacientes - acesso isolado por organization_id';\nCOMMENT ON TABLE appointments IS 'Tabela de compromissos - acesso isolado por organization_id';\nCOMMENT ON TABLE settings IS 'Tabela de configurações - acesso isolado por organization_id';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1776,
+        -560
+      ],
+      "id": "ceb73e6e-442d-4e7a-8b59-3924f8619ef1",
+      "name": "9",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 008: Super Admin System\n-- =====================================================\n\n-- 1. ADICIONAR COLUNA is_super_admin\nALTER TABLE profiles \nADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT false;\n\nCOMMENT ON COLUMN profiles.super_admin IS 'Super admins têm acesso total ao sistema';\n\n-- Índice para busca rápida de super admins\nCREATE INDEX IF NOT EXISTS idx_profiles_super_admin \nON profiles(is_super_admin) \nWHERE is_super_admin = true;\n\n-- 2. FUNÇÃO HELPER: Verificar se usuário é super admin\nCREATE OR REPLACE FUNCTION is_user_super_admin()\nRETURNS BOOLEAN AS $$\n  SELECT COALESCE(\n    (SELECT is_super_admin FROM profiles WHERE id = auth.uid()),\n    false\n  );\n$$ LANGUAGE sql SECURITY DEFINER STABLE;\n\nCOMMENT ON FUNCTION is_user_super_admin() IS 'Retorna true se o usuário autenticado é super admin';\n\n-- 3. POLICIES PARA SUPER ADMIN\n\n-- Organizations: Super admins podem ver todas\nDROP POLICY IF EXISTS \"Super admins can view all organizations\" ON organizations;\nCREATE POLICY \"Super admins can view all organizations\"\nON organizations FOR SELECT\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Organizations: Super admins podem inserir\nDROP POLICY IF EXISTS \"Super admins can insert organizations\" ON organizations;\nCREATE POLICY \"Super admins can insert organizations\"\nON organizations FOR INSERT\nTO authenticated\nWITH CHECK (is_user_super_admin());\n\n-- Organizations: Super admins podem atualizar\nDROP POLICY IF EXISTS \"Super admins can update organizations\" ON organizations;\nCREATE POLICY \"Super admins can update organizations\"\nON organizations FOR UPDATE\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Organizations: Super admins podem deletar\nDROP POLICY IF EXISTS \"Super admins can delete organizations\" ON organizations;\nCREATE POLICY \"Super admins can delete organizations\"\nON organizations FOR DELETE\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Profiles: Super admins podem ver todos os perfis\nDROP POLICY IF EXISTS \"Super admins can view all profiles\" ON profiles;\nCREATE POLICY \"Super admins can view all profiles\"\nON profiles FOR SELECT\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Profiles: Super admins podem criar perfis em qualquer organização\nDROP POLICY IF EXISTS \"Super admins can insert profiles\" ON profiles;\nCREATE POLICY \"Super admins can insert profiles\"\nON profiles FOR INSERT\nTO authenticated\nWITH CHECK (is_user_super_admin());\n\n-- Profiles: Super admins podem atualizar qualquer perfil\nDROP POLICY IF EXISTS \"Super admins can update profiles\" ON profiles;\nCREATE POLICY \"Super admins can update profiles\"\nON profiles FOR UPDATE\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Patients: Super admins podem ver todos\nDROP POLICY IF EXISTS \"Super admins can view all patients\" ON contacts;\nCREATE POLICY \"Super admins can view all patients\"\nON contacts FOR SELECT\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Appointments: Super admins podem ver todos\nDROP POLICY IF EXISTS \"Super admins can view all appointments\" ON appointments;\nCREATE POLICY \"Super admins can view all appointments\"\nON appointments FOR SELECT\nTO authenticated\nUSING (is_user_super_admin());\n\n-- Settings: Super admins podem ver todas\nDROP POLICY IF EXISTS \"Super admins can view all settings\" ON settings;\nCREATE POLICY \"Super admins can view all settings\"\nON settings FOR SELECT\nTO authenticated\nUSING (is_user_super_admin());\n\n-- 4. ATUALIZAR organization_id PARA SER NULLABLE (super admins não têm org)\nALTER TABLE profiles \nALTER COLUMN organization_id DROP NOT NULL;\n\nCOMMENT ON COLUMN profiles.id_organizacao IS 'Organization do usuário - NULL para super admins';\n\n-- 5. CHECK CONSTRAINT: Super admin não pode ter organization_id\nALTER TABLE profiles\nADD CONSTRAINT profiles_super_admin_no_org_check \nCHECK (\n  (is_super_admin = true AND organization_id IS NULL) OR\n  (is_super_admin = false AND organization_id IS NOT NULL)\n);\n\nCOMMENT ON CONSTRAINT profiles_super_admin_no_org_check ON profiles IS \n'Super admins não devem ter organization_id, usuários normais devem ter';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2016,
+        -560
+      ],
+      "id": "5937fe7a-ef9d-49a9-a84b-d56b8823ac37",
+      "name": "10",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 009: Criar Primeiro Super Admin\n-- =====================================================\n-- IMPORTANTE: Você precisa substituir os valores abaixo\n-- com suas credenciais desejadas antes de executar\n\n-- ⚠️ INSTRUÇÕES:\n-- 1. Primeiro cadastre o usuário manualmente via Supabase Dashboard:\n--    - Vá em Authentication > Users > \"Add User\"\n--    - Email: [SEU EMAIL AQUI]\n--    - Password: [SUA SENHA AQUI]\n--    - Copie o UUID gerado\n--\n-- 2. Cole o UUID abaixo e execute este SQL:\n\nDO $$\nDECLARE\n  super_admin_id UUID := '3149a2a0-0c6a-4fc0-b657-dad33acfc1c6'; -- ⚠️ SUBSTITUIR\n  super_admin_name TEXT := 'Ric Neves'; -- ⚠️ SUBSTITUIR com seu nome\nBEGIN\n  -- Inserir profile de super admin\n  INSERT INTO profiles (\n    id,\n    organization_id,\n    full_name,\n    role,\n    is_super_admin,\n    is_active\n  ) VALUES (\n    super_admin_id,\n    NULL, -- Super admin não tem organização\n    super_admin_name,\n    'admin',\n    true,\n    true\n  )\n  ON CONFLICT (id) DO UPDATE \n  SET \n    is_super_admin = true,\n    organization_id = NULL,\n    full_name = EXCLUDED.nome_completo;\n\n  RAISE NOTICE 'Super admin criado/atualizado com sucesso!';\nEND $$;\n\n-- Verificar\nSELECT id, full_name, is_super_admin, organization_id\nFROM profiles\nWHERE is_super_admin = true;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        -352
+      ],
+      "id": "c983ad08-d8b8-4236-b0ec-509996016345",
+      "name": "11",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =====================================================\n-- MIGRATION 010: Adicionar Logo às Organizações\n-- =====================================================\n\n-- 1. Adicionar coluna logo_url\nALTER TABLE organizations \nADD COLUMN IF NOT EXISTS logo_url TEXT;\n\nCOMMENT ON COLUMN organizations.url_logo IS 'URL do logo da organização armazenado no Supabase Storage';\n\n-- 2. Criar bucket no Supabase Storage (se não existir)\n-- Nota: Execute isso manualmente no Supabase Dashboard se necessário\n-- Storage > Create Bucket > Name: \"organization-logos\" > Public: true\n\n-- 3. Verificar\nSELECT id, name, logo_url \nFROM organizations \nLIMIT 5;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        -352
+      ],
+      "id": "deefc705-3cf7-4b2d-aabe-17a661ac6730",
+      "name": "12",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE POLICY \"Super admins can upload logos\"\nON storage.objects\nFOR INSERT\nTO authenticated\nWITH CHECK (\n  bucket_id = 'organization-logos' AND\n  (EXISTS (\n    SELECT 1 FROM profiles \n    WHERE id = auth.uid() AND is_super_admin = true\n  ))\n);\n\n-- Policy: Super admins podem deletar logos\nCREATE POLICY \"Super admins can delete logos\"\nON storage.objects\nFOR DELETE\nTO authenticated\nUSING (\n  bucket_id = 'organization-logos' AND\n  (EXISTS (\n    SELECT 1 FROM profiles \n    WHERE id = auth.uid() AND is_super_admin = true\n  ))\n);\n\n-- Policy: Todos podem ver logos (público)\nCREATE POLICY \"Anyone can view logos\"\nON storage.objects\nFOR SELECT\nTO public\nUSING (bucket_id = 'organization-logos');\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        464,
+        -352
+      ],
+      "id": "183118ad-324e-43b6-b46b-db21a2157bb7",
+      "name": "13",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar coluna kanban_status na tabela patients\n-- Descrição: Permite rastrear a posição do lead/paciente no funil de vendas do Kanban\n\n-- Adiciona a coluna kanban_status com os 6 estados possíveis\nALTER TABLE public.contacts\nADD COLUMN kanban_status TEXT DEFAULT 'novo_contato' CHECK (\n  kanban_status IN (\n    'novo_contato',\n    'qualificado',\n    'em_atendimento',\n    'agendado',\n    'aguardando_confirmacao',\n    'concluido'\n  )\n);\n\n-- Adiciona comentário explicativo na coluna\nCOMMENT ON COLUMN public.patients.status_kanban IS 'Status do lead no funil de vendas do Kanban';\n\n-- Cria índice para melhorar performance das consultas filtradas por kanban_status\nCREATE INDEX idx_patients_kanban_status ON public.patients(kanban_status);\n\n-- Cria índice composto para filtros por organization e kanban_status\nCREATE INDEX idx_patients_org_kanban_status ON public.patients(organization_id, kanban_status);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        -352
+      ],
+      "id": "63058f83-2a7d-47d5-be43-00997d0b0d28",
+      "name": "14",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar tabela de configurações do Agent IA\n-- Descrição: Armazena configurações personalizadas do Agent IA por organização\n\n-- Cria a tabela de configurações do Agent IA\nCREATE TABLE public.agent_ia_config (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  organization_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,\n  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,\n  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,\n  \n  -- Configurações do Agent\n  agent_name TEXT NOT NULL DEFAULT 'Assistente Virtual',\n  personality TEXT NOT NULL DEFAULT 'profissional',\n  pause_duration INTEGER NOT NULL DEFAULT 30, -- tempo em minutos\n  greeting_message TEXT NOT NULL DEFAULT 'Olá! Sou o assistente virtual da clínica. Como posso ajudá-lo hoje?',\n  closing_message TEXT NOT NULL DEFAULT 'Foi um prazer atendê-lo! Se precisar de algo mais, estou à disposição.',\n  \n  -- Garante apenas uma configuração por organização\n  UNIQUE(organization_id)\n);\n\n-- Adiciona comentários\nCOMMENT ON TABLE public.agent_ia_config IS 'Configurações personalizadas do Agent IA por organização';\nCOMMENT ON COLUMN public.agent_ia_config.nome_agente IS 'Nome personalizado do agent';\nCOMMENT ON COLUMN public.agent_ia_config.personality IS 'Personalidade do agent: profissional, amigável, formal, descontraído';\nCOMMENT ON COLUMN public.agent_ia_config.pause_duration IS 'Tempo em minutos que o agent pausa quando atendente humano assume';\nCOMMENT ON COLUMN public.agent_ia_config.mensagem_boas_vindas IS 'Mensagem de saudação inicial';\nCOMMENT ON COLUMN public.agent_ia_config.mensagem_encerramento IS 'Mensagem de finalização do atendimento';\n\n-- Habilita RLS\nALTER TABLE public.agent_ia_config ENABLE ROW LEVEL SECURITY;\n\n-- Política de SELECT: usuários podem ver apenas configurações da sua organização\nCREATE POLICY \"Users can view their organization agent config\"\n  ON public.agent_ia_config\n  FOR SELECT\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de INSERT: usuários podem criar configurações para sua organização\nCREATE POLICY \"Users can create their organization agent config\"\n  ON public.agent_ia_config\n  FOR INSERT\n  WITH CHECK (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de UPDATE: usuários podem atualizar configurações da sua organização\nCREATE POLICY \"Users can update their organization agent config\"\n  ON public.agent_ia_config\n  FOR UPDATE\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de DELETE: usuários podem deletar configurações da sua organização\nCREATE POLICY \"Users can delete their organization agent config\"\n  ON public.agent_ia_config\n  FOR DELETE\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Super admins têm acesso total\nCREATE POLICY \"Super admins have full access to agent config\"\n  ON public.agent_ia_config\n  FOR ALL\n  USING (\n    EXISTS (\n      SELECT 1 FROM public.profiles \n      WHERE id = auth.uid() AND is_super_admin = true\n    )\n  );\n\n-- Índice para performance\nCREATE INDEX idx_agent_ia_config_organization ON public.agent_ia_config(organization_id);\n\n-- Função para atualizar o updated_at automaticamente\nCREATE OR REPLACE FUNCTION update_agent_ia_config_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.atualizado_em = timezone('utc'::text, now());\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\n-- Trigger para atualizar updated_at\nCREATE TRIGGER update_agent_ia_config_updated_at\n  BEFORE UPDATE ON public.agent_ia_config\n  FOR EACH ROW\n  EXECUTE FUNCTION update_agent_ia_config_updated_at();\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        -352
+      ],
+      "id": "f5da0a6c-81da-4040-a2f8-910c37359f68",
+      "name": "15",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar tabela de instâncias do WhatsApp\n-- Descrição: Armazena informações das instâncias do WhatsApp conectadas por organização\n\n-- Cria a tabela de instâncias do WhatsApp\nCREATE TABLE public.whatsapp_instances (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  organization_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,\n  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,\n  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,\n  \n  -- Dados da instância retornados pelo webhook\n  instance_id TEXT NOT NULL UNIQUE, -- id retornado pelo webhook\n  token TEXT NOT NULL,\n  instance_name TEXT NOT NULL, -- name retornado pelo webhook\n  admin_field_01 TEXT NOT NULL, -- adminField01 (nome da empresa formatado)\n  phone TEXT NOT NULL, -- telefone conectado\n  webhook_created TEXT, -- created date do webhook\n  \n  -- Status da conexão\n  status TEXT NOT NULL DEFAULT 'pendente', -- pending, connected, disconnected, error\n  qr_code TEXT, -- QR code para pareamento (se disponível)\n  pairing_code TEXT, -- código de pareamento (se disponível)\n  \n  -- Garante apenas uma instância ativa por organização\n  UNIQUE(organization_id, instance_id)\n);\n\n-- Adiciona comentários\nCOMMENT ON TABLE public.whatsapp_instances IS 'Instâncias do WhatsApp conectadas por organização';\nCOMMENT ON COLUMN public.whatsapp_instances.id_instancia IS 'ID da instância retornado pelo webhook';\nCOMMENT ON COLUMN public.whatsapp_instances.token IS 'Token de autenticação da instância';\nCOMMENT ON COLUMN public.whatsapp_instances.nome_instancia IS 'Nome da instância (identificador)';\nCOMMENT ON COLUMN public.whatsapp_instances.campo_admin_01 IS 'Nome formatado da empresa';\nCOMMENT ON COLUMN public.whatsapp_instances.telefone IS 'Telefone conectado ao WhatsApp';\nCOMMENT ON COLUMN public.whatsapp_instances.situacao IS 'Status: pending, connected, disconnected, error';\n\n-- Habilita RLS\nALTER TABLE public.whatsapp_instances ENABLE ROW LEVEL SECURITY;\n\n-- Política de SELECT: usuários podem ver apenas instâncias da sua organização\nCREATE POLICY \"Users can view their organization whatsapp instances\"\n  ON public.whatsapp_instances\n  FOR SELECT\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de INSERT: usuários podem criar instâncias para sua organização\nCREATE POLICY \"Users can create their organization whatsapp instances\"\n  ON public.whatsapp_instances\n  FOR INSERT\n  WITH CHECK (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de UPDATE: usuários podem atualizar instâncias da sua organização\nCREATE POLICY \"Users can update their organization whatsapp instances\"\n  ON public.whatsapp_instances\n  FOR UPDATE\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Política de DELETE: usuários podem deletar instâncias da sua organização\nCREATE POLICY \"Users can delete their organization whatsapp instances\"\n  ON public.whatsapp_instances\n  FOR DELETE\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM public.profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Super admins têm acesso total\nCREATE POLICY \"Super admins have full access to whatsapp instances\"\n  ON public.whatsapp_instances\n  FOR ALL\n  USING (\n    EXISTS (\n      SELECT 1 FROM public.profiles \n      WHERE id = auth.uid() AND is_super_admin = true\n    )\n  );\n\n-- Índices para performance\nCREATE INDEX idx_whatsapp_instances_organization ON public.whatsapp_instances(organization_id);\nCREATE INDEX idx_whatsapp_instances_instance_id ON public.whatsapp_instances(instance_id);\nCREATE INDEX idx_whatsapp_instances_status ON public.whatsapp_instances(status);\n\n-- Função para atualizar o updated_at automaticamente\nCREATE OR REPLACE FUNCTION update_whatsapp_instances_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.atualizado_em = timezone('utc'::text, now());\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\n-- Trigger para atualizar updated_at\nCREATE TRIGGER update_whatsapp_instances_updated_at\n  BEFORE UPDATE ON public.whatsapp_instances\n  FOR EACH ROW\n  EXECUTE FUNCTION update_whatsapp_instances_updated_at();\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -352
+      ],
+      "id": "88ede5c7-04d5-4d04-80a5-5d7c07689830",
+      "name": "16",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Add new columns to agent_ia_config table\nALTER TABLE public.agent_ia_config\nADD COLUMN IF NOT EXISTS reminder_1_minutes INTEGER DEFAULT 15,\nADD COLUMN IF NOT EXISTS reminder_2_minutes INTEGER DEFAULT 60,\nADD COLUMN IF NOT EXISTS reminder_3_minutes INTEGER DEFAULT 1440,\nADD COLUMN IF NOT EXISTS qualification_questions JSONB DEFAULT '[]'::jsonb,\nADD COLUMN IF NOT EXISTS confirmation_email_body TEXT DEFAULT '<p>Olá, seu agendamento foi confirmado!</p>';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1344,
+        -352
+      ],
+      "id": "8d66b956-e4e0-4282-8d61-7de22ff59284",
+      "name": "17",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Add OpenAI API Key to agent_ia_config table\n\nALTER TABLE public.agent_ia_config\nADD COLUMN openai_api_key TEXT;\n\n-- Add comment explaining the field\nCOMMENT ON COLUMN public.agent_ia_config.chave_openai IS 'OpenAI API Key for AI features like email confirmation, chatbot, etc.';\n\n-- Create index for performance (optional, but good practice)\nCREATE INDEX idx_agent_ia_config_has_api_key ON public.agent_ia_config (organization_id) WHERE openai_api_key IS NOT NULL;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1568,
+        -336
+      ],
+      "id": "f6fea9cd-dcc6-4111-a078-45c877121cae",
+      "name": "18",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Add confirmation email HTML field to agent_ia_config table\n\nALTER TABLE public.agent_ia_config\nADD COLUMN confirmation_email_html TEXT;\n\n-- Add comment explaining the field\nCOMMENT ON COLUMN public.agent_ia_config.email_confirmacao_html IS 'HTML template for confirmation email generated by AI';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1808,
+        -336
+      ],
+      "id": "0208b7bd-b7fa-46a6-9dc8-a8d34675ea4b",
+      "name": "19",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Remove old confirmation_email_body column from agent_ia_config table\n-- Now we only use confirmation_email_html\n\nALTER TABLE public.agent_ia_config\nDROP COLUMN IF EXISTS confirmation_email_body;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2032,
+        -336
+      ],
+      "id": "6c1634d0-4300-4278-8eb3-efa624560a44",
+      "name": "20",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Add webhook_url to whatsapp_instances table\n\nALTER TABLE public.whatsapp_instances\nADD COLUMN webhook_url TEXT;\n\n-- Add comment explaining the field\nCOMMENT ON COLUMN public.whatsapp_instances.url_webhook IS 'URL do webhook configurado para receber eventos do WhatsApp';\n\n-- Create index for performance\nCREATE INDEX idx_whatsapp_instances_webhook_url ON public.whatsapp_instances (organization_id) WHERE webhook_url IS NOT NULL;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        -112
+      ],
+      "id": "7d09f34b-f892-4622-b590-207f5e18bad1",
+      "name": "21",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Add customer_pause_duration_seconds to agent_ia_config table\n-- Also rename pause_duration to pause_duration_seconds for consistency\n\n-- Add new column for customer-requested pause (in seconds)\nALTER TABLE public.agent_ia_config\nADD COLUMN customer_pause_duration_seconds INTEGER DEFAULT 300 CHECK (customer_pause_duration_seconds >= 60 AND customer_pause_duration_seconds <= 86400);\n\n-- Rename existing pause_duration to pause_duration_seconds and convert from minutes to seconds\n-- First, add new column\nALTER TABLE public.agent_ia_config\nADD COLUMN pause_duration_seconds INTEGER;\n\n-- Copy data, converting from minutes to seconds\nUPDATE public.agent_ia_config\nSET pause_duration_seconds = pause_duration * 60;\n\n-- Set NOT NULL constraint and default\nALTER TABLE public.agent_ia_config\nALTER COLUMN pause_duration_seconds SET NOT NULL,\nALTER COLUMN pause_duration_seconds SET DEFAULT 1800;\n\n-- Add check constraint (1 minute to 24 hours in seconds)\nALTER TABLE public.agent_ia_config\nADD CONSTRAINT chk_pause_duration_seconds CHECK (pause_duration_seconds >= 60 AND pause_duration_seconds <= 86400);\n\n-- Drop old column\nALTER TABLE public.agent_ia_config\nDROP COLUMN pause_duration;\n\n-- Add comments\nCOMMENT ON COLUMN public.agent_ia_config.pausa_segundos IS 'Tempo de pausa em segundos quando atendente humano assume (60-86400)';\nCOMMENT ON COLUMN public.agent_ia_config.pausa_cliente_segundos IS 'Tempo de pausa em segundos quando cliente solicita (60-86400)';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        -112
+      ],
+      "id": "c9a44e98-192c-4a17-ab14-e4ff72a38cb1",
+      "name": "22",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Tabela de horários de trabalho dos médicos\nCREATE TABLE IF NOT EXISTS work_schedules (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,\n  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  \n  -- Dias da semana (segunda a domingo)\n  day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),\n  -- 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado\n  \n  -- Horários de trabalho (formato TEXT para facilitar, ex: \"08:00\", \"18:00\")\n  inicio_trabalho TEXT NOT NULL,\n  fim_trabalho TEXT NOT NULL,\n  inicio_almoco TEXT,\n  fim_almoco TEXT,\n  \n  -- Se o médico trabalha neste dia\n  is_working_day BOOLEAN DEFAULT true,\n  \n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  \n  -- Garantir que não haja duplicatas (um horário por dia por usuário)\n  UNIQUE(organization_id, user_id, day_of_week)\n);\n\n-- Índices para melhorar performance\nCREATE INDEX idx_work_schedules_org ON work_schedules(organization_id);\nCREATE INDEX idx_work_schedules_user ON work_schedules(user_id);\nCREATE INDEX idx_work_schedules_day ON work_schedules(day_of_week);\n\n-- Habilitar RLS\nALTER TABLE work_schedules ENABLE ROW LEVEL SECURITY;\n\n-- Políticas RLS\nCREATE POLICY \"Users can view their organization's work schedules\"\n  ON work_schedules FOR SELECT\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can insert their own work schedules\"\n  ON work_schedules FOR INSERT\n  WITH CHECK (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can update their own work schedules\"\n  ON work_schedules FOR UPDATE\n  USING (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can delete their own work schedules\"\n  ON work_schedules FOR DELETE\n  USING (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Super admins podem fazer tudo\nCREATE POLICY \"Super admins have full access to work schedules\"\n  ON work_schedules FOR ALL\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.super_admin = true\n    )\n  );\n\n-- Trigger para atualizar updated_at\nCREATE OR REPLACE FUNCTION update_work_schedules_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.atualizado_em = NOW();\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER work_schedules_updated_at\n  BEFORE UPDATE ON work_schedules\n  FOR EACH ROW\n  EXECUTE FUNCTION update_work_schedules_updated_at();\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        464,
+        -112
+      ],
+      "id": "6e76de1d-7683-48a1-ac8b-486eb779ad6c",
+      "name": "23",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Dropar tabela antiga\nDROP TABLE IF EXISTS work_schedules;\n\n-- Criar nova tabela com estrutura horizontal (uma linha por usuário)\nCREATE TABLE IF NOT EXISTS work_schedules (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,\n  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  \n  -- DOMINGO (0)\n  domingo_is_active BOOLEAN DEFAULT false,\n  domingo_inicio_trabalho TEXT,\n  domingo_fim_trabalho TEXT,\n  domingo_inicio_almoco TEXT,\n  domingo_fim_almoco TEXT,\n  \n  -- SEGUNDA-FEIRA (1)\n  segunda_is_active BOOLEAN DEFAULT true,\n  segunda_inicio_trabalho TEXT DEFAULT '08:00',\n  segunda_fim_trabalho TEXT DEFAULT '18:00',\n  segunda_inicio_almoco TEXT DEFAULT '12:00',\n  segunda_fim_almoco TEXT DEFAULT '13:00',\n  \n  -- TERÇA-FEIRA (2)\n  terca_is_active BOOLEAN DEFAULT true,\n  terca_inicio_trabalho TEXT DEFAULT '08:00',\n  terca_fim_trabalho TEXT DEFAULT '18:00',\n  terca_inicio_almoco TEXT DEFAULT '12:00',\n  terca_fim_almoco TEXT DEFAULT '13:00',\n  \n  -- QUARTA-FEIRA (3)\n  quarta_is_active BOOLEAN DEFAULT true,\n  quarta_inicio_trabalho TEXT DEFAULT '08:00',\n  quarta_fim_trabalho TEXT DEFAULT '18:00',\n  quarta_inicio_almoco TEXT DEFAULT '12:00',\n  quarta_fim_almoco TEXT DEFAULT '13:00',\n  \n  -- QUINTA-FEIRA (4)\n  quinta_is_active BOOLEAN DEFAULT true,\n  quinta_inicio_trabalho TEXT DEFAULT '08:00',\n  quinta_fim_trabalho TEXT DEFAULT '18:00',\n  quinta_inicio_almoco TEXT DEFAULT '12:00',\n  quinta_fim_almoco TEXT DEFAULT '13:00',\n  \n  -- SEXTA-FEIRA (5)\n  sexta_is_active BOOLEAN DEFAULT true,\n  sexta_inicio_trabalho TEXT DEFAULT '08:00',\n  sexta_fim_trabalho TEXT DEFAULT '18:00',\n  sexta_inicio_almoco TEXT DEFAULT '12:00',\n  sexta_fim_almoco TEXT DEFAULT '13:00',\n  \n  -- SÁBADO (6)\n  sabado_is_active BOOLEAN DEFAULT false,\n  sabado_inicio_trabalho TEXT,\n  sabado_fim_trabalho TEXT,\n  sabado_inicio_almoco TEXT,\n  sabado_fim_almoco TEXT,\n  \n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  \n  -- Garantir que só existe uma linha por usuário\n  UNIQUE(organization_id, user_id)\n);\n\n-- Índices para melhorar performance\nCREATE INDEX idx_work_schedules_org_new ON work_schedules(organization_id);\nCREATE INDEX idx_work_schedules_user_new ON work_schedules(user_id);\n\n-- Habilitar RLS\nALTER TABLE work_schedules ENABLE ROW LEVEL SECURITY;\n\n-- Políticas RLS\nCREATE POLICY \"Users can view their organization's work schedules\"\n  ON work_schedules FOR SELECT\n  USING (\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can insert their own work schedules\"\n  ON work_schedules FOR INSERT\n  WITH CHECK (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can update their own work schedules\"\n  ON work_schedules FOR UPDATE\n  USING (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\nCREATE POLICY \"Users can delete their own work schedules\"\n  ON work_schedules FOR DELETE\n  USING (\n    user_id = auth.uid() AND\n    organization_id IN (\n      SELECT organization_id FROM profiles WHERE id = auth.uid()\n    )\n  );\n\n-- Super admins podem fazer tudo\nCREATE POLICY \"Super admins have full access to work schedules\"\n  ON work_schedules FOR ALL\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.super_admin = true\n    )\n  );\n\n-- Trigger para atualizar updated_at\nCREATE OR REPLACE FUNCTION update_work_schedules_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.atualizado_em = NOW();\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER work_schedules_updated_at\n  BEFORE UPDATE ON work_schedules\n  FOR EACH ROW\n  EXECUTE FUNCTION update_work_schedules_updated_at();\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        688,
+        -112
+      ],
+      "id": "6cf27891-0ba7-479a-b7f9-ebc735bd8fb3",
+      "name": "24",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna de plano na tabela organizations\nALTER TABLE organizations \nADD COLUMN IF NOT EXISTS subscription_plan TEXT DEFAULT 'plano_a' CHECK (\n  subscription_plan IN ('plano_a', 'plano_b', 'plano_c', 'plano_d')\n);\n\n-- Adicionar coluna para recursos habilitados por plano\nALTER TABLE organizations\nADD COLUMN IF NOT EXISTS plan_features JSONB DEFAULT '{\n  \"atendimento_inteligente\": false,\n  \"agendamento_automatico\": false,\n  \"lembretes_automaticos\": false,\n  \"confirmacao_email\": false,\n  \"base_conhecimento\": false,\n  \"relatorios_avancados\": false,\n  \"integracao_whatsapp\": false,\n  \"multi_usuarios\": false,\n  \"personalizacao_agente\": false,\n  \"analytics\": false\n}'::jsonb;\n\n-- Criar tabela de configuração de planos (para definir o que cada plano tem)\nCREATE TABLE IF NOT EXISTS subscription_plan_configs (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  plan_id TEXT UNIQUE NOT NULL CHECK (\n    plan_id IN ('plano_a', 'plano_b', 'plano_c', 'plano_d')\n  ),\n  plan_name TEXT NOT NULL,\n  plan_description TEXT,\n  \n  -- Recursos do plano\n  atendimento_inteligente BOOLEAN DEFAULT false,\n  agendamento_automatico BOOLEAN DEFAULT false,\n  lembretes_automaticos BOOLEAN DEFAULT false,\n  confirmacao_email BOOLEAN DEFAULT false,\n  base_conhecimento BOOLEAN DEFAULT false,\n  relatorios_avancados BOOLEAN DEFAULT false,\n  integracao_whatsapp BOOLEAN DEFAULT false,\n  multi_usuarios BOOLEAN DEFAULT false,\n  personalizacao_agente BOOLEAN DEFAULT false,\n  analytics BOOLEAN DEFAULT false,\n  \n  -- Limites do plano\n  max_agendamentos_mes INTEGER,\n  max_mensagens_whatsapp_mes INTEGER,\n  max_usuarios INTEGER,\n  max_pacientes INTEGER,\n  \n  -- Preço\n  price_monthly DECIMAL(10, 2),\n  price_annual DECIMAL(10, 2),\n  \n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- Inserir configurações padrão dos planos\nINSERT INTO subscription_plan_configs (\n  plan_id,\n  plan_name,\n  plan_description,\n  atendimento_inteligente,\n  agendamento_automatico,\n  lembretes_automaticos,\n  confirmacao_email,\n  base_conhecimento,\n  relatorios_avancados,\n  integracao_whatsapp,\n  multi_usuarios,\n  personalizacao_agente,\n  analytics,\n  max_agendamentos_mes,\n  max_mensagens_whatsapp_mes,\n  max_usuarios,\n  max_pacientes,\n  price_monthly,\n  price_annual\n) VALUES \n  -- Plano A: Atendimento Inteligente\n  (\n    'plano_a',\n    'Atendimento Inteligente',\n    'Chatbot inteligente com IA para atendimento automatizado',\n    true,   -- atendimento_inteligente\n    false,  -- agendamento_automatico\n    false,  -- lembretes_automaticos\n    false,  -- confirmacao_email\n    true,   -- base_conhecimento\n    false,  -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    false,  -- multi_usuarios\n    true,   -- personalizacao_agente\n    false,  -- analytics\n    100,    -- max_agendamentos_mes\n    1000,   -- max_mensagens_whatsapp_mes\n    1,      -- max_usuarios\n    500,    -- max_pacientes\n    97.00,  -- price_monthly\n    970.00  -- price_annual (10% desconto)\n  ),\n  \n  -- Plano B: Atendimento Agendador\n  (\n    'plano_b',\n    'Atendimento Agendador',\n    'Sistema de agendamento automatizado com confirmações',\n    false,  -- atendimento_inteligente\n    true,   -- agendamento_automatico\n    true,   -- lembretes_automaticos\n    true,   -- confirmacao_email\n    false,  -- base_conhecimento\n    false,  -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    true,   -- multi_usuarios\n    false,  -- personalizacao_agente\n    false,  -- analytics\n    500,    -- max_agendamentos_mes\n    2000,   -- max_mensagens_whatsapp_mes\n    3,      -- max_usuarios\n    1000,   -- max_pacientes\n    147.00, -- price_monthly\n    1470.00 -- price_annual (10% desconto)\n  ),\n  \n  -- Plano C: Atendimento Total\n  (\n    'plano_c',\n    'Atendimento Total',\n    'Solução completa: IA + Agendamento + Relatórios',\n    true,   -- atendimento_inteligente\n    true,   -- agendamento_automatico\n    true,   -- lembretes_automaticos\n    true,   -- confirmacao_email\n    true,   -- base_conhecimento\n    true,   -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    true,   -- multi_usuarios\n    true,   -- personalizacao_agente\n    true,   -- analytics\n    2000,   -- max_agendamentos_mes\n    10000,  -- max_mensagens_whatsapp_mes\n    10,     -- max_usuarios\n    5000,   -- max_pacientes\n    297.00, -- price_monthly\n    2970.00 -- price_annual (10% desconto)\n  ),\n  \n  -- Plano D: Atendimento Escalável\n  (\n    'plano_d',\n    'Atendimento Escalável',\n    'Solução enterprise ilimitada com suporte prioritário',\n    true,   -- atendimento_inteligente\n    true,   -- agendamento_automatico\n    true,   -- lembretes_automaticos\n    true,   -- confirmacao_email\n    true,   -- base_conhecimento\n    true,   -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    true,   -- multi_usuarios\n    true,   -- personalizacao_agente\n    true,   -- analytics\n    NULL,   -- max_agendamentos_mes (ilimitado)\n    NULL,   -- max_mensagens_whatsapp_mes (ilimitado)\n    NULL,   -- max_usuarios (ilimitado)\n    NULL,   -- max_pacientes (ilimitado)\n    497.00, -- price_monthly\n    4970.00 -- price_annual (10% desconto)\n  )\nON CONFLICT (plan_id) DO UPDATE SET\n  plan_name = EXCLUDED.nome_plano,\n  plan_description = EXCLUDED.descricao_plano,\n  atendimento_inteligente = EXCLUDED.atendimento_inteligente,\n  agendamento_automatico = EXCLUDED.agendamento_automatico,\n  lembretes_automaticos = EXCLUDED.lembretes_automaticos,\n  confirmacao_email = EXCLUDED.confirmacao_email,\n  base_conhecimento = EXCLUDED.base_conhecimento,\n  relatorios_avancados = EXCLUDED.relatorios_avancados,\n  integracao_whatsapp = EXCLUDED.integracao_whatsapp,\n  multi_usuarios = EXCLUDED.multi_usuarios,\n  personalizacao_agente = EXCLUDED.personalizacao_agente,\n  analytics = EXCLUDED.analytics,\n  max_agendamentos_mes = EXCLUDED.max_agendamentos_mes,\n  max_mensagens_whatsapp_mes = EXCLUDED.max_mensagens_whatsapp_mes,\n  max_usuarios = EXCLUDED.max_usuarios,\n  max_pacientes = EXCLUDED.max_pacientes,\n  price_monthly = EXCLUDED.preco_mensal,\n  price_annual = EXCLUDED.preco_anual,\n  updated_at = NOW();\n\n-- Habilitar RLS na tabela de configuração de planos\nALTER TABLE subscription_plan_configs ENABLE ROW LEVEL SECURITY;\n\n-- Políticas RLS - apenas super admins podem editar\nCREATE POLICY \"Super admins can view plan configs\"\n  ON subscription_plan_configs FOR SELECT\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.super_admin = true\n    )\n  );\n\nCREATE POLICY \"Super admins can manage plan configs\"\n  ON subscription_plan_configs FOR ALL\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.super_admin = true\n    )\n  );\n\n-- Todos podem ver os planos (para escolher na criação)\nCREATE POLICY \"Anyone can view plan configs for selection\"\n  ON subscription_plan_configs FOR SELECT\n  USING (true);\n\n-- Trigger para atualizar updated_at\nCREATE OR REPLACE FUNCTION update_subscription_plan_configs_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.atualizado_em = NOW();\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER subscription_plan_configs_updated_at\n  BEFORE UPDATE ON subscription_plan_configs\n  FOR EACH ROW\n  EXECUTE FUNCTION update_subscription_plan_configs_updated_at();\n\n-- Índices\nCREATE INDEX idx_organizations_subscription_plan ON organizations(subscription_plan);\nCREATE INDEX idx_subscription_plan_configs_plan_id ON subscription_plan_configs(plan_id);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "fb274757-1fba-4659-8a9d-4a3932eb72e6",
+      "name": "25",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar campos de Follow Up ao Agent IA\n-- Cada follow up será armazenado em minutos no banco de dados\n\nALTER TABLE public.agent_ia_config\nADD COLUMN IF NOT EXISTS follow_up_1_minutes INTEGER DEFAULT 60,\nADD COLUMN IF NOT EXISTS follow_up_2_minutes INTEGER DEFAULT 1440,\nADD COLUMN IF NOT EXISTS follow_up_3_minutes INTEGER DEFAULT 4320;\n\nCOMMENT ON COLUMN public.agent_ia_config.followup_1_minutos IS 'Primeiro follow up em minutos (padrão: 60 min = 1 hora)';\nCOMMENT ON COLUMN public.agent_ia_config.followup_2_minutos IS 'Segundo follow up em minutos (padrão: 1440 min = 1 dia)';\nCOMMENT ON COLUMN public.agent_ia_config.followup_3_minutos IS 'Terceiro follow up em minutos (padrão: 4320 min = 3 dias)';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "396f1a6e-7480-40e5-a9c7-06841a05035b",
+      "name": "26",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 1. Remove a função anterior para evitar conflitos\nDROP FUNCTION IF EXISTS match_documents_geral;\n\n-- 2. Cria a função EXATA que o seu n8n está pedindo (apenas 3 parâmetros)\nCREATE OR REPLACE FUNCTION match_documents_geral (\n  query_embedding vector(1536),\n  match_count int,\n  filter jsonb\n)\nRETURNS TABLE (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nLANGUAGE plpgsql\nAS $$\nBEGIN\n  RETURN QUERY\n  SELECT\n    documents_geral.id,\n    documents_geral.content,\n    documents_geral.metadata,\n    1 - (documents_geral.embedding <=> query_embedding) AS similarity\n  FROM documents_geral\n  WHERE documents_geral.metadata @> filter -- O filtro 'documento' funcionará aqui\n  ORDER BY documents_geral.embedding <=> query_embedding\n  LIMIT match_count;\nEND;\n$$;\n\n-- 3. Permissões necessárias\nGRANT EXECUTE ON FUNCTION match_documents_geral TO anon;\nGRANT EXECUTE ON FUNCTION match_documents_geral TO authenticated;\nGRANT EXECUTE ON FUNCTION match_documents_geral TO service_role;\n\n-- 4. Atualiza a API\nNOTIFY pgrst, 'reload config';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "4a6c7717-5409-48ff-adae-1118cb2bc5b4",
+      "name": "27",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna contact_email à tabela organizations\nALTER TABLE public.organizations\nADD COLUMN IF NOT EXISTS contact_email TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.organizations.email_contato IS 'E-mail de contato da organização usado em comunicações como confirmação de agendamentos';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1552,
+        -96
+      ],
+      "id": "d3f5cab0-5a5c-4e94-9ffa-2ad3c9ee7091",
+      "name": "28",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna contact_email à tabela organizations\nALTER TABLE public.organizations\nADD COLUMN IF NOT EXISTS contact_email TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.organizations.email_contato IS 'E-mail de contato da organização usado em comunicações como confirmação de agendamentos';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1808,
+        -96
+      ],
+      "id": "e47b7922-42f1-4b33-b0a9-6308bc6f30a6",
+      "name": "29",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna support_whatsapp à tabela organizations\nALTER TABLE public.organizations\nADD COLUMN IF NOT EXISTS support_whatsapp TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.organizations.whatsapp_suporte IS 'Número de WhatsApp para suporte da organização (formato: 5511999999999)';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2032,
+        -80
+      ],
+      "id": "1927fe6b-04c8-4019-b6e6-82cb0eeb905f",
+      "name": "30",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n-- Criar tabela de configurações globais\nCREATE TABLE IF NOT EXISTS public.global_settings (\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    support_whatsapp TEXT,\n    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,\n    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL\n);\n\n-- Comentário\nCOMMENT ON TABLE public.global_settings IS 'Configurações globais do sistema (aplicam-se a todas as organizações)';\nCOMMENT ON COLUMN public.global_settings.whatsapp_suporte IS 'Número de WhatsApp para suporte global (formato: 5511999999999)';\n\n-- Inserir registro inicial vazio\nINSERT INTO public.global_settings (id) \nVALUES ('00000000-0000-0000-0000-000000000001')\nON CONFLICT (id) DO NOTHING;\n\n-- RLS\nALTER TABLE public.global_settings ENABLE ROW LEVEL SECURITY;\n\n-- Policy: Todos podem ler\nCREATE POLICY \"Anyone can read global settings\"\nON public.global_settings FOR SELECT\nUSING (true);\n\n-- Policy: Apenas super admins podem atualizar\nCREATE POLICY \"Only super admins can update global settings\"\nON public.global_settings FOR UPDATE\nUSING (\n  EXISTS (\n    SELECT 1 FROM public.profiles\n    WHERE profiles.id = auth.uid()\n    AND profiles.super_admin = true\n  )\n);\n\n-- Trigger para updated_at\nCREATE OR REPLACE FUNCTION update_global_settings_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.atualizado_em = timezone('utc'::text, now());\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER update_global_settings_timestamp\nBEFORE UPDATE ON public.global_settings\nFOR EACH ROW\nEXECUTE FUNCTION update_global_settings_updated_at();\n\n-- Adicionar coluna openai_api_key à tabela global_settings\nALTER TABLE public.global_settings\nADD COLUMN IF NOT EXISTS openai_api_key TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.global_settings.chave_openai IS 'Chave de API OpenAI global usada por todas as organizações';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        128
+      ],
+      "id": "99b441ca-ae46-4a2e-b6ae-008f2632c209",
+      "name": "31",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar CASCADE DELETE para todas as tabelas relacionadas a organizations\n\n-- 1. Tabela profiles\nALTER TABLE public.profiles\nDROP CONSTRAINT IF EXISTS profiles_organization_id_fkey;\n\nALTER TABLE public.profiles\nADD CONSTRAINT profiles_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 2. Tabela patients\nALTER TABLE public.contacts\nDROP CONSTRAINT IF EXISTS patients_organization_id_fkey;\n\nALTER TABLE public.contacts\nADD CONSTRAINT patients_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 3. Tabela appointments\nALTER TABLE public.appointments\nDROP CONSTRAINT IF EXISTS appointments_organization_id_fkey;\n\nALTER TABLE public.appointments\nADD CONSTRAINT appointments_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 4. Tabela settings\nALTER TABLE public.settings\nDROP CONSTRAINT IF EXISTS settings_organization_id_fkey;\n\nALTER TABLE public.settings\nADD CONSTRAINT settings_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 5. Tabela agent_ia_config\nALTER TABLE public.agent_ia_config\nDROP CONSTRAINT IF EXISTS agent_ia_config_organization_id_fkey;\n\nALTER TABLE public.agent_ia_config\nADD CONSTRAINT agent_ia_config_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 6. Tabela whatsapp_instances\nALTER TABLE public.whatsapp_instances\nDROP CONSTRAINT IF EXISTS whatsapp_instances_organization_id_fkey;\n\nALTER TABLE public.whatsapp_instances\nADD CONSTRAINT whatsapp_instances_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- 7. Tabela work_schedules\nALTER TABLE public.work_schedules\nDROP CONSTRAINT IF EXISTS work_schedules_organization_id_fkey;\n\nALTER TABLE public.work_schedules\nADD CONSTRAINT work_schedules_organization_id_fkey\nFOREIGN KEY (organization_id)\nREFERENCES public.organizations(id)\nON DELETE CASCADE;\n\n-- Comentário\nCOMMENT ON CONSTRAINT profiles_organization_id_fkey ON public.profiles IS 'Cascade delete: ao excluir organização, exclui todos os perfis';\nCOMMENT ON CONSTRAINT patients_organization_id_fkey ON public.patients IS 'Cascade delete: ao excluir organização, exclui todos os pacientes';\nCOMMENT ON CONSTRAINT appointments_organization_id_fkey ON public.appointments IS 'Cascade delete: ao excluir organização, exclui todos os compromissos';\nCOMMENT ON CONSTRAINT settings_organization_id_fkey ON public.settings IS 'Cascade delete: ao excluir organização, exclui todas as configurações';\nCOMMENT ON CONSTRAINT agent_ia_config_organization_id_fkey ON public.agent_ia_config IS 'Cascade delete: ao excluir organização, exclui config do agent';\nCOMMENT ON CONSTRAINT whatsapp_instances_organization_id_fkey ON public.whatsapp_instances IS 'Cascade delete: ao excluir organização, exclui instâncias WhatsApp';\nCOMMENT ON CONSTRAINT work_schedules_organization_id_fkey ON public.work_schedules IS 'Cascade delete: ao excluir organização, exclui horários de trabalho';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        128
+      ],
+      "id": "ad6cbd42-aa8d-477e-8f4e-b5ea32687bfc",
+      "name": "32",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna observations à tabela patients\nALTER TABLE public.contacts\nADD COLUMN IF NOT EXISTS observations TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.patients.observacoes IS 'Observações e anotações sobre o paciente';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        464,
+        128
+      ],
+      "id": "d8e4c6f9-30c2-4b84-8b2a-113d9d301725",
+      "name": "33",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna session_id à tabela appointments\nALTER TABLE public.appointments\nADD COLUMN IF NOT EXISTS session_id TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.appointments.id_sessao IS 'ID da sessão/conversa associada ao agendamento (vínculo com sistema de chat/WhatsApp)';\n\n-- Criar índice para melhorar performance de busca por session_id\nCREATE INDEX IF NOT EXISTS idx_appointments_session_id \nON public.appointments(session_id);\n\n-- Criar índice composto para busca por organização + session_id\nCREATE INDEX IF NOT EXISTS idx_appointments_org_session \nON public.appointments(organization_id, session_id);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        128
+      ],
+      "id": "6720c3f4-472c-4b87-9b59-840f0f0f0ef8",
+      "name": "34",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adicionar coluna resumo à tabela patients\nALTER TABLE public.contacts\nADD COLUMN IF NOT EXISTS summary TEXT;\n\n-- Comentário descritivo\nCOMMENT ON COLUMN public.patients.resumo IS 'Resumo da conversa/histórico do paciente gerado automaticamente';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        128
+      ],
+      "id": "8a872661-21d3-4245-95af-b9e28f74fffa",
+      "name": "35",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Criar tabela de uso de tokens\nCREATE TABLE IF NOT EXISTS public.token_usage (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  organization_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,\n  tokens INTEGER NOT NULL DEFAULT 0,\n  type TEXT,\n  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())\n);\n\n-- Comentários\nCOMMENT ON TABLE public.token_usage IS 'Registro de uso de tokens por organização';\nCOMMENT ON COLUMN public.token_usage.id_organizacao IS 'ID da organização que consumiu os tokens';\nCOMMENT ON COLUMN public.token_usage.tokens IS 'Quantidade de tokens gastos na operação';\nCOMMENT ON COLUMN public.token_usage.type IS 'Tipo de uso: chat, email, summary, etc';\nCOMMENT ON COLUMN public.token_usage.criado_em IS 'Data/hora do consumo';\n\n-- Índices para performance\nCREATE INDEX IF NOT EXISTS idx_token_usage_organization \nON public.token_usage(organization_id);\n\nCREATE INDEX IF NOT EXISTS idx_token_usage_created_at \nON public.token_usage(created_at DESC);\n\nCREATE INDEX IF NOT EXISTS idx_token_usage_org_date \nON public.token_usage(organization_id, created_at DESC);\n\n-- Habilitar RLS\nALTER TABLE public.token_usage ENABLE ROW LEVEL SECURITY;\n\n-- Política: Usuários só veem tokens da própria organização\nCREATE POLICY \"Users can view their organization tokens\"\nON public.token_usage\nFOR SELECT\nTO authenticated\nUSING (\n  organization_id IN (\n    SELECT organization_id \n    FROM public.profiles \n    WHERE id = auth.uid()\n  )\n);\n\n-- Política: Super admins veem tudo\nCREATE POLICY \"Super admins can view all tokens\"\nON public.token_usage\nFOR SELECT\nTO authenticated\nUSING (\n  EXISTS (\n    SELECT 1 FROM public.profiles\n    WHERE id = auth.uid()\n    AND is_super_admin = true\n  )\n);\n\n-- Política: Sistema pode inserir (para webhooks/APIs)\nCREATE POLICY \"System can insert tokens\"\nON public.token_usage\nFOR INSERT\nTO authenticated\nWITH CHECK (true);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        128
+      ],
+      "id": "3f1cb462-c199-4e3b-9760-329153d714dc",
+      "name": "36",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Ajustar estrutura da tabela token_usage\n-- type passa a ser total_tokens (INTEGER)\n-- tokens passa a ser cost_reais (NUMERIC)\n\n-- 1. Renomear coluna 'type' para 'total_tokens' e mudar tipo\nALTER TABLE public.token_usage \nRENAME COLUMN type TO total_tokens;\n\nALTER TABLE public.token_usage \nALTER COLUMN total_tokens TYPE INTEGER USING total_tokens::integer;\n\nALTER TABLE public.token_usage \nALTER COLUMN total_tokens SET NOT NULL;\n\nALTER TABLE public.token_usage \nALTER COLUMN total_tokens SET DEFAULT 0;\n\n-- 2. Renomear coluna 'tokens' para 'cost_reais' e mudar tipo\nALTER TABLE public.token_usage \nRENAME COLUMN tokens TO cost_reais;\n\nALTER TABLE public.token_usage \nALTER COLUMN cost_reais TYPE NUMERIC(10, 2) USING cost_reais::numeric;\n\n-- 3. Atualizar comentários\nCOMMENT ON COLUMN public.token_usage.total_tokens IS 'Quantidade total de tokens consumidos na operação';\nCOMMENT ON COLUMN public.token_usage.custo_reais IS 'Valor em reais (R$) da execução/operação';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "6f441638-1753-484d-abbd-7f6a54e77628",
+      "name": "37",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Ajustar precisão da coluna cost_reais para suportar valores pequenos\n-- Mudando de NUMERIC(10,2) para NUMERIC(15,8)\n-- Permite valores como 0.00122, 0.000034, etc.\n\nALTER TABLE public.token_usage \nALTER COLUMN cost_reais TYPE NUMERIC(15, 8);\n\nCOMMENT ON COLUMN public.token_usage.custo_reais IS 'Valor em reais (R$) da execução/operação - Suporta até 8 casas decimais (ex: 0.00122000)';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1568,
+        144
+      ],
+      "id": "731cb696-7a2b-43e5-9b2d-5dc295880eb0",
+      "name": "38",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar estágio \"consulta_cancelado\" ao Kanban\n-- Descrição: Permite rastrear consultas canceladas no funil de vendas\n\n-- Remove a constraint antiga\nALTER TABLE public.contacts\nDROP CONSTRAINT IF EXISTS patients_kanban_status_check;\n\n-- Adiciona nova constraint com o estágio adicional\nALTER TABLE public.contacts\nADD CONSTRAINT patients_kanban_status_check CHECK (\n  kanban_status IN (\n    'novo_contato',\n    'qualificado',\n    'em_atendimento',\n    'agendado',\n    'aguardando_confirmacao',\n    'concluido',\n    'consulta_cancelado'\n  )\n);\n\n-- Atualiza o comentário\nCOMMENT ON COLUMN public.patients.status_kanban IS 'Status do lead no funil de vendas do Kanban - Inclui: novo_contato, qualificado, em_atendimento, agendado, aguardando_confirmacao, concluido, consulta_cancelado';\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1808,
+        144
+      ],
+      "id": "b37fd337-6c02-40d7-a128-1e1b9e596acb",
+      "name": "39",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar duração padrão de consulta por organização\n-- Descrição: Define o tempo padrão de cada consulta (em minutos) para facilitar o agendamento\n\nALTER TABLE public.organizations\nADD COLUMN IF NOT EXISTS service_duration INTEGER DEFAULT 30;\n\nCOMMENT ON COLUMN public.organizations.duracao_atendimento IS 'Duração padrão de cada consulta em minutos (ex: 30, 45, 60)';\n\n-- Adicionar constraint para garantir valores razoáveis (entre 15 e 240 minutos - 4 horas)\nALTER TABLE public.organizations\nADD CONSTRAINT organizations_service_duration_check \nCHECK (service_duration >= 15 AND service_duration <= 240);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2032,
+        144
+      ],
+      "id": "ee2439ba-d6d5-46cd-9e12-b13ab47a0de5",
+      "name": "40",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Migration: Adicionar duração padrão de consulta nos horários de trabalho\n-- Descrição: Define o tempo padrão de cada consulta (em minutos) para facilitar o agendamento\n\nALTER TABLE public.work_schedules\nADD COLUMN IF NOT EXISTS service_duration INTEGER DEFAULT 30;\n\nCOMMENT ON COLUMN public.work_schedules.duracao_atendimento IS 'Duração padrão de cada consulta em minutos (ex: 30, 45, 60)';\n\n-- Adicionar constraint para garantir valores razoáveis (entre 15 e 240 minutos - 4 horas)\nALTER TABLE public.work_schedules\nADD CONSTRAINT work_schedules_service_duration_check \nCHECK (service_duration >= 15 AND service_duration <= 240);\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        64,
+        352
+      ],
+      "id": "08b05259-959d-40d2-bd3c-9cd89b771680",
+      "name": "41",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adiciona colunas de controle de envio na tabela appointments\nALTER TABLE public.appointments\nADD COLUMN IF NOT EXISTS reminder_1_sent BOOLEAN DEFAULT FALSE,\nADD COLUMN IF NOT EXISTS reminder_2_sent BOOLEAN DEFAULT FALSE,\nADD COLUMN IF NOT EXISTS reminder_3_sent BOOLEAN DEFAULT FALSE;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        352
+      ],
+      "id": "c294ea24-499d-4852-99b4-8101c32397b3",
+      "name": "42",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Atualizar estrutura de planos para os 4 novos planos\n\n-- Limpar configurações antigas e inserir novas\nDELETE FROM subscription_plan_configs;\n\nINSERT INTO subscription_plan_configs (\n  plan_id,\n  plan_name,\n  plan_description,\n  atendimento_inteligente,\n  agendamento_automatico,\n  lembretes_automaticos,\n  confirmacao_email,\n  base_conhecimento,\n  relatorios_avancados,\n  integracao_whatsapp,\n  multi_usuarios,\n  personalizacao_agente,\n  analytics,\n  max_agendamentos_mes,\n  max_mensagens_whatsapp_mes,\n  max_usuarios,\n  max_pacientes,\n  price_monthly,\n  price_annual\n) VALUES \n  -- Plano A: Apenas Atendimento\n  (\n    'plano_a',\n    'Atendimento',\n    'Chatbot inteligente com IA para atendimento automatizado via WhatsApp',\n    true,   -- atendimento_inteligente\n    false,  -- agendamento_automatico\n    false,  -- lembretes_automaticos\n    false,  -- confirmacao_email\n    false,  -- base_conhecimento (SEM base de conhecimento)\n    false,  -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    false,  -- multi_usuarios\n    true,   -- personalizacao_agente\n    false,  -- analytics\n    NULL,   -- max_agendamentos_mes (não tem agenda)\n    1000,   -- max_mensagens_whatsapp_mes\n    1,      -- max_usuarios\n    500,    -- max_pacientes\n    97.00,  -- price_monthly\n    970.00  -- price_annual\n  ),\n  \n  -- Plano B: Atendimento + Base de Conhecimento\n  (\n    'plano_b',\n    'Atendimento + Conhecimento',\n    'Atendimento inteligente com base de conhecimento personalizada',\n    true,   -- atendimento_inteligente\n    false,  -- agendamento_automatico (SEM agendamento)\n    false,  -- lembretes_automaticos\n    false,  -- confirmacao_email\n    true,   -- base_conhecimento\n    false,  -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    false,  -- multi_usuarios\n    true,   -- personalizacao_agente\n    false,  -- analytics\n    NULL,   -- max_agendamentos_mes (não tem agenda)\n    2000,   -- max_mensagens_whatsapp_mes\n    2,      -- max_usuarios\n    1000,   -- max_pacientes\n    147.00, -- price_monthly\n    1470.00 -- price_annual\n  ),\n  \n  -- Plano C: Atendimento + Conhecimento + Agendamento (Completo)\n  (\n    'plano_c',\n    'Atendimento Completo',\n    'Solução completa: Atendimento IA + Base de Conhecimento + Agendamento Automático',\n    true,   -- atendimento_inteligente\n    true,   -- agendamento_automatico\n    true,   -- lembretes_automaticos\n    true,   -- confirmacao_email\n    true,   -- base_conhecimento\n    true,   -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    true,   -- multi_usuarios\n    true,   -- personalizacao_agente\n    true,   -- analytics\n    2000,   -- max_agendamentos_mes\n    5000,   -- max_mensagens_whatsapp_mes\n    5,      -- max_usuarios\n    5000,   -- max_pacientes\n    297.00, -- price_monthly\n    2970.00 -- price_annual\n  ),\n  \n  -- Plano D: Implementação Futura\n  (\n    'plano_d',\n    'Enterprise',\n    'Plano personalizado para grandes operações - Entre em contato',\n    true,   -- atendimento_inteligente\n    true,   -- agendamento_automatico\n    true,   -- lembretes_automaticos\n    true,   -- confirmacao_email\n    true,   -- base_conhecimento\n    true,   -- relatorios_avancados\n    true,   -- integracao_whatsapp\n    true,   -- multi_usuarios\n    true,   -- personalizacao_agente\n    true,   -- analytics\n    NULL,   -- max_agendamentos_mes (ilimitado)\n    NULL,   -- max_mensagens_whatsapp_mes (ilimitado)\n    NULL,   -- max_usuarios (ilimitado)\n    NULL,   -- max_pacientes (ilimitado)\n    NULL,   -- price_monthly (sob consulta)\n    NULL    -- price_annual (sob consulta)\n  );\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        352
+      ],
+      "id": "201d56fe-0988-4508-a3cd-6c77f6013b26",
+      "name": "43",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Atualizar estrutura de planos para os 4 novos planos\nDELETE FROM subscription_plan_configs;\n\nINSERT INTO subscription_plan_configs (\n  plan_id, plan_name, plan_description,\n  atendimento_inteligente, agendamento_automatico, lembretes_automaticos,\n  confirmacao_email, base_conhecimento, relatorios_avancados,\n  integracao_whatsapp, multi_usuarios, personalizacao_agente, analytics,\n  max_agendamentos_mes, max_mensagens_whatsapp_mes, max_usuarios, max_pacientes,\n  price_monthly, price_annual\n) VALUES \n  ('plano_a', 'Atendimento', 'Chatbot inteligente com IA para atendimento automatizado via WhatsApp',\n   true, false, false, false, false, false, true, false, true, false,\n   NULL, 1000, 1, 500, 97.00, 970.00),\n  \n  ('plano_b', 'Atendimento + Conhecimento', 'Atendimento inteligente com base de conhecimento personalizada',\n   true, false, false, false, true, false, true, false, true, false,\n   NULL, 2000, 2, 1000, 147.00, 1470.00),\n  \n  ('plano_c', 'Atendimento Completo', 'Solução completa: Atendimento IA + Base de Conhecimento + Agendamento Automático',\n   true, true, true, true, true, true, true, true, true, true,\n   2000, 5000, 5, 5000, 297.00, 2970.00),\n  \n  ('plano_d', 'Enterprise', 'Plano personalizado para grandes operações - Entre em contato',\n   true, true, true, true, true, true, true, true, true, true,\n   NULL, NULL, NULL, NULL, NULL, NULL);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        688,
+        336
+      ],
+      "id": "148e0b43-4112-4a89-9daf-daac2e4db3d6",
+      "name": "44",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "create table public.clientes_followup (\n  id bigint generated by default as identity primary key,\n\n  nome text,\n  numero text,\n  organization_id uuid,\n  sessionid text,\n\n  situacao text,\n  followup text,\n  followup1 text,\n  followup2 text,\n  followup3 text,\n\n  mensagem1 text,\n  mensagem2 text,\n  mensagem3 text,\n\n  data_envio1 timestamp with time zone,\n  data_envio2 timestamp with time zone,\n  data_envio3 timestamp with time zone,\n\n  ultima_atividade timestamp with time zone,\n  ultima_mensagem_ia text,\n\n  created_at timestamp with time zone default now(),\n  updated_at timestamp with time zone default now()\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        352
+      ],
+      "id": "a3e5f288-2b17-4ea0-aadd-7c6631f26f0f",
+      "name": "45",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "create table public.documents_geral (\n  id bigserial not null,\n  content text null,\n  metadata jsonb null,\n  embedding vector(1536),\n  titulo text null default 'flow'::text,\n  constraint documents_geral_pkey primary key (id)\n) TABLESPACE pg_default;\n\ncreate index IF not exists documents_geral_embedding_idx on public.documents_geral using hnsw (embedding vector_cosine_ops) TABLESPACE pg_default;\n\n-- Create a function to search for documents\ncreate function match_documents (\n  query_embedding vector(1536),\n  match_count int default null,\n  filter jsonb DEFAULT '{}'\n) returns table (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nlanguage plpgsql\nas $$\n#variable_conflict use_column\nbegin\n  return query\n  select\n    id,\n    content,\n    metadata,\n    1 - (documents.embedding <=> query_embedding) as similarity\n  from documents\n  where metadata @> filter\n  order by documents.embedding <=> query_embedding\n  limit match_count;\nend;\n$$;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1136,
+        352
+      ],
+      "id": "785d97b3-8c3e-408e-9017-981f12921783",
+      "name": "46",
+      "credentials": {
+        "postgres": {
+          "id": "sdVOFX9ZZ85bA3Cm",
+          "name": "Postgres FlowClinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Instalar banco de dados\nRode 1 por 1 para realizar a nstalação",
+        "height": 1280,
+        "width": 2528,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -720
+      ],
+      "id": "c04d5acc-6fbe-45b7-bce8-51fc6501e2e2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 176,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        -992
+      ],
+      "typeVersion": 1,
+      "id": "700651f4-4f0e-42c4-9c6b-f343f2b99672",
+      "name": "Sticky Note29"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9f0b6125-6867-4b1d-9ac8-cf55bb59e98a",
+  "activeVersionId": null,
+  "versionCounter": 17,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-05T19:39:55.146Z",
+      "createdAt": "2026-01-05T19:39:55.146Z",
+      "role": "workflow:owner",
+      "workflowId": "gh7gewCSIB3jT9sHb4SSi",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": null
+}

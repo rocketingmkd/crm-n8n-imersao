@@ -54,12 +54,12 @@ type KanbanStatus =
 
 interface KanbanCard {
   id: string;
-  name: string;
+  nome: string;
   email: string;
-  phone: string;
-  kanban_status: KanbanStatus;
-  created_at: string;
-  organization_id: string;
+  telefone: string;
+  status_kanban: KanbanStatus;
+  criado_em: string;
+  id_organizacao: string;
 }
 
 interface Column {
@@ -109,8 +109,8 @@ function SortableCard({ card }: { card: KanbanCard }) {
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
-            {card.name
-              ? card.name.split(" ")
+            {card.nome
+              ? card.nome.split(" ")
                   .map((n) => n[0])
                   .join("")
                   .toUpperCase()
@@ -119,7 +119,7 @@ function SortableCard({ card }: { card: KanbanCard }) {
             }
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-sm truncate">{card.name || "Sem nome"}</h3>
+            <h3 className="font-semibold text-sm truncate">{card.nome || "Sem nome"}</h3>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -135,14 +135,14 @@ function SortableCard({ card }: { card: KanbanCard }) {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Phone className="h-3 w-3 shrink-0" />
-          <span className="truncate">{formatPhoneNumber(card.phone) || "Sem telefone"}</span>
+          <span className="truncate">{formatPhoneNumber(card.telefone) || "Sem telefone"}</span>
         </div>
       </div>
 
       {/* Footer */}
       <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          {new Date(card.created_at).toLocaleDateString('pt-BR')}
+          {new Date(card.criado_em).toLocaleDateString('pt-BR')}
         </span>
       </div>
     </div>
@@ -211,28 +211,28 @@ export default function Kanban() {
     phone: "",
   });
 
-  // Carregar pacientes do banco de dados
+  // Carregar contatos do banco de dados
   useEffect(() => {
-    loadPatients();
-  }, [profile?.organization_id]);
+    loadContacts();
+  }, [profile?.id_organizacao]);
 
-  const loadPatients = async () => {
-    if (!profile?.organization_id) return;
+  const loadContacts = async () => {
+    if (!profile?.id_organizacao) return;
 
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from("patients")
-        .select("id, name, email, phone, kanban_status, created_at, organization_id")
-        .eq("organization_id", profile.organization_id)
-        .order("created_at", { ascending: false });
+        .from("contatos")
+        .select("id, nome, email, telefone, status_kanban, criado_em, id_organizacao")
+        .eq("id_organizacao", profile.id_organizacao)
+        .order("criado_em", { ascending: false });
 
       if (error) throw error;
 
       setCards((data || []) as KanbanCard[]);
     } catch (error) {
-      console.error("Erro ao carregar pacientes:", error);
-      toast.error("Erro ao carregar pacientes");
+      console.error("Erro ao carregar contatos:", error);
+      toast.error("Erro ao carregar contatos");
     } finally {
       setIsLoading(false);
     }
@@ -271,7 +271,7 @@ export default function Kanban() {
     // Se arrastou sobre um card, pegar o status desse card
     const overCard = cards.find((c) => c.id === over.id);
     if (overCard) {
-      newStatus = overCard.kanban_status;
+      newStatus = overCard.status_kanban;
     } else {
       // Se arrastou sobre uma coluna (droppable), usar o ID da coluna
       const column = columns.find((col) => col.id === over.id);
@@ -280,19 +280,19 @@ export default function Kanban() {
       }
     }
 
-    if (newStatus && activeCard.kanban_status !== newStatus) {
+    if (newStatus && activeCard.status_kanban !== newStatus) {
       // Atualizar otimisticamente na UI
       setCards((prevCards) =>
         prevCards.map((card) =>
-          card.id === active.id ? { ...card, kanban_status: newStatus } : card
+          card.id === active.id ? { ...card, status_kanban: newStatus } : card
         )
       );
       
       // Salvar no banco de dados
       try {
         const { error } = await supabase
-          .from("patients")
-          .update({ kanban_status: newStatus })
+          .from("contatos")
+          .update({ status_kanban: newStatus })
           .eq("id", String(active.id));
 
         if (error) throw error;
@@ -303,7 +303,7 @@ export default function Kanban() {
         console.error("Erro ao atualizar status:", error);
         toast.error("Erro ao atualizar status");
         // Reverter mudança em caso de erro
-        loadPatients();
+        loadContacts();
       }
     }
 
@@ -316,22 +316,22 @@ export default function Kanban() {
       return;
     }
 
-    if (!profile?.organization_id) {
+    if (!profile?.id_organizacao) {
       toast.error("Erro: organização não identificada");
       return;
     }
 
     try {
       const { data, error } = await supabase
-        .from("patients")
+        .from("contatos")
         .insert({
-          name: newCardForm.name,
+          nome: newCardForm.name,
           email: newCardForm.email,
-          phone: newCardForm.phone,
-          organization_id: profile.organization_id,
-          kanban_status: "novo_contato",
-          status: "active",
-          total_visits: 0,
+          telefone: newCardForm.phone,
+          id_organizacao: profile.id_organizacao,
+          status_kanban: "novo_contato",
+          situacao: "ativo",
+          total_interacoes: 0,
         })
         .select()
         .single();
@@ -377,7 +377,7 @@ export default function Kanban() {
             Kanban
           </h1>
           <p className="text-base md:text-lg text-muted-foreground">
-            Status de atendimento dos pacientes
+            Status de atendimento dos contatos
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -469,7 +469,7 @@ export default function Kanban() {
                   <KanbanColumn
                     key={column.id}
                     column={column}
-                    cards={cards.filter((card) => card.kanban_status === column.id)}
+                    cards={cards.filter((card) => card.status_kanban === column.id)}
                   />
                 ))}
               </div>
@@ -483,4 +483,3 @@ export default function Kanban() {
     </div>
   );
 }
-

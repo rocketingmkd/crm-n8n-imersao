@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useCoresPataforma } from "@/hooks/useCoresPataforma";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -35,15 +36,22 @@ import OrganizationForm from "./pages/super-admin/OrganizationForm";
 import Plans from "./pages/super-admin/Plans";
 import TokenUsage from "./pages/super-admin/TokenUsage";
 import N8nInsights from "./pages/super-admin/N8nInsights";
+import GestaoVps from "./pages/super-admin/GestaoVps";
 import SuperAdminSettings from "./pages/super-admin/Settings";
 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function AplicadorCores() {
+  useCoresPataforma();
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
+      <AplicadorCores />
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -65,6 +73,7 @@ const App = () => (
                 <Route path="/super-admin/token-usage" element={<TokenUsage />} />
                 <Route path="/super-admin/observability" element={<Observability />} />
                 <Route path="/super-admin/insights" element={<N8nInsights />} />
+                <Route path="/super-admin/gestao-vps" element={<GestaoVps />} />
                 <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
               </Route>
 

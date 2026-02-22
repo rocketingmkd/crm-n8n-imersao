@@ -1,0 +1,495 @@
+{
+  "updatedAt": "2026-01-16T12:44:00.597Z",
+  "createdAt": "2026-01-08T01:34:00.473Z",
+  "id": "0eEfoRSnYdzVajZ5",
+  "name": "Gestao de Tokens",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "organization_id"
+            },
+            {
+              "name": "input"
+            },
+            {
+              "name": "output"
+            },
+            {
+              "name": "llmModel"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "Executa Fluxo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -144,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega input e output\nconst input = $('Executa Fluxo').first().json.input;\nconst output = $('Executa Fluxo').first().json.output;\nconst llmModel = $('Executa Fluxo').first().json.llmModel;\n\n\n// Estima tokens (1.5 tokens por palavra em português)\nconst estimateTokens = (text) => {\n  if (!text) return 0;\n  const words = text.split(/\\s+/).length;\n  return Math.ceil(words * 1.5);\n};\n\nconst inputTokens = estimateTokens(input);\nconst outputTokens = estimateTokens(output);\nconst totalTokens = inputTokens + outputTokens;\n\n// Preços GPT-4o (por 1M tokens)\nconst precoInput = $input.first().json.input_price;   // $2.50 por 1M input\nconst precoOutput = $input.first().json.output_price; // $10.00 por 1M output\n\n// Cotação dólar\nconst dolar = $input.first().json.dolar;\n\n// Calcula custo\nconst custoUSD = ((inputTokens / 1_000_000) * precoInput) + ((outputTokens / 1_000_000) * precoOutput);\nconst custoBRL = custoUSD * dolar;\n\nreturn {\n  output: output,\n  input_tokens: inputTokens,\n  output_tokens: outputTokens,\n  total_tokens: totalTokens,\n  model: llmModel,\n  custo_usd: Number(custoUSD.toFixed(8)),\n  custo_brl: Number(custoBRL.toFixed(6))\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        352
+      ],
+      "id": "ade28628-065d-41fa-ad44-46cb8ab5face",
+      "name": "Estima Tokens"
+    },
+    {
+      "parameters": {
+        "tableId": "token_usage",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $('Executa Fluxo').item.json.id_organizacao }}"
+            },
+            {
+              "fieldId": "total_tokens",
+              "fieldValue": "={{ $json.total_tokens }}"
+            },
+            {
+              "fieldId": "cost_reais",
+              "fieldValue": "={{ $json.custo_brl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        528,
+        352
+      ],
+      "id": "86b32977-10c3-4fae-a6b0-5e822a54aa25",
+      "name": "Grava Custo de Tokens",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "model_costs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "llm_model",
+              "keyValue": "={{ $json.llmModel }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        64,
+        352
+      ],
+      "id": "f0587b1b-9121-458e-80bf-4a8d6a0f20e6",
+      "name": "Busca os custos do modelo LLM",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo para gravar os custos de tokens por organizacao",
+        "height": 512,
+        "width": 1152,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        64
+      ],
+      "id": "d4a992da-06bb-424b-8544-a3121a824956",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "width": 464,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "9d15ab93-67ae-4751-a74b-886beb3a8907",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "pJyh2kkjSzFWa3J0",
+          "mode": "list",
+          "cachedResultName": "modelCosts",
+          "cachedResultUrl": "/projects/sXNN8zKIunLvXNly/datatables/pJyh2kkjSzFWa3J0"
+        },
+        "filters": {
+          "conditions": [
+            {}
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        160
+      ],
+      "id": "1a40f3f5-f1fd-4061-b232-96d9d7b74e02",
+      "name": "Busca Custos LLM",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Executa Fluxo": {
+      "main": [
+        [
+          {
+            "node": "Busca os custos do modelo LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estima Tokens": {
+      "main": [
+        [
+          {
+            "node": "Grava Custo de Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca os custos do modelo LLM": {
+      "main": [
+        [
+          {
+            "node": "Estima Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Executa Fluxo": [
+      {
+        "json": {
+          "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
+          "input": "Olá tudo bem ?",
+          "output": "Olá! Sou o assistente virtual da clínica. Como posso ajudá-lo hoje? Qual é o seu nome?",
+          "llmModel": "gpt-4o"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "fed84ee6-971b-4233-8dc0-3e2dd179efef",
+  "activeVersionId": "240634da-c53d-4831-8e55-55c377d0a87b",
+  "versionCounter": 74,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-08T01:34:00.473Z",
+      "createdAt": "2026-01-08T01:34:00.473Z",
+      "role": "workflow:owner",
+      "workflowId": "0eEfoRSnYdzVajZ5",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-12T13:18:32.812Z",
+    "createdAt": "2026-01-12T13:18:14.432Z",
+    "versionId": "240634da-c53d-4831-8e55-55c377d0a87b",
+    "workflowId": "0eEfoRSnYdzVajZ5",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "organization_id"
+              },
+              {
+                "name": "input"
+              },
+              {
+                "name": "output"
+              },
+              {
+                "name": "llmModel"
+              }
+            ]
+          }
+        },
+        "id": "c055762a-8fe7-4141-a639-df2372f30060",
+        "typeVersion": 1.1,
+        "name": "Executa Fluxo",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -144,
+          352
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Pega input e output\nconst input = $('Executa Fluxo').first().json.input;\nconst output = $('Executa Fluxo').first().json.output;\nconst llmModel = $('Executa Fluxo').first().json.llmModel;\n\n\n// Estima tokens (1.5 tokens por palavra em português)\nconst estimateTokens = (text) => {\n  if (!text) return 0;\n  const words = text.split(/\\s+/).length;\n  return Math.ceil(words * 1.5);\n};\n\nconst inputTokens = estimateTokens(input);\nconst outputTokens = estimateTokens(output);\nconst totalTokens = inputTokens + outputTokens;\n\n// Preços GPT-4o (por 1M tokens)\nconst precoInput = $input.first().json.input_price;   // $2.50 por 1M input\nconst precoOutput = $input.first().json.output_price; // $10.00 por 1M output\n\n// Cotação dólar\nconst dolar = $input.first().json.dolar;\n\n// Calcula custo\nconst custoUSD = ((inputTokens / 1_000_000) * precoInput) + ((outputTokens / 1_000_000) * precoOutput);\nconst custoBRL = custoUSD * dolar;\n\nreturn {\n  output: output,\n  input_tokens: inputTokens,\n  output_tokens: outputTokens,\n  total_tokens: totalTokens,\n  model: llmModel,\n  custo_usd: Number(custoUSD.toFixed(8)),\n  custo_brl: Number(custoBRL.toFixed(6))\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          352
+        ],
+        "id": "ade28628-065d-41fa-ad44-46cb8ab5face",
+        "name": "Estima Tokens"
+      },
+      {
+        "parameters": {
+          "tableId": "token_usage",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "organization_id",
+                "fieldValue": "={{ $('Executa Fluxo').item.json.id_organizacao }}"
+              },
+              {
+                "fieldId": "total_tokens",
+                "fieldValue": "={{ $json.total_tokens }}"
+              },
+              {
+                "fieldId": "cost_reais",
+                "fieldValue": "={{ $json.custo_brl }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          528,
+          352
+        ],
+        "id": "86b32977-10c3-4fae-a6b0-5e822a54aa25",
+        "name": "Grava Custo de Tokens",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "value": "pJyh2kkjSzFWa3J0",
+            "mode": "list",
+            "cachedResultName": "modelCosts",
+            "cachedResultUrl": "/projects/sXNN8zKIunLvXNly/datatables/pJyh2kkjSzFWa3J0"
+          },
+          "filters": {
+            "conditions": [
+              {}
+            ]
+          },
+          "returnAll": true
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          64,
+          160
+        ],
+        "id": "1a40f3f5-f1fd-4061-b232-96d9d7b74e02",
+        "name": "Busca Custos LLM",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "model_costs",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "llm_model",
+                "keyValue": "={{ $json.llmModel }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          64,
+          352
+        ],
+        "id": "f0587b1b-9121-458e-80bf-4a8d6a0f20e6",
+        "name": "Busca os custos do modelo LLM",
+        "credentials": {
+          "supabaseApi": {
+            "id": "GW9MBPeXxgW9VKzF",
+            "name": "Supabase Flow Clinic"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Fluxo para gravar os custos de tokens por organizacao",
+          "height": 512,
+          "width": 1152,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -320,
+          64
+        ],
+        "id": "d4a992da-06bb-424b-8544-a3121a824956",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "width": 464,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          304,
+          144
+        ],
+        "typeVersion": 1,
+        "id": "9d15ab93-67ae-4751-a74b-886beb3a8907",
+        "name": "Sticky Note29"
+      }
+    ],
+    "connections": {
+      "Executa Fluxo": {
+        "main": [
+          [
+            {
+              "node": "Busca os custos do modelo LLM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Estima Tokens": {
+        "main": [
+          [
+            {
+              "node": "Grava Custo de Tokens",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Custos LLM": {
+        "main": [
+          []
+        ]
+      },
+      "Busca os custos do modelo LLM": {
+        "main": [
+          [
+            {
+              "node": "Estima Tokens",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 2",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-12T13:18:32.809Z",
+        "id": 173,
+        "workflowId": "0eEfoRSnYdzVajZ5",
+        "versionId": "240634da-c53d-4831-8e55-55c377d0a87b",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

@@ -39,11 +39,13 @@ import {
 interface OrganizationFormData {
   name: string;
   contact_email: string;
+  rotulo_entidade: string;
+  rotulo_entidade_plural: string;
   adminEmail: string;
   adminPassword: string;
   adminFullName: string;
-  is_active: boolean;
-  subscription_plan: 'plano_a' | 'plano_b' | 'plano_c' | 'plano_d';
+  ativo: boolean;
+  plano_assinatura: 'plano_a' | 'plano_b' | 'plano_c' | 'plano_d';
 }
 
 export default function OrganizationForm() {
@@ -59,10 +61,10 @@ export default function OrganizationForm() {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [newUserForm, setNewUserForm] = useState({
-    full_name: "",
+    nome_completo: "",
     email: "",
     password: "",
-    role: "doctor" as "admin" | "doctor" | "assistant",
+    role: "profissional" as "admin" | "profissional" | "assistente",
   });
 
   const {
@@ -74,22 +76,24 @@ export default function OrganizationForm() {
     watch,
   } = useForm<OrganizationFormData>({
     defaultValues: {
-      is_active: true,
-      subscription_plan: 'plano_a',
+      ativo: true,
+      plano_assinatura: 'plano_a',
+      rotulo_entidade: 'Cliente',
+      rotulo_entidade_plural: 'Clientes',
     },
   });
 
-  const isActive = watch("is_active");
-  const subscriptionPlan = watch("subscription_plan");
+  const isActive = watch("ativo");
+  const subscriptionPlan = watch("plano_assinatura");
   
   // Carregar planos disponíveis
   const { data: plans = [] } = useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscription_plan_configs')
+        .from('planos_assinatura')
         .select('*')
-        .order('plan_id', { ascending: true });
+        .order('id_plano', { ascending: true });
       
       if (error) throw error;
       return data;
@@ -181,13 +185,13 @@ export default function OrganizationForm() {
       setIsConfiguringWebhook(true);
 
       const payload = {
-        instanceId: whatsappInstance.instance_id,
+        instanceId: whatsappInstance.id_instancia,
         token: whatsappInstance.token,
-        instanceName: whatsappInstance.instance_name,
+        instanceName: whatsappInstance.nome_instancia,
         adminField01: whatsappInstance.admin_field_01,
         phone: whatsappInstance.phone,
         organizationId: id,
-        organizationName: organization?.name,
+        organizationName: organization?.nome,
       };
 
       console.log("Configurando webhook, payload:", payload);
@@ -214,8 +218,8 @@ export default function OrganizationForm() {
       if (webhookData && webhookData.url) {
         // Salvar URL do webhook no banco (apenas webhook_url existe atualmente)
         const { error: updateError } = await supabase
-          .from("whatsapp_instances")
-          .update({ 
+          .from("instancias_whatsapp")
+          .update({
             webhook_url: webhookData.url,
           })
           .eq("id", whatsappInstance.id);
@@ -251,7 +255,7 @@ export default function OrganizationForm() {
 
       // Buscar todos os dados da organização
       const { data: orgData, error: orgError } = await supabase
-        .from("organizations")
+        .from("organizacoes")
         .select("*")
         .eq("id", id)
         .single();
@@ -260,30 +264,30 @@ export default function OrganizationForm() {
 
       // Buscar configuração do Agent IA
       const { data: agentData, error: agentError } = await supabase
-        .from("agent_ia_config")
+        .from("config_agente_ia")
         .select("*")
-        .eq("organization_id", id)
+        .eq("id_organizacao", id)
         .single();
 
       // Buscar instância WhatsApp
       const { data: whatsappData, error: whatsappError } = await supabase
-        .from("whatsapp_instances")
+        .from("instancias_whatsapp")
         .select("*")
-        .eq("organization_id", id)
+        .eq("id_organizacao", id)
         .single();
 
       // Buscar configurações gerais
       const { data: settingsData, error: settingsError } = await supabase
-        .from("settings")
+        .from("configuracoes")
         .select("*")
-        .eq("organization_id", id)
+        .eq("id_organizacao", id)
         .single();
 
       // Buscar perfis (usuários) da organização
       const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
+        .from("perfis")
         .select("*")
-        .eq("organization_id", id);
+        .eq("id_organizacao", id);
 
       // Mapear plano para número
       // plano_a = 1 (atendimento)
@@ -296,7 +300,7 @@ export default function OrganizationForm() {
         'plano_c': 3,
         'plano_d': 4,
       };
-      const planNumber = planNumberMap[orgData?.subscription_plan] || 1;
+      const planNumber = planNumberMap[orgData?.plano_assinatura] || 1;
 
       // Montar payload com TODAS as informações
       const payload = {
@@ -344,7 +348,7 @@ export default function OrganizationForm() {
       if (!id) return null;
 
       const { data, error } = await supabase
-        .from("organizations")
+        .from("organizacoes")
         .select("*")
         .eq("id", id)
         .single();
@@ -362,9 +366,9 @@ export default function OrganizationForm() {
       if (!id) return null;
 
       const { data, error } = await supabase
-        .from("whatsapp_instances")
+        .from("instancias_whatsapp")
         .select("*")
-        .eq("organization_id", id)
+        .eq("id_organizacao", id)
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -382,11 +386,11 @@ export default function OrganizationForm() {
       if (!id) return [];
 
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, role, is_active, created_at")
-        .eq("organization_id", id)
-        .eq("is_super_admin", false)
-        .order("created_at", { ascending: false });
+        .from("perfis")
+        .select("id, nome_completo, funcao, ativo, criado_em")
+        .eq("id_organizacao", id)
+        .eq("super_admin", false)
+        .order("criado_em", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -399,15 +403,17 @@ export default function OrganizationForm() {
   useEffect(() => {
     if (organization) {
       reset({
-        name: organization.name,
-        contact_email: organization.contact_email || "",
-        is_active: organization.is_active,
-        subscription_plan: (organization.subscription_plan || 'plano_a') as OrganizationFormData['subscription_plan'],
+        name: organization.nome,
+        contact_email: organization.email_contato || "",
+        rotulo_entidade: organization.rotulo_entidade || 'Cliente',
+        rotulo_entidade_plural: organization.rotulo_entidade_plural || 'Clientes',
+        ativo: organization.ativo,
+        plano_assinatura: (organization.plano_assinatura || 'plano_a') as OrganizationFormData['plano_assinatura'],
         adminEmail: "",
         adminPassword: "",
         adminFullName: "",
       });
-      setCurrentLogoUrl(organization.logo_url);
+      setCurrentLogoUrl(organization.url_logo);
     }
   }, [organization, reset]);
 
@@ -459,21 +465,23 @@ export default function OrganizationForm() {
 
       if (isEditing) {
         const { error } = await supabase
-          .from('organizations')
+          .from('organizacoes')
           .update({
-            name: data.name,
-            contact_email: data.contact_email || null,
-            is_active: data.is_active,
-            logo_url: logoUrl,
-            subscription_plan: data.subscription_plan,
+            nome: data.name,
+            email_contato: data.contact_email || null,
+            rotulo_entidade: data.rotulo_entidade || 'Cliente',
+            rotulo_entidade_plural: data.rotulo_entidade_plural || 'Clientes',
+            ativo: data.ativo,
+            url_logo: logoUrl,
+            plano_assinatura: data.plano_assinatura,
           })
           .eq('id', id);
 
         if (error) throw error;
       } else {
         // Chamar Edge Function para criar
-        console.log("📞 Chamando Edge Function create-organization...");
-        console.log("📞 URL:", `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-organization`);
+        console.log("📞 Chamando Edge Function criar-organizacao...");
+        console.log("📞 URL:", `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-organizacao`);
         console.log("📞 VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
         console.log("📞 Access Token presente:", !!session.access_token);
         console.log("📞 Access Token (primeiros 50 chars):", session.access_token.substring(0, 50) + '...');
@@ -481,8 +489,8 @@ export default function OrganizationForm() {
           organizationName: data.name,
           adminEmail: data.adminEmail,
           adminFullName: data.adminFullName,
-          isActive: data.is_active,
-          subscriptionPlan: data.subscription_plan,
+          isActive: data.ativo,
+          subscriptionPlan: data.plano_assinatura,
         });
         
         // Verificar se a chave pública está disponível
@@ -492,7 +500,7 @@ export default function OrganizationForm() {
         }
         
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-organization`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-organizacao`,
           {
             method: "POST",
             headers: {
@@ -505,8 +513,8 @@ export default function OrganizationForm() {
               adminEmail: data.adminEmail,
               adminPassword: data.adminPassword,
               adminFullName: data.adminFullName,
-              isActive: data.is_active,
-              subscriptionPlan: data.subscription_plan,
+              isActive: data.ativo,
+              subscriptionPlan: data.plano_assinatura,
             }),
           }
         );
@@ -531,8 +539,8 @@ export default function OrganizationForm() {
             setUploadingLogo(true);
             const newLogoUrl = await uploadLogo(logoFile, newOrgId);
             await supabase
-              .from('organizations')
-              .update({ logo_url: newLogoUrl })
+              .from('organizacoes')
+              .update({ url_logo: newLogoUrl })
               .eq('id', newOrgId);
             toast.success('Logo enviado com sucesso!');
           } catch (logoErr) {
@@ -560,7 +568,7 @@ export default function OrganizationForm() {
 
   // Adicionar usuário
   const handleAddUser = async () => {
-    if (!newUserForm.full_name || !newUserForm.email || !newUserForm.password) {
+    if (!newUserForm.nome_completo || !newUserForm.email || !newUserForm.password) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -587,7 +595,7 @@ export default function OrganizationForm() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-organization-users`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gerenciar-usuarios-organizacao`,
         {
           method: "POST",
           headers: {
@@ -599,7 +607,7 @@ export default function OrganizationForm() {
             action: "create",
             organizationId: id,
             userData: {
-              fullName: newUserForm.full_name,
+              fullName: newUserForm.nome_completo,
               email: newUserForm.email,
               password: newUserForm.password,
               role: newUserForm.role,
@@ -617,10 +625,10 @@ export default function OrganizationForm() {
       toast.success("Usuário criado com sucesso!", { id: "create-user" });
       setIsAddUserModalOpen(false);
       setNewUserForm({
-        full_name: "",
+        nome_completo: "",
         email: "",
         password: "",
-        role: "doctor",
+        role: "profissional",
       });
       refetchUsers();
     } catch (error: any) {
@@ -648,7 +656,7 @@ export default function OrganizationForm() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-organization-users`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gerenciar-usuarios-organizacao`,
         {
           method: "POST",
           headers: {
@@ -748,31 +756,63 @@ export default function OrganizationForm() {
               </p>
             </div>
 
+            {/* Label da Entidade */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rotulo_entidade">
+                  Como chama seus clientes? (singular)
+                </Label>
+                <Input
+                  id="rotulo_entidade"
+                  {...register("rotulo_entidade")}
+                  placeholder="Ex: Paciente, Cliente, Aluno"
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Usado em botões, labels e mensagens
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="rotulo_entidade_plural">
+                  Plural
+                </Label>
+                <Input
+                  id="rotulo_entidade_plural"
+                  {...register("rotulo_entidade_plural")}
+                  placeholder="Ex: Pacientes, Clientes, Alunos"
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Forma plural do nome
+                </p>
+              </div>
+            </div>
+
             {/* Plano de Assinatura */}
             <div className="space-y-2">
-              <Label htmlFor="subscription_plan">
+              <Label htmlFor="plano_assinatura">
                 Pacote de Assinatura *
               </Label>
               <select
-                id="subscription_plan"
-                {...register("subscription_plan", { required: "Plano é obrigatório" })}
+                id="plano_assinatura"
+                {...register("plano_assinatura", { required: "Plano é obrigatório" })}
                 className="w-full h-10 px-3 rounded-md bg-input border border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 {plans.map((plan) => (
-                  <option key={plan.plan_id} value={plan.plan_id}>
-                    {plan.plan_name} - R$ {plan.price_monthly?.toFixed(2)}/mês
+                  <option key={plan.id_plano} value={plan.id_plano}>
+                    {plan.nome_plano} - R$ {plan.preco_mensal?.toFixed(2)}/mês
                   </option>
                 ))}
               </select>
-              {errors.subscription_plan && (
-                <p className="text-xs text-destructive mt-1">{errors.subscription_plan.message}</p>
+              {errors.plano_assinatura && (
+                <p className="text-xs text-destructive mt-1">{errors.plano_assinatura.message}</p>
               )}
               
               {/* Descrição do Plano Selecionado */}
-              {subscriptionPlan && plans.find(p => p.plan_id === subscriptionPlan) && (
+              {subscriptionPlan && plans.find(p => p.id_plano === subscriptionPlan) && (
                 <div className="mt-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
                   <p className="text-sm text-foreground mb-3">
-                    {plans.find(p => p.plan_id === subscriptionPlan)?.plan_description}
+                    {plans.find(p => p.id_plano === subscriptionPlan)?.descricao_plano}
                   </p>
                   
                   {/* Recursos do Plano */}
@@ -781,61 +821,61 @@ export default function OrganizationForm() {
                       Recursos Inclusos:
                     </p>
                     <div className="grid grid-cols-2 gap-2">
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.atendimento_inteligente && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.atendimento_inteligente && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Atendimento Inteligente</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.agendamento_automatico && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.agendamento_automatico && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Agendamento Automático</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.lembretes_automaticos && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.lembretes_automaticos && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Lembretes Automáticos</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.confirmacao_email && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.confirmacao_email && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Confirmação por Email</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.base_conhecimento && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.base_conhecimento && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Base de Conhecimento</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.relatorios_avancados && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.relatorios_avancados && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Relatórios Avançados</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.integracao_whatsapp && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.integracao_whatsapp && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Integração WhatsApp</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.multi_usuarios && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.multi_usuarios && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Múltiplos Usuários</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.personalizacao_agente && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.personalizacao_agente && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Personalização do Agente</span>
                         </div>
                       )}
-                      {plans.find(p => p.plan_id === subscriptionPlan)?.analytics && (
+                      {plans.find(p => p.id_plano === subscriptionPlan)?.analytics && (
                         <div className="flex items-center gap-2 text-xs text-foreground">
                           <Check className="h-3 w-3 text-primary" />
                           <span>Analytics</span>
@@ -851,19 +891,19 @@ export default function OrganizationForm() {
                       <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                         <div>
                           <span className="font-medium">Agendamentos/mês:</span>{' '}
-                          {plans.find(p => p.plan_id === subscriptionPlan)?.max_agendamentos_mes || 'Ilimitado'}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_agendamentos_mes || 'Ilimitado'}
                         </div>
                         <div>
                           <span className="font-medium">Mensagens/mês:</span>{' '}
-                          {plans.find(p => p.plan_id === subscriptionPlan)?.max_mensagens_whatsapp_mes || 'Ilimitado'}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_mensagens_whatsapp_mes || 'Ilimitado'}
                         </div>
                         <div>
                           <span className="font-medium">Usuários:</span>{' '}
-                          {plans.find(p => p.plan_id === subscriptionPlan)?.max_usuarios || 'Ilimitado'}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_usuarios || 'Ilimitado'}
                         </div>
                         <div>
-                          <span className="font-medium">Pacientes:</span>{' '}
-                          {plans.find(p => p.plan_id === subscriptionPlan)?.max_pacientes || 'Ilimitado'}
+                          <span className="font-medium">Clientes:</span>{' '}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_contatos || 'Ilimitado'}
                         </div>
                       </div>
                     </div>
@@ -874,7 +914,7 @@ export default function OrganizationForm() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="is_active">
+                <Label htmlFor="ativo">
                   Empresa Ativa
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -882,9 +922,9 @@ export default function OrganizationForm() {
                 </p>
               </div>
               <Switch
-                id="is_active"
+                id="ativo"
                 checked={isActive}
-                onCheckedChange={(checked) => setValue("is_active", checked)}
+                onCheckedChange={(checked) => setValue("ativo", checked)}
               />
             </div>
           </CardContent>
@@ -1089,12 +1129,12 @@ export default function OrganizationForm() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-foreground">Status:</span>
-                    {whatsappInstance.status === 'connected' ? (
+                    {whatsappInstance.situacao === 'conectado' ? (
                       <span className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full text-green-600 dark:text-green-400 text-sm font-medium">
                         <Check className="h-4 w-4" />
                         Conectado
                       </span>
-                    ) : whatsappInstance.status === 'pending' ? (
+                    ) : whatsappInstance.situacao === 'pendente' ? (
                       <span className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-600 dark:text-yellow-400 text-sm font-medium">
                         <Clock className="h-4 w-4" />
                         Aguardando
@@ -1102,7 +1142,7 @@ export default function OrganizationForm() {
                     ) : (
                       <span className="flex items-center gap-2 px-3 py-1 bg-destructive/10 border border-destructive/30 rounded-full text-destructive text-sm font-medium">
                         <XCircle className="h-4 w-4" />
-                        {whatsappInstance.status}
+                        {whatsappInstance.situacao}
                       </span>
                     )}
                   </div>
@@ -1110,7 +1150,7 @@ export default function OrganizationForm() {
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Nome da Instância:</span>
-                      <span className="text-sm font-mono text-foreground">{whatsappInstance.instance_name}</span>
+                      <span className="text-sm font-mono text-foreground">{whatsappInstance.nome_instancia}</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Empresa:</span>
@@ -1122,7 +1162,7 @@ export default function OrganizationForm() {
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Instance ID:</span>
-                      <span className="text-xs font-mono text-muted-foreground">{whatsappInstance.instance_id}</span>
+                      <span className="text-xs font-mono text-muted-foreground">{whatsappInstance.id_instancia}</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Token:</span>
@@ -1133,13 +1173,13 @@ export default function OrganizationForm() {
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Criado em:</span>
                       <span className="text-sm text-foreground">
-                        {new Date(whatsappInstance.created_at).toLocaleString('pt-BR')}
+                        {new Date(whatsappInstance.criado_em).toLocaleString('pt-BR')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Atualizado em:</span>
                       <span className="text-sm text-foreground">
-                        {new Date(whatsappInstance.updated_at).toLocaleString('pt-BR')}
+                        {new Date(whatsappInstance.atualizado_em).toLocaleString('pt-BR')}
                       </span>
                     </div>
                   </div>
@@ -1246,21 +1286,21 @@ export default function OrganizationForm() {
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                           <span className="font-semibold text-primary">
-                            {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                            {user.nome_completo?.charAt(0).toUpperCase() || 'U'}
                           </span>
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-foreground">
-                            {user.full_name}
+                            {user.nome_completo}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-muted-foreground capitalize">
-                              {user.role === 'admin' ? 'Administrador' : 
-                               user.role === 'doctor' ? 'Médico' : 'Assistente'}
+                              {user.funcao === 'admin' ? 'Administrador' : 
+                               user.funcao === 'profissional' ? 'Profissional' : 'Assistente'}
                             </span>
                             <span className="text-primary">•</span>
-                            <span className={`text-xs ${user.is_active ? 'text-primary' : 'text-muted-foreground'}`}>
-                              {user.is_active ? 'Ativo' : 'Inativo'}
+                            <span className={`text-xs ${user.ativo ? 'text-primary' : 'text-muted-foreground'}`}>
+                              {user.ativo ? 'Ativo' : 'Inativo'}
                             </span>
                           </div>
                         </div>
@@ -1320,12 +1360,12 @@ export default function OrganizationForm() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="user_full_name">Nome Completo *</Label>
+              <Label htmlFor="user_nome_completo">Nome Completo *</Label>
               <Input
-                id="user_full_name"
+                id="user_nome_completo"
                 placeholder="Ex: Dr. João Silva"
-                value={newUserForm.full_name}
-                onChange={(e) => setNewUserForm({ ...newUserForm, full_name: e.target.value })}
+                value={newUserForm.nome_completo}
+                onChange={(e) => setNewUserForm({ ...newUserForm, nome_completo: e.target.value })}
               />
             </div>
 
@@ -1362,8 +1402,8 @@ export default function OrganizationForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="doctor">Médico</SelectItem>
-                  <SelectItem value="assistant">Assistente</SelectItem>
+                  <SelectItem value="profissional">Profissional</SelectItem>
+                  <SelectItem value="assistente">Assistente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1407,4 +1447,3 @@ export default function OrganizationForm() {
     </div>
   );
 }
-

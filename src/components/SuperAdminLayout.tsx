@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3 } from "lucide-react";
+import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FlowgrammersLogo } from "@/components/FlowgrammersLogo";
+import { AppLogo } from "@/components/AppLogo";
 
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -15,6 +15,7 @@ const menuItems = [
   { path: "/super-admin/token-usage", label: "Consumo de Tokens", icon: Eye },
   { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },
   { path: "/super-admin/insights", label: "Insights n8n", icon: BarChart3 },
+  { path: "/super-admin/gestao-vps", label: "Gestão de VPS", icon: Server },
   { path: "/super-admin/settings", label: "Configs", icon: Sliders },
 ];
 
@@ -74,7 +75,7 @@ export default function SuperAdminLayout() {
             "flex h-14 items-center justify-between border-b border-border transition-all duration-300",
             isSidebarCollapsed ? "px-2 justify-center" : "px-4"
           )}>
-            <FlowgrammersLogo height={isSidebarCollapsed ? 24 : 30} />
+            <AppLogo variant="platform" height={isSidebarCollapsed ? 24 : 30} />
             <Button
               variant="ghost"
               size="icon"
@@ -100,7 +101,7 @@ export default function SuperAdminLayout() {
               {!isSidebarCollapsed && (
                 <div className="flex-1 overflow-hidden">
                   <p className="truncate text-xs font-semibold text-foreground">
-                    {profile?.full_name || "Admin"}
+                    {profile?.nome_completo || "Admin"}
                   </p>
                   <p className="text-[10px] text-muted-foreground">Admin</p>
                 </div>
@@ -208,7 +209,7 @@ export default function SuperAdminLayout() {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <FlowgrammersLogo height={26} />
+            <AppLogo variant="platform" height={26} />
 
             <div className="ml-auto">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/20">

@@ -14,170 +14,173 @@ export type Database = {
   }
   public: {
     Tables: {
-      agent_ia_config: {
+      config_agente_ia: {
         Row: {
-          agent_name: string
-          closing_message: string
-          confirmation_email_html: string | null
-          created_at: string
-          customer_pause_duration_seconds: number | null
-          follow_up_1_minutes: number | null
-          follow_up_2_minutes: number | null
-          follow_up_3_minutes: number | null
-          greeting_message: string
+          nome_agente: string
+          mensagem_encerramento: string
+          email_confirmacao_html: string | null
+          criado_em: string
+          pausa_cliente_segundos: number | null
+          followup_1_minutos: number | null
+          followup_2_minutos: number | null
+          followup_3_minutos: number | null
+          mensagem_boas_vindas: string
           id: string
-          openai_api_key: string | null
-          organization_id: string
-          pause_duration_seconds: number
-          personality: string
-          qualification_questions: Json | null
-          reminder_1_minutes: number | null
-          reminder_2_minutes: number | null
-          reminder_3_minutes: number | null
-          updated_at: string
+          chave_openai: string | null
+          id_organizacao: string
+          pausa_segundos: number
+          personalidade: string
+          perguntas_qualificacao: Json | null
+          lembrete_1_minutos: number | null
+          lembrete_2_minutos: number | null
+          lembrete_3_minutos: number | null
+          atualizado_em: string
         }
         Insert: {
-          agent_name?: string
-          closing_message?: string
-          confirmation_email_html?: string | null
-          created_at?: string
-          customer_pause_duration_seconds?: number | null
-          follow_up_1_minutes?: number | null
-          follow_up_2_minutes?: number | null
-          follow_up_3_minutes?: number | null
-          greeting_message?: string
+          nome_agente?: string
+          mensagem_encerramento?: string
+          email_confirmacao_html?: string | null
+          criado_em?: string
+          pausa_cliente_segundos?: number | null
+          followup_1_minutos?: number | null
+          followup_2_minutos?: number | null
+          followup_3_minutos?: number | null
+          mensagem_boas_vindas?: string
           id?: string
-          openai_api_key?: string | null
-          organization_id: string
-          pause_duration_seconds?: number
-          personality?: string
-          qualification_questions?: Json | null
-          reminder_1_minutes?: number | null
-          reminder_2_minutes?: number | null
-          reminder_3_minutes?: number | null
-          updated_at?: string
+          chave_openai?: string | null
+          id_organizacao: string
+          pausa_segundos?: number
+          personalidade?: string
+          perguntas_qualificacao?: Json | null
+          lembrete_1_minutos?: number | null
+          lembrete_2_minutos?: number | null
+          lembrete_3_minutos?: number | null
+          atualizado_em?: string
         }
         Update: {
-          agent_name?: string
-          closing_message?: string
-          confirmation_email_html?: string | null
-          created_at?: string
-          customer_pause_duration_seconds?: number | null
-          follow_up_1_minutes?: number | null
-          follow_up_2_minutes?: number | null
-          follow_up_3_minutes?: number | null
-          greeting_message?: string
+          nome_agente?: string
+          mensagem_encerramento?: string
+          email_confirmacao_html?: string | null
+          criado_em?: string
+          pausa_cliente_segundos?: number | null
+          followup_1_minutos?: number | null
+          followup_2_minutos?: number | null
+          followup_3_minutos?: number | null
+          mensagem_boas_vindas?: string
           id?: string
-          openai_api_key?: string | null
-          organization_id?: string
-          pause_duration_seconds?: number
-          personality?: string
-          qualification_questions?: Json | null
-          reminder_1_minutes?: number | null
-          reminder_2_minutes?: number | null
-          reminder_3_minutes?: number | null
-          updated_at?: string
+          chave_openai?: string | null
+          id_organizacao?: string
+          pausa_segundos?: number
+          personalidade?: string
+          perguntas_qualificacao?: Json | null
+          lembrete_1_minutos?: number | null
+          lembrete_2_minutos?: number | null
+          lembrete_3_minutos?: number | null
+          atualizado_em?: string
         }
         Relationships: [
           {
             foreignKeyName: "agent_ia_config_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: true
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
       }
-      appointments: {
+      agendamentos: {
         Row: {
-          created_at: string
-          date: string
-          end_datetime: string | null
+          criado_em: string
+          data: string
+          fim: string | null
           id: string
-          observations: string | null
-          organization_id: string
-          patient_id: string | null
-          patient_name: string
-          reminder_1_sent: boolean | null
-          reminder_2_sent: boolean | null
-          reminder_3_sent: boolean | null
-          session_id: string | null
-          start_datetime: string | null
-          status: string | null
-          time: string
-          type: string
+          observacoes: string | null
+          id_organizacao: string
+          id_contato: string | null
+          nome_contato: string
+          lembrete_1_enviado: boolean | null
+          lembrete_2_enviado: boolean | null
+          lembrete_3_enviado: boolean | null
+          id_sessao: string | null
+          inicio: string | null
+          situacao: string | null
+          hora: string
+          tipo: string
+          notas: string | null
         }
         Insert: {
-          created_at?: string
-          date: string
-          end_datetime?: string | null
+          criado_em?: string
+          data: string
+          fim?: string | null
           id?: string
-          observations?: string | null
-          organization_id: string
-          patient_id?: string | null
-          patient_name: string
-          reminder_1_sent?: boolean | null
-          reminder_2_sent?: boolean | null
-          reminder_3_sent?: boolean | null
-          session_id?: string | null
-          start_datetime?: string | null
-          status?: string | null
-          time: string
-          type: string
+          observacoes?: string | null
+          id_organizacao: string
+          id_contato?: string | null
+          nome_contato: string
+          lembrete_1_enviado?: boolean | null
+          lembrete_2_enviado?: boolean | null
+          lembrete_3_enviado?: boolean | null
+          id_sessao?: string | null
+          inicio?: string | null
+          situacao?: string | null
+          hora: string
+          tipo: string
+          notas?: string | null
         }
         Update: {
-          created_at?: string
-          date?: string
-          end_datetime?: string | null
+          criado_em?: string
+          data?: string
+          fim?: string | null
           id?: string
-          observations?: string | null
-          organization_id?: string
-          patient_id?: string | null
-          patient_name?: string
-          reminder_1_sent?: boolean | null
-          reminder_2_sent?: boolean | null
-          reminder_3_sent?: boolean | null
-          session_id?: string | null
-          start_datetime?: string | null
-          status?: string | null
-          time?: string
-          type?: string
+          observacoes?: string | null
+          id_organizacao?: string
+          id_contato?: string | null
+          nome_contato?: string
+          lembrete_1_enviado?: boolean | null
+          lembrete_2_enviado?: boolean | null
+          lembrete_3_enviado?: boolean | null
+          id_sessao?: string | null
+          inicio?: string | null
+          situacao?: string | null
+          hora?: string
+          tipo?: string
+          notas?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "appointments_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_patient_id_fkey"
-            columns: ["patient_id"]
+            foreignKeyName: "appointments_contact_id_fkey"
+            columns: ["id_contato"]
             isOneToOne: false
-            referencedRelation: "patients"
+            referencedRelation: "contatos"
             referencedColumns: ["id"]
           },
         ]
       }
-      bem_estar_chats: {
+      bem_estar_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
@@ -196,8 +199,8 @@ export type Database = {
           mensagem3: string | null
           nome: string | null
           numero: string | null
-          organization_id: string | null
-          sessionid: string | null
+          id_organizacao: string | null
+          id_sessao: string | null
           situacao: string | null
           ultima_atividade: string | null
           ultima_mensagem_ia: string | null
@@ -216,8 +219,8 @@ export type Database = {
           mensagem3?: string | null
           nome?: string | null
           numero?: string | null
-          organization_id?: string | null
-          sessionid?: string | null
+          id_organizacao?: string | null
+          id_sessao?: string | null
           situacao?: string | null
           ultima_atividade?: string | null
           ultima_mensagem_ia?: string | null
@@ -236,368 +239,389 @@ export type Database = {
           mensagem3?: string | null
           nome?: string | null
           numero?: string | null
-          organization_id?: string | null
-          sessionid?: string | null
+          id_organizacao?: string | null
+          id_sessao?: string | null
           situacao?: string | null
           ultima_atividade?: string | null
           ultima_mensagem_ia?: string | null
         }
         Relationships: []
       }
-      clinica_flowgrammers_chats: {
+      clinica_flowgrammers_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
-      clinica_teste_chats: {
+      clinica_teste_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
-      clinica_saude_chats: {
+      clinica_saude_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
-      documents_geral: {
+      documentos: {
         Row: {
-          content: string | null
+          conteudo: string | null
           embedding: string | null
           id: number
-          metadata: Json | null
+          metadados: Json | null
           titulo: string | null
         }
         Insert: {
-          content?: string | null
+          conteudo?: string | null
           embedding?: string | null
           id?: number
-          metadata?: Json | null
+          metadados?: Json | null
           titulo?: string | null
         }
         Update: {
-          content?: string | null
+          conteudo?: string | null
           embedding?: string | null
           id?: number
-          metadata?: Json | null
+          metadados?: Json | null
           titulo?: string | null
         }
         Relationships: []
       }
-      empresa_digital_chats: {
+      empresa_digital_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
-      global_settings: {
+      configuracoes_globais: {
         Row: {
-          created_at: string
+          criado_em: string
           id: string
-          openai_api_key: string | null
-          support_whatsapp: string | null
-          updated_at: string
+          chave_openai: string | null
+          whatsapp_suporte: string | null
+          atualizado_em: string
+          nome_plataforma: string
+          url_logo_plataforma: string | null
+          url_logo_plataforma_escuro: string | null
+          cor_primaria: string | null
+          chave_elevenlabs: string | null
         }
         Insert: {
-          created_at?: string
+          criado_em?: string
           id?: string
-          openai_api_key?: string | null
-          support_whatsapp?: string | null
-          updated_at?: string
+          chave_openai?: string | null
+          whatsapp_suporte?: string | null
+          atualizado_em?: string
+          nome_plataforma?: string
+          url_logo_plataforma?: string | null
+          url_logo_plataforma_escuro?: string | null
+          cor_primaria?: string | null
+          chave_elevenlabs?: string | null
         }
         Update: {
-          created_at?: string
+          criado_em?: string
           id?: string
-          openai_api_key?: string | null
-          support_whatsapp?: string | null
-          updated_at?: string
+          chave_openai?: string | null
+          whatsapp_suporte?: string | null
+          atualizado_em?: string
+          nome_plataforma?: string
+          url_logo_plataforma?: string | null
+          url_logo_plataforma_escuro?: string | null
+          cor_primaria?: string | null
+          chave_elevenlabs?: string | null
         }
         Relationships: []
       }
-      lado_digital_chats: {
+      lado_digital_conversas: {
         Row: {
           data: string | null
           id: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Insert: {
           data?: string | null
           id?: number
-          message: Json
-          session_id: string
+          mensagem: Json
+          id_sessao: string
         }
         Update: {
           data?: string | null
           id?: number
-          message?: Json
-          session_id?: string
+          mensagem?: Json
+          id_sessao?: string
         }
         Relationships: []
       }
-      organizations: {
+      organizacoes: {
         Row: {
-          consultation_duration: number | null
-          contact_email: string | null
-          created_at: string | null
+          duracao_atendimento: number | null
+          email_contato: string | null
+          criado_em: string | null
           id: string
-          is_active: boolean | null
-          logo_url: string | null
-          name: string
-          plan_features: Json | null
-          settings: Json | null
-          slug: string
-          subscription_plan: string | null
+          ativo: boolean | null
+          url_logo: string | null
+          nome: string
+          recursos_plano: Json | null
+          dados: Json | null
+          identificador: string
+          plano_assinatura: string | null
+          rotulo_entidade: string
+          rotulo_entidade_plural: string
         }
         Insert: {
-          consultation_duration?: number | null
-          contact_email?: string | null
-          created_at?: string | null
+          duracao_atendimento?: number | null
+          email_contato?: string | null
+          criado_em?: string | null
           id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name: string
-          plan_features?: Json | null
-          settings?: Json | null
-          slug: string
-          subscription_plan?: string | null
+          ativo?: boolean | null
+          url_logo?: string | null
+          nome: string
+          recursos_plano?: Json | null
+          dados?: Json | null
+          identificador: string
+          plano_assinatura?: string | null
+          rotulo_entidade?: string
+          rotulo_entidade_plural?: string
         }
         Update: {
-          consultation_duration?: number | null
-          contact_email?: string | null
-          created_at?: string | null
+          duracao_atendimento?: number | null
+          email_contato?: string | null
+          criado_em?: string | null
           id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string
-          plan_features?: Json | null
-          settings?: Json | null
-          slug?: string
-          subscription_plan?: string | null
+          ativo?: boolean | null
+          url_logo?: string | null
+          nome?: string
+          recursos_plano?: Json | null
+          dados?: Json | null
+          identificador?: string
+          plano_assinatura?: string | null
+          rotulo_entidade?: string
+          rotulo_entidade_plural?: string
         }
         Relationships: []
       }
-      patients: {
+      contatos: {
         Row: {
-          created_at: string
+          criado_em: string
           email: string | null
           id: string
-          kanban_status: string | null
-          last_visit: string | null
-          name: string | null
-          observations: string | null
-          organization_id: string
-          phone: string
+          status_kanban: string | null
+          ultima_interacao: string | null
+          nome: string | null
+          observacoes: string | null
+          id_organizacao: string
+          telefone: string
           resumo: string | null
-          session_id: string | null
-          status: string | null
-          total_visits: number | null
+          id_sessao: string | null
+          situacao: string | null
+          total_interacoes: number | null
         }
         Insert: {
-          created_at?: string
+          criado_em?: string
           email?: string | null
           id?: string
-          kanban_status?: string | null
-          last_visit?: string | null
-          name?: string | null
-          observations?: string | null
-          organization_id: string
-          phone: string
+          status_kanban?: string | null
+          ultima_interacao?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          id_organizacao: string
+          telefone: string
           resumo?: string | null
-          session_id?: string | null
-          status?: string | null
-          total_visits?: number | null
+          id_sessao?: string | null
+          situacao?: string | null
+          total_interacoes?: number | null
         }
         Update: {
-          created_at?: string
+          criado_em?: string
           email?: string | null
           id?: string
-          kanban_status?: string | null
-          last_visit?: string | null
-          name?: string | null
-          observations?: string | null
-          organization_id?: string
-          phone?: string
+          status_kanban?: string | null
+          ultima_interacao?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          id_organizacao?: string
+          telefone?: string
           resumo?: string | null
-          session_id?: string | null
-          status?: string | null
-          total_visits?: number | null
+          id_sessao?: string | null
+          situacao?: string | null
+          total_interacoes?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "patients_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "contacts_organization_id_fkey"
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      perfis: {
         Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string
+          url_avatar: string | null
+          criado_em: string | null
+          nome_completo: string
           id: string
-          is_active: boolean | null
-          is_super_admin: boolean | null
-          organization_id: string | null
-          role: string
+          ativo: boolean | null
+          super_admin: boolean | null
+          id_organizacao: string | null
+          funcao: string
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name: string
+          url_avatar?: string | null
+          criado_em?: string | null
+          nome_completo: string
           id: string
-          is_active?: boolean | null
-          is_super_admin?: boolean | null
-          organization_id?: string | null
-          role?: string
+          ativo?: boolean | null
+          super_admin?: boolean | null
+          id_organizacao?: string | null
+          funcao?: string
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string
+          url_avatar?: string | null
+          criado_em?: string | null
+          nome_completo?: string
           id?: string
-          is_active?: boolean | null
-          is_super_admin?: boolean | null
-          organization_id?: string | null
-          role?: string
+          ativo?: boolean | null
+          super_admin?: boolean | null
+          id_organizacao?: string | null
+          funcao?: string
         }
         Relationships: [
           {
             foreignKeyName: "profiles_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
       }
-      settings: {
+      configuracoes: {
         Row: {
-          clinic_name: string
-          created_at: string
-          doctor_name: string
+          nome_empresa: string
+          criado_em: string
+          nome_responsavel: string
           id: string
-          organization_id: string
-          subscription_plan: string | null
-          subscription_renews_at: string | null
+          id_organizacao: string
+          plano_assinatura: string | null
+          renovacao_em: string | null
         }
         Insert: {
-          clinic_name: string
-          created_at?: string
-          doctor_name: string
+          nome_empresa: string
+          criado_em?: string
+          nome_responsavel: string
           id?: string
-          organization_id: string
-          subscription_plan?: string | null
-          subscription_renews_at?: string | null
+          id_organizacao: string
+          plano_assinatura?: string | null
+          renovacao_em?: string | null
         }
         Update: {
-          clinic_name?: string
-          created_at?: string
-          doctor_name?: string
+          nome_empresa?: string
+          criado_em?: string
+          nome_responsavel?: string
           id?: string
-          organization_id?: string
-          subscription_plan?: string | null
-          subscription_renews_at?: string | null
+          id_organizacao?: string
+          plano_assinatura?: string | null
+          renovacao_em?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "settings_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: true
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
       }
-      subscription_plan_configs: {
+      planos_assinatura: {
         Row: {
           agendamento_automatico: boolean | null
           analytics: boolean | null
           atendimento_inteligente: boolean | null
           base_conhecimento: boolean | null
           confirmacao_email: boolean | null
-          created_at: string | null
+          criado_em: string | null
           id: string
           integracao_whatsapp: boolean | null
           lembretes_automaticos: boolean | null
           max_agendamentos_mes: number | null
           max_mensagens_whatsapp_mes: number | null
-          max_pacientes: number | null
+          max_contatos: number | null
           max_usuarios: number | null
           multi_usuarios: boolean | null
           personalizacao_agente: boolean | null
-          plan_description: string | null
-          plan_id: string
-          plan_name: string
-          price_annual: number | null
-          price_monthly: number | null
+          descricao_plano: string | null
+          id_plano: string
+          nome_plano: string
+          preco_anual: number | null
+          preco_mensal: number | null
           relatorios_avancados: boolean | null
-          updated_at: string | null
+          atualizado_em: string | null
         }
         Insert: {
           agendamento_automatico?: boolean | null
@@ -605,23 +629,23 @@ export type Database = {
           atendimento_inteligente?: boolean | null
           base_conhecimento?: boolean | null
           confirmacao_email?: boolean | null
-          created_at?: string | null
+          criado_em?: string | null
           id?: string
           integracao_whatsapp?: boolean | null
           lembretes_automaticos?: boolean | null
           max_agendamentos_mes?: number | null
           max_mensagens_whatsapp_mes?: number | null
-          max_pacientes?: number | null
+          max_contatos?: number | null
           max_usuarios?: number | null
           multi_usuarios?: boolean | null
           personalizacao_agente?: boolean | null
-          plan_description?: string | null
-          plan_id: string
-          plan_name: string
-          price_annual?: number | null
-          price_monthly?: number | null
+          descricao_plano?: string | null
+          id_plano: string
+          nome_plano: string
+          preco_anual?: number | null
+          preco_mensal?: number | null
           relatorios_avancados?: boolean | null
-          updated_at?: string | null
+          atualizado_em?: string | null
         }
         Update: {
           agendamento_automatico?: boolean | null
@@ -629,54 +653,54 @@ export type Database = {
           atendimento_inteligente?: boolean | null
           base_conhecimento?: boolean | null
           confirmacao_email?: boolean | null
-          created_at?: string | null
+          criado_em?: string | null
           id?: string
           integracao_whatsapp?: boolean | null
           lembretes_automaticos?: boolean | null
           max_agendamentos_mes?: number | null
           max_mensagens_whatsapp_mes?: number | null
-          max_pacientes?: number | null
+          max_contatos?: number | null
           max_usuarios?: number | null
           multi_usuarios?: boolean | null
           personalizacao_agente?: boolean | null
-          plan_description?: string | null
-          plan_id?: string
-          plan_name?: string
-          price_annual?: number | null
-          price_monthly?: number | null
+          descricao_plano?: string | null
+          id_plano?: string
+          nome_plano?: string
+          preco_anual?: number | null
+          preco_mensal?: number | null
           relatorios_avancados?: boolean | null
-          updated_at?: string | null
+          atualizado_em?: string | null
         }
         Relationships: []
       }
-      token_usage: {
+      uso_tokens: {
         Row: {
-          cost_reais: number
-          created_at: string | null
+          custo_reais: number
+          criado_em: string | null
           id: string
-          organization_id: string
+          id_organizacao: string
           total_tokens: number
         }
         Insert: {
-          cost_reais?: number
-          created_at?: string | null
+          custo_reais?: number
+          criado_em?: string | null
           id?: string
-          organization_id: string
+          id_organizacao: string
           total_tokens?: number
         }
         Update: {
-          cost_reais?: number
-          created_at?: string | null
+          custo_reais?: number
+          criado_em?: string | null
           id?: string
-          organization_id?: string
+          id_organizacao?: string
           total_tokens?: number
         }
         Relationships: [
           {
             foreignKeyName: "token_usage_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -720,201 +744,201 @@ export type Database = {
         }
         Relationships: []
       }
-      whatsapp_instances: {
+      instancias_whatsapp: {
         Row: {
-          admin_field_01: string
-          created_at: string
+          campo_admin_01: string
+          criado_em: string
           id: string
-          instance_id: string
-          instance_name: string
-          organization_id: string
-          pairing_code: string | null
-          phone: string
+          id_instancia: string
+          nome_instancia: string
+          id_organizacao: string
+          codigo_pareamento: string | null
+          telefone: string
           qr_code: string | null
-          status: string
+          situacao: string
           token: string
-          updated_at: string
-          webhook_created: string | null
-          webhook_url: string | null
+          atualizado_em: string
+          webhook_criado: string | null
+          url_webhook: string | null
         }
         Insert: {
-          admin_field_01: string
-          created_at?: string
+          campo_admin_01: string
+          criado_em?: string
           id?: string
-          instance_id: string
-          instance_name: string
-          organization_id: string
-          pairing_code?: string | null
-          phone: string
+          id_instancia: string
+          nome_instancia: string
+          id_organizacao: string
+          codigo_pareamento?: string | null
+          telefone: string
           qr_code?: string | null
-          status?: string
+          situacao?: string
           token: string
-          updated_at?: string
-          webhook_created?: string | null
-          webhook_url?: string | null
+          atualizado_em?: string
+          webhook_criado?: string | null
+          url_webhook?: string | null
         }
         Update: {
-          admin_field_01?: string
-          created_at?: string
+          campo_admin_01?: string
+          criado_em?: string
           id?: string
-          instance_id?: string
-          instance_name?: string
-          organization_id?: string
-          pairing_code?: string | null
-          phone?: string
+          id_instancia?: string
+          nome_instancia?: string
+          id_organizacao?: string
+          codigo_pareamento?: string | null
+          telefone?: string
           qr_code?: string | null
-          status?: string
+          situacao?: string
           token?: string
-          updated_at?: string
-          webhook_created?: string | null
-          webhook_url?: string | null
+          atualizado_em?: string
+          webhook_criado?: string | null
+          url_webhook?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "whatsapp_instances_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
       }
-      work_schedules: {
+      horarios_trabalho: {
         Row: {
-          consultation_duration: number | null
-          created_at: string | null
+          duracao_atendimento: number | null
+          criado_em: string | null
           domingo_fim_almoco: string | null
           domingo_fim_trabalho: string | null
           domingo_inicio_almoco: string | null
           domingo_inicio_trabalho: string | null
-          domingo_is_active: boolean | null
+          domingo_ativo: boolean | null
           id: string
-          organization_id: string
+          id_organizacao: string
           quarta_fim_almoco: string | null
           quarta_fim_trabalho: string | null
           quarta_inicio_almoco: string | null
           quarta_inicio_trabalho: string | null
-          quarta_is_active: boolean | null
+          quarta_ativo: boolean | null
           quinta_fim_almoco: string | null
           quinta_fim_trabalho: string | null
           quinta_inicio_almoco: string | null
           quinta_inicio_trabalho: string | null
-          quinta_is_active: boolean | null
+          quinta_ativo: boolean | null
           sabado_fim_almoco: string | null
           sabado_fim_trabalho: string | null
           sabado_inicio_almoco: string | null
           sabado_inicio_trabalho: string | null
-          sabado_is_active: boolean | null
+          sabado_ativo: boolean | null
           segunda_fim_almoco: string | null
           segunda_fim_trabalho: string | null
           segunda_inicio_almoco: string | null
           segunda_inicio_trabalho: string | null
-          segunda_is_active: boolean | null
+          segunda_ativo: boolean | null
           sexta_fim_almoco: string | null
           sexta_fim_trabalho: string | null
           sexta_inicio_almoco: string | null
           sexta_inicio_trabalho: string | null
-          sexta_is_active: boolean | null
+          sexta_ativo: boolean | null
           terca_fim_almoco: string | null
           terca_fim_trabalho: string | null
           terca_inicio_almoco: string | null
           terca_inicio_trabalho: string | null
-          terca_is_active: boolean | null
-          updated_at: string | null
-          user_id: string
+          terca_ativo: boolean | null
+          atualizado_em: string | null
+          id_usuario: string
         }
         Insert: {
-          consultation_duration?: number | null
-          created_at?: string | null
+          duracao_atendimento?: number | null
+          criado_em?: string | null
           domingo_fim_almoco?: string | null
           domingo_fim_trabalho?: string | null
           domingo_inicio_almoco?: string | null
           domingo_inicio_trabalho?: string | null
-          domingo_is_active?: boolean | null
+          domingo_ativo?: boolean | null
           id?: string
-          organization_id: string
+          id_organizacao: string
           quarta_fim_almoco?: string | null
           quarta_fim_trabalho?: string | null
           quarta_inicio_almoco?: string | null
           quarta_inicio_trabalho?: string | null
-          quarta_is_active?: boolean | null
+          quarta_ativo?: boolean | null
           quinta_fim_almoco?: string | null
           quinta_fim_trabalho?: string | null
           quinta_inicio_almoco?: string | null
           quinta_inicio_trabalho?: string | null
-          quinta_is_active?: boolean | null
+          quinta_ativo?: boolean | null
           sabado_fim_almoco?: string | null
           sabado_fim_trabalho?: string | null
           sabado_inicio_almoco?: string | null
           sabado_inicio_trabalho?: string | null
-          sabado_is_active?: boolean | null
+          sabado_ativo?: boolean | null
           segunda_fim_almoco?: string | null
           segunda_fim_trabalho?: string | null
           segunda_inicio_almoco?: string | null
           segunda_inicio_trabalho?: string | null
-          segunda_is_active?: boolean | null
+          segunda_ativo?: boolean | null
           sexta_fim_almoco?: string | null
           sexta_fim_trabalho?: string | null
           sexta_inicio_almoco?: string | null
           sexta_inicio_trabalho?: string | null
-          sexta_is_active?: boolean | null
+          sexta_ativo?: boolean | null
           terca_fim_almoco?: string | null
           terca_fim_trabalho?: string | null
           terca_inicio_almoco?: string | null
           terca_inicio_trabalho?: string | null
-          terca_is_active?: boolean | null
-          updated_at?: string | null
-          user_id: string
+          terca_ativo?: boolean | null
+          atualizado_em?: string | null
+          id_usuario: string
         }
         Update: {
-          consultation_duration?: number | null
-          created_at?: string | null
+          duracao_atendimento?: number | null
+          criado_em?: string | null
           domingo_fim_almoco?: string | null
           domingo_fim_trabalho?: string | null
           domingo_inicio_almoco?: string | null
           domingo_inicio_trabalho?: string | null
-          domingo_is_active?: boolean | null
+          domingo_ativo?: boolean | null
           id?: string
-          organization_id?: string
+          id_organizacao?: string
           quarta_fim_almoco?: string | null
           quarta_fim_trabalho?: string | null
           quarta_inicio_almoco?: string | null
           quarta_inicio_trabalho?: string | null
-          quarta_is_active?: boolean | null
+          quarta_ativo?: boolean | null
           quinta_fim_almoco?: string | null
           quinta_fim_trabalho?: string | null
           quinta_inicio_almoco?: string | null
           quinta_inicio_trabalho?: string | null
-          quinta_is_active?: boolean | null
+          quinta_ativo?: boolean | null
           sabado_fim_almoco?: string | null
           sabado_fim_trabalho?: string | null
           sabado_inicio_almoco?: string | null
           sabado_inicio_trabalho?: string | null
-          sabado_is_active?: boolean | null
+          sabado_ativo?: boolean | null
           segunda_fim_almoco?: string | null
           segunda_fim_trabalho?: string | null
           segunda_inicio_almoco?: string | null
           segunda_inicio_trabalho?: string | null
-          segunda_is_active?: boolean | null
+          segunda_ativo?: boolean | null
           sexta_fim_almoco?: string | null
           sexta_fim_trabalho?: string | null
           sexta_inicio_almoco?: string | null
           sexta_inicio_trabalho?: string | null
-          sexta_is_active?: boolean | null
+          sexta_ativo?: boolean | null
           terca_fim_almoco?: string | null
           terca_fim_trabalho?: string | null
           terca_inicio_almoco?: string | null
           terca_inicio_trabalho?: string | null
-          terca_is_active?: boolean | null
-          updated_at?: string | null
-          user_id?: string
+          terca_ativo?: boolean | null
+          atualizado_em?: string | null
+          id_usuario?: string
         }
         Relationships: [
           {
             foreignKeyName: "work_schedules_organization_id_fkey"
-            columns: ["organization_id"]
+            columns: ["id_organizacao"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "organizacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -937,7 +961,7 @@ export type Database = {
         Returns: string
       }
       delete_vault_item: { Args: { p_id: string }; Returns: boolean }
-      generate_slug: { Args: { name: string }; Returns: string }
+      gerar_identificador: { Args: { name: string }; Returns: string }
       get_user_organization_id: { Args: never; Returns: string }
       get_vault_item_by_id: {
         Args: { p_id: string }
@@ -973,9 +997,9 @@ export type Database = {
       match_documents: {
         Args: { filter?: Json; match_count?: number; query_embedding: string }
         Returns: {
-          content: string
+          conteudo: string
           id: number
-          metadata: Json
+          metadados: Json
           similarity: number
         }[]
       }
@@ -987,18 +1011,18 @@ export type Database = {
           table_name: string
         }
         Returns: {
-          content: string
+          conteudo: string
           id: number
-          metadata: Json
+          metadados: Json
           similarity: number
         }[]
       }
       match_documents_geral: {
         Args: { filter: Json; match_count: number; query_embedding: string }
         Returns: {
-          content: string
+          conteudo: string
           id: number
-          metadata: Json
+          metadados: Json
           similarity: number
         }[]
       }

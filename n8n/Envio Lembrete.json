@@ -1,0 +1,671 @@
+{
+  "updatedAt": "2026-01-14T14:33:23.431Z",
+  "createdAt": "2026-01-05T19:40:29.065Z",
+  "id": "pGqCWL2AB1YUWvbLIo8Eo",
+  "name": "Envio Lembrete",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        96
+      ],
+      "id": "45d21766-b092-4165-8615-b8891d44f5a8",
+      "name": "Cron (1 min)"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "pending"
+            },
+            {
+              "keyName": "start_datetime",
+              "condition": "gte",
+              "keyValue": "={{ $now.minus({hours: 1}).toISO() }}"
+            },
+            {
+              "keyName": "start_datetime",
+              "condition": "lte",
+              "keyValue": "={{ $now.plus({days: 2}).toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "2299aa66-a89a-4d60-b744-3b32f9991fd2",
+      "name": "Busca Agendamentos Pendentes",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_ia_config",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        192
+      ],
+      "id": "7a0c2c27-f957-4baf-b89d-50bba5f9d404",
+      "name": "Busca Configs IA",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs\nconst appointments = $('Busca Agendamentos Pendentes').all().map(i => i.json);\nconst configs = $('Busca Configs IA').all().map(i => i.json);\n\nconst remindersToSend = [];\nconst now = new Date();\n\n// Cria mapa de configs por Organization ID para acesso rápido\nconst configMap = {};\nconfigs.forEach(c => {\n  configMap[c.id_organizacao] = c;\n});\n\nfor (const appt of appointments) {\n  const config = configMap[appt.id_organizacao];\n  \n  // Se não tiver config para essa empresa, pula\n  if (!config) continue;\n\n  // Pega telefone do paciente (precisamos fazer lookup na tabela patients ou assumir que vem no appointment? \n  // No seu schema appointment tem patient_id. Vou assumir que precisamos buscar o telefone ou ele já vem num join.\n  // O ideal seria fazer um Join no Supabase node, mas vamos assumir que você consegue o telefone.\n  // PROVISÓRIO: Vou assumir que conseguimos pegar o telefone em outro passo ou ele está no appointment (se vc alterou).\n  // Se não estiver, precisaremos de um passo extra de \"Get Patient\".\n  \n  const start = new Date(appt.inicio);\n  const diffMs = start - now;\n  const diffMinutes = Math.floor(diffMs / 1000 / 60);\n\n  // Definição de tolerância (janela de envio) para não perder o minuto exato\n  // Ex: Se o cron rodar 14:01 e o lembrete era 14:00, aceitamos até 2 min de atraso\n  const tolerance = 2;\n\n  // --- Lembrete 1 ---\n  // Ex: Faltam 15 min\n  const r1 = config.lembrete_1_minutos || 15;\n  if (diffMinutes <= r1 && diffMinutes > (r1 - tolerance) && !appt.lembrete_1_enviado) {\n    remindersToSend.push({\n      type: 'reminder_1',\n      minutes_left: r1,\n      appt_id: appt.id,\n      patient_id: appt.id_contato,\n      patient_name: appt.nome_contato,\n      appt_time: appt.time,\n      org_id: appt.id_organizacao,\n      config: config\n    });\n    continue; // Envia apenas um por vez\n  }\n\n  // --- Lembrete 2 ---\n  // Ex: Faltam 60 min\n  const r2 = config.lembrete_2_minutos || 60;\n  if (diffMinutes <= r2 && diffMinutes > (r2 - tolerance) && !appt.lembrete_2_enviado) {\n    remindersToSend.push({\n      type: 'reminder_2',\n      minutes_left: r2,\n      appt_id: appt.id,\n      patient_id: appt.id_contato,\n      patient_name: appt.nome_contato,\n      appt_time: appt.time,\n      org_id: appt.id_organizacao,\n      config: config\n    });\n    continue;\n  }\n\n  // --- Lembrete 3 ---\n  // Ex: Faltam 1440 min (24h)\n  const r3 = config.lembrete_3_minutos || 1440;\n  if (diffMinutes <= r3 && diffMinutes > (r3 - tolerance) && !appt.lembrete_3_enviado) {\n    remindersToSend.push({\n      type: 'reminder_3',\n      minutes_left: r3,\n      appt_id: appt.id,\n      patient_id: appt.id_contato,\n      patient_name: appt.nome_contato,\n      appt_time: appt.time,\n      org_id: appt.id_organizacao,\n      config: config\n    });\n    continue;\n  }\n}\n\nreturn remindersToSend.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        112
+      ],
+      "id": "6727fb91-e1e0-446f-9bc7-1130df0a144c",
+      "name": "Calcula Lembretes"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{$json.id_contato}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        112
+      ],
+      "id": "5a20f0e9-8dad-43b3-a894-9f772952edf4",
+      "name": "Busca Telefone Paciente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "whatsapp_instances",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "organization_id",
+              "keyValue": "={{ $('Calcula Lembretes').item.json.org_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        112
+      ],
+      "id": "64596dc1-88b3-4c95-9b42-bf211ab34ba0",
+      "name": "Busca Token Instance",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{$vars.servidorUAZAPI}}.uazapi.com/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $json.token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Busca Telefone Paciente').item.json.telefone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Gera Mensagem para o cliente').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        112
+      ],
+      "id": "a7687644-b4c2-47ed-a2f0-c79557a426cb",
+      "name": "Envia WhatsApp"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Calcula Lembretes').item.json.appt_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ $('Calcula Lembretes').item.json.type + '_sent' }}",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        112
+      ],
+      "id": "df6127a8-6b63-40bf-a934-e8022fee0e9b",
+      "name": "Marca como Enviado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        32,
+        112
+      ],
+      "id": "8589ea2f-b42d-43d5-a797-96b57e1466bb",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "0eEfoRSnYdzVajZ5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0eEfoRSnYdzVajZ5",
+          "cachedResultName": "Imersao — Gestao de Tokens"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input": "={{$('Normaliza dados para o Agente').first().json.mensagem}}",
+            "organization_id": "={{ $('Calcula Lembretes').item.json.org_id }}",
+            "output": "={{$json.output}}",
+            "llmModel": "gpt-4.1-mini"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "organization_id",
+              "displayName": "organization_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "llmModel",
+              "displayName": "llmModel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        -352
+      ],
+      "id": "79c7782f-6632-404f-a397-3b0fc19c3932",
+      "name": "Gestao De Tokens"
+    },
+    {
+      "parameters": {
+        "content": "## Gestão de Tokens",
+        "height": 256,
+        "width": 304,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -416
+      ],
+      "id": "29f40c84-8c17-4793-8873-b883de6672a7",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aea9d9de-6384-4c64-971e-0f72b085617d",
+              "name": "mensagem",
+              "value": "=Paciente: {{ $('Busca Telefone Paciente').item.json.name }}\nHorário da Consulta: {{ $('Calcula Lembretes').item.json.appt_time }}\nTempo Restante: {{ $('Calcula Lembretes').item.json.minutes_left }} minutos",
+              "type": "string"
+            },
+            {
+              "id": "cf0c1af4-1209-464f-b32d-9dd53e139313",
+              "name": "config.nome_agente",
+              "value": "={{ $json.config.nome_agente }}",
+              "type": "string"
+            },
+            {
+              "id": "cff43359-ba77-4215-a0b9-0cc0c5e9a3f4",
+              "name": "config.personality",
+              "value": "={{ $json.config.personality }}",
+              "type": "string"
+            },
+            {
+              "id": "231816e1-04c5-4849-8bef-2558d3978d02",
+              "name": "config.mensagem_boas_vindas",
+              "value": "={{ $json.config.mensagem_boas_vindas }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        112
+      ],
+      "id": "22351626-1d33-4ce8-8134-1756a2033292",
+      "name": "Normaliza dados para o Agente"
+    },
+    {
+      "parameters": {
+        "content": "## Busca dados para envio",
+        "height": 528,
+        "width": 704
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -128
+      ],
+      "id": "03b2e41c-0e29-4f5b-a35f-eaf8b0029132",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Calcula lembretes e seta dados para o agente",
+        "height": 528,
+        "width": 640,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "29a06944-8916-44e1-9078-6246bd7579c0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Gera mensagem de lembrete e envia para o clicente",
+        "height": 528,
+        "width": 992,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -128
+      ],
+      "id": "30e816fd-54ac-45dc-a9f4-90e4fb351ecd",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensagem }}",
+        "options": {
+          "systemMessage": "=Você é o assistente virtual {{ $json.config.nome_agente }} da clínica.\nPersonalidade: {{ $json.config.personality }}\n\nSua tarefa é enviar um lembrete curto e amigável para o paciente sobre a consulta que se aproxima.\n\nRegras:\n1. Se for 24h antes (aprox 1440 min), lembre da importância de confirmar ou avisar caso não possa ir.\n2. Se for 1h antes (60 min), lembre de sair com antecedência.\n3. Se for 15 min antes, diga que já estamos aguardando.\n4. Use a mensagem de saudação configurada se fizer sentido: \"{{ $json.config.mensagem_boas_vindas }}\"\n\nNÃO invente dados. Seja breve. Formate para WhatsApp."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        912,
+        112
+      ],
+      "id": "2c5b003f-9522-4a9d-a080-fec454346c07",
+      "name": "Gera Mensagem para o cliente"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        272
+      ],
+      "id": "ab026139-d01e-4074-9ca5-e88e3b24ec6d",
+      "name": "GPT4.1mini",
+      "credentials": {
+        "openAiApi": {
+          "id": "TNvVwiRTTnV3NVM1",
+          "name": "OpenAi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 272,
+        "width": 752,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -512,
+        -432
+      ],
+      "typeVersion": 1,
+      "id": "65654bcc-8869-49ac-b032-d74a9c7b6676",
+      "name": "Sticky Note29"
+    }
+  ],
+  "connections": {
+    "Cron (1 min)": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamentos Pendentes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Busca Configs IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Agendamentos Pendentes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Configs IA": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Calcula Lembretes": {
+      "main": [
+        [
+          {
+            "node": "Busca Telefone Paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Telefone Paciente": {
+      "main": [
+        [
+          {
+            "node": "Normaliza dados para o Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Token Instance": {
+      "main": [
+        [
+          {
+            "node": "Envia WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Marca como Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Calcula Lembretes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normaliza dados para o Agente": {
+      "main": [
+        [
+          {
+            "node": "Gera Mensagem para o cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gera Mensagem para o cliente": {
+      "main": [
+        [
+          {
+            "node": "Busca Token Instance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gestao De Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT4.1mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gera Mensagem para o cliente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f470492b-6873-4bc5-8811-508a417bd29e",
+  "activeVersionId": null,
+  "versionCounter": 20,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-05T19:40:29.065Z",
+      "createdAt": "2026-01-05T19:40:29.065Z",
+      "role": "workflow:owner",
+      "workflowId": "pGqCWL2AB1YUWvbLIo8Eo",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": null
+}

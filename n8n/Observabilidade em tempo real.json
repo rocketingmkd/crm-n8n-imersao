@@ -1,0 +1,419 @@
+{
+  "updatedAt": "2026-02-09T17:17:03.285Z",
+  "createdAt": "2026-01-12T19:47:23.896Z",
+  "id": "Y9lBbeWF7diBSsTX",
+  "name": "Observabilidade em tempo real",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<erro-n8n>\n{{JSON.stringify($json)}}\n</erro-n8n> ",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=Você é um especialista experiente em gestão e automação com a ferramenta N8N\n\nA sua função é analisar os erros que acontecem em um workflow do N8N, identificando uma possível causa e recomendar quais ações devem ser seguidas para uma possível solução do erro."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "96ca14f4-c7c7-4f88-8fd9-34015f51f6fb",
+      "name": "Analisador de Erro"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "flowgrammers",
+        "remoteJid": "5511982561489",
+        "messageText": "=❌ *Erro no Workflow do n8n* ❌\n*Execução:* [#{{ $('Captura Erro').item.json.execution.id }}]({{ $('Captura Erro').item.json.execution.url.replaceAll('n8n.', 'manager.') }})\n🧩 *Último nó que foi executado:* {{ $('Captura Erro').item.json.execution.lastNodeExecuted }}\n📂 *Workflow:* {{ $('Captura Erro').item.json.workflow.name }}\n⚙️ *Modo de execução:* {{ $('Captura Erro').item.json.execution.mode }}\n🚨 O workflow apresentou um erro !. Verifique o quanto antes.\n📦 EXECUTION ERROR:\n```{{ $json.text }}```",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "a8b4efa4-98b5-44e5-b0f0-75e80879b909",
+      "name": "Envia Erro",
+      "credentials": {
+        "evolutionApi": {
+          "id": "kdNj8VYS0ShcLu35",
+          "name": "Evolution Flowgrammers"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac749aa5-08cd-42b5-b9d7-d7c7cafa1569",
+      "name": "Captura Erro"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        208,
+        208
+      ],
+      "id": "a37318a3-36c7-474f-89db-50513febb5ac",
+      "name": "gpt 4.1 mini",
+      "credentials": {
+        "openRouterApi": {
+          "id": "bhdNxTSPM17OLcXj",
+          "name": "OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Captura erro dos fluxos e envia por whatsapp",
+        "height": 460,
+        "width": 1020,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -128
+      ],
+      "id": "480bc66d-58bd-45ca-8983-f2b5c2d197c9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+        "height": 176,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "d2f052e9-1a16-4fa8-a01e-30cb0386d47e",
+      "name": "Sticky Note29"
+    }
+  ],
+  "connections": {
+    "Analisador de Erro": {
+      "main": [
+        [
+          {
+            "node": "Envia Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Captura Erro": {
+      "main": [
+        [
+          {
+            "node": "Analisador de Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt 4.1 mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analisador de Erro",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "all",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Captura Erro": [
+      {
+        "json": {
+          "execution": {
+            "id": "320700",
+            "url": "https://webhook.agentes-n8n.com.br/workflow/3y45thZ2oOI0ZvDP/executions/320700",
+            "error": {
+              "level": "error",
+              "shouldReport": true,
+              "tags": {},
+              "extra": {
+                "workflowId": "CjtDu_tlmFldPaUO_ebOs"
+              },
+              "message": "Workflow is not active and cannot be executed.",
+              "stack": "Error: Workflow is not active and cannot be executed.\n    at getPublishedWorkflowData (/usr/local/lib/node_modules/n8n/src/workflow-execute-additional-data.ts:189:8)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at Object.executeWorkflow (/usr/local/lib/node_modules/n8n/src/workflow-execute-additional-data.ts:216:6)\n    at ExecuteContext.executeWorkflow (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/node-execution-context/base-execute-context.ts:137:18)\n    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-nodes-base@file+packages+nodes-base_@aws-sdk+credential-providers@3.808.0_asn1.js@5_8da18263ca0574b0db58d4fefd8173ce/node_modules/n8n-nodes-base/nodes/ExecuteWorkflow/ExecuteWorkflow/ExecuteWorkflow.node.ts:414:50)\n    at WorkflowExecute.executeNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1045:8)\n    at WorkflowExecute.runNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1226:11)\n    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1662:27\n    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:2297:11"
+            },
+            "lastNodeExecuted": "Disparo de Follow Up",
+            "mode": "trigger",
+            "executionContext": {
+              "version": 1,
+              "establishedAt": 1768948328065,
+              "source": "trigger",
+              "triggerNode": {
+                "name": "Roda a cada 1 minuto",
+                "type": "n8n-nodes-base.scheduleTrigger"
+              }
+            }
+          },
+          "workflow": {
+            "id": "3y45thZ2oOI0ZvDP",
+            "name": "Atendimento - Completo (RAG + Agendamento) - ORIGINAL"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "a591c0b4-e2d8-489d-bdac-876fef6eca92",
+  "activeVersionId": "a591c0b4-e2d8-489d-bdac-876fef6eca92",
+  "versionCounter": 74,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-12T19:47:46.365Z",
+      "createdAt": "2026-01-12T19:47:46.365Z",
+      "role": "workflow:owner",
+      "workflowId": "Y9lBbeWF7diBSsTX",
+      "projectId": "sXNN8zKIunLvXNly",
+      "project": {
+        "updatedAt": "2026-01-13T15:20:09.820Z",
+        "createdAt": "2026-01-05T19:33:48.715Z",
+        "id": "sXNN8zKIunLvXNly",
+        "name": "Imersao",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🔥"
+        },
+        "description": "Projeto de imersão",
+        "creatorId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-01-14T14:33:00.763Z",
+      "createdAt": "2026-01-14T14:33:00.763Z",
+      "id": "TtVOsKCOOd2YXmo1",
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-20T22:33:32.414Z",
+    "createdAt": "2026-01-20T22:33:28.940Z",
+    "versionId": "a591c0b4-e2d8-489d-bdac-876fef6eca92",
+    "workflowId": "Y9lBbeWF7diBSsTX",
+    "nodes": [
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=<erro-n8n>\n{{JSON.stringify($json)}}\n</erro-n8n> ",
+          "messages": {
+            "messageValues": [
+              {
+                "type": "AIMessagePromptTemplate",
+                "message": "=Você é um especialista experiente em gestão e automação com a ferramenta N8N\n\nA sua função é analisar os erros que acontecem em um workflow do N8N, identificando uma possível causa e recomendar quais ações devem ser seguidas para uma possível solução do erro."
+              }
+            ]
+          },
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          224,
+          0
+        ],
+        "id": "96ca14f4-c7c7-4f88-8fd9-34015f51f6fb",
+        "name": "Analisador de Erro"
+      },
+      {
+        "parameters": {
+          "resource": "messages-api",
+          "instanceName": "flowgrammers",
+          "remoteJid": "5511982561489",
+          "messageText": "=❌ *Erro no Workflow do n8n* ❌\n*Execução:* [#{{ $('Captura Erro').item.json.execution.id }}]({{ $('Captura Erro').item.json.execution.url.replaceAll('n8n.', 'manager.') }})\n🧩 *Último nó que foi executado:* {{ $('Captura Erro').item.json.execution.lastNodeExecuted }}\n📂 *Workflow:* {{ $('Captura Erro').item.json.workflow.name }}\n⚙️ *Modo de execução:* {{ $('Captura Erro').item.json.execution.mode }}\n🚨 O workflow apresentou um erro !. Verifique o quanto antes.\n📦 EXECUTION ERROR:\n```{{ $json.text }}```",
+          "options_message": {}
+        },
+        "type": "n8n-nodes-evolution-api.evolutionApi",
+        "typeVersion": 1,
+        "position": [
+          576,
+          0
+        ],
+        "id": "a8b4efa4-98b5-44e5-b0f0-75e80879b909",
+        "name": "Envia Erro",
+        "credentials": {
+          "evolutionApi": {
+            "id": "kdNj8VYS0ShcLu35",
+            "name": "Evolution Flowgrammers"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "ac749aa5-08cd-42b5-b9d7-d7c7cafa1569",
+        "name": "Captura Erro"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          208,
+          208
+        ],
+        "id": "a37318a3-36c7-474f-89db-50513febb5ac",
+        "name": "gpt 4.1 mini",
+        "credentials": {
+          "openRouterApi": {
+            "id": "bhdNxTSPM17OLcXj",
+            "name": "OpenRouter"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Captura erro dos fluxos e envia por whatsapp",
+          "height": 460,
+          "width": 1020,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -160,
+          -128
+        ],
+        "id": "480bc66d-58bd-45ca-8983-f2b5c2d197c9",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "![Source example](https://i.postimg.cc/ZnT79dJx/Captura-de-Tela-2025-08-20-a-s-10-47-53.png)\n",
+          "height": 176,
+          "width": 448,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -160,
+          -320
+        ],
+        "typeVersion": 1,
+        "id": "d2f052e9-1a16-4fa8-a01e-30cb0386d47e",
+        "name": "Sticky Note29"
+      }
+    ],
+    "connections": {
+      "Analisador de Erro": {
+        "main": [
+          [
+            {
+              "node": "Envia Erro",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Captura Erro": {
+        "main": [
+          [
+            {
+              "node": "Analisador de Erro",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt 4.1 mini": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Analisador de Erro",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Ricardo Neves",
+    "name": "Version 2",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-20T22:33:32.400Z",
+        "id": 220,
+        "workflowId": "Y9lBbeWF7diBSsTX",
+        "versionId": "a591c0b4-e2d8-489d-bdac-876fef6eca92",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      },
+      {
+        "createdAt": "2026-02-09T17:17:03.359Z",
+        "id": 376,
+        "workflowId": "Y9lBbeWF7diBSsTX",
+        "versionId": "a591c0b4-e2d8-489d-bdac-876fef6eca92",
+        "event": "activated",
+        "userId": "37c5e92b-9604-4346-8167-cb09d89f1846"
+      }
+    ]
+  }
+}

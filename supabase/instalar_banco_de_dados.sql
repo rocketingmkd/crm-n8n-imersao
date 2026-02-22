@@ -1,0 +1,766 @@
+-- ============================================================
+-- FlowAtend — Instalação do Banco de Dados
+-- ============================================================
+-- Execute este arquivo UMA VEZ em um banco Supabase limpo.
+-- Representa o estado final após todas as migrations (001–037).
+-- Inclui: tabelas, funções, RLS, storage bucket de logos.
+-- ============================================================
+
+-- ============================================================
+-- EXTENSÕES
+-- ============================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "vector";
+
+-- ============================================================
+-- FUNÇÕES AUXILIARES
+-- ============================================================
+
+-- Gera identificador URL-friendly a partir de um nome
+CREATE OR REPLACE FUNCTION gerar_identificador(name text)
+RETURNS text
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  slug text;
+BEGIN
+  slug := lower(name);
+  slug := regexp_replace(slug, '[àáâãäå]', 'a', 'g');
+  slug := regexp_replace(slug, '[èéêë]',   'e', 'g');
+  slug := regexp_replace(slug, '[ìíîï]',   'i', 'g');
+  slug := regexp_replace(slug, '[òóôõö]',  'o', 'g');
+  slug := regexp_replace(slug, '[ùúûü]',   'u', 'g');
+  slug := regexp_replace(slug, '[ç]',      'c', 'g');
+  slug := regexp_replace(slug, '[ñ]',      'n', 'g');
+  slug := regexp_replace(slug, '[^a-z0-9\s-]', '', 'g');
+  slug := regexp_replace(slug, '[\s]+',    '-', 'g');
+  slug := regexp_replace(slug, '-+',       '-', 'g');
+  slug := trim(both '-' from slug);
+  RETURN slug;
+END;
+$$;
+
+-- Retorna o organization_id do usuário autenticado
+CREATE OR REPLACE FUNCTION get_user_organization_id()
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT id_organizacao
+  FROM perfis
+  WHERE id = auth.uid();
+$$;
+
+-- Verifica se o usuário autenticado é super admin
+CREATE OR REPLACE FUNCTION is_user_super_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT COALESCE(super_admin, false)
+  FROM perfis
+  WHERE id = auth.uid();
+$$;
+
+-- Trigger para atualizar atualizado_em automaticamente
+CREATE OR REPLACE FUNCTION trigger_atualizado_em()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.atualizado_em = now();
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================
+-- TABELA: organizacoes
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS organizacoes (
+  id                    uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  criado_em             timestamptz DEFAULT now(),
+  nome                  text NOT NULL,
+  identificador         text NOT NULL UNIQUE,
+  dados                 jsonb DEFAULT '{}'::jsonb,
+  ativo                 boolean DEFAULT true,
+  url_logo              text,
+  email_contato         text,
+  plano_assinatura      text DEFAULT 'plano_a',
+  recursos_plano        jsonb DEFAULT '{}'::jsonb,
+  duracao_atendimento   integer,
+  rotulo_entidade       text NOT NULL DEFAULT 'Cliente',
+  rotulo_entidade_plural text NOT NULL DEFAULT 'Clientes'
+);
+
+ALTER TABLE organizacoes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_organizacoes" ON organizacoes
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_ver_propria_organizacao" ON organizacoes
+  FOR SELECT USING (id = get_user_organization_id());
+
+GRANT ALL ON organizacoes TO authenticated;
+
+-- ============================================================
+-- TABELA: perfis
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS perfis (
+  id              uuid PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
+  id_organizacao  uuid REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em       timestamptz DEFAULT now(),
+  nome_completo   text NOT NULL,
+  funcao          text NOT NULL DEFAULT 'admin'
+                  CHECK (funcao IN ('admin', 'profissional', 'assistente')),
+  url_avatar      text,
+  ativo           boolean DEFAULT true,
+  super_admin     boolean DEFAULT false,
+  -- Um super admin não deve ter organização vinculada
+  CONSTRAINT perfis_super_admin_sem_org_check CHECK (
+    NOT (super_admin = true AND id_organizacao IS NOT NULL)
+  )
+);
+
+ALTER TABLE perfis ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_perfis" ON perfis
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_ver_perfis_da_org" ON perfis
+  FOR SELECT USING (id_organizacao = get_user_organization_id());
+
+CREATE POLICY "usuarios_atualizar_proprio_perfil" ON perfis
+  FOR UPDATE USING (id = auth.uid());
+
+CREATE POLICY "usuarios_criar_perfil_na_org" ON perfis
+  FOR INSERT WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON perfis TO authenticated;
+
+-- ============================================================
+-- TABELA: contatos
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS contatos (
+  id                 uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao     uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em          timestamptz DEFAULT now(),
+  nome               text,
+  email              text,
+  telefone           text NOT NULL,
+  situacao           text DEFAULT 'ativo' CHECK (situacao IN ('ativo', 'inativo')),
+  ultima_interacao   timestamptz,
+  total_interacoes   integer DEFAULT 0,
+  status_kanban      text DEFAULT 'novo_contato'
+                     CHECK (status_kanban IN (
+                       'novo_contato', 'qualificado', 'em_atendimento',
+                       'agendado', 'aguardando_confirmacao', 'concluido'
+                     )),
+  observacoes        text,
+  resumo             text,
+  id_sessao          text
+);
+
+CREATE INDEX IF NOT EXISTS contatos_id_organizacao_idx ON contatos(id_organizacao);
+CREATE INDEX IF NOT EXISTS contatos_status_kanban_idx   ON contatos(status_kanban);
+CREATE INDEX IF NOT EXISTS contatos_situacao_idx        ON contatos(situacao);
+
+ALTER TABLE contatos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_contatos" ON contatos
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_contatos_da_org" ON contatos
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON contatos TO authenticated;
+
+-- ============================================================
+-- TABELA: agendamentos
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS agendamentos (
+  id                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao      uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  id_contato          uuid REFERENCES contatos(id) ON DELETE SET NULL,
+  criado_em           timestamptz DEFAULT now(),
+  data                date NOT NULL,
+  hora                text NOT NULL,
+  inicio              text,  -- ISO8601 com timezone, ex: 2025-11-25T09:00:00-03:00
+  fim                 text,  -- ISO8601 com timezone, ex: 2025-11-25T10:00:00-03:00
+  nome_contato        text NOT NULL,
+  tipo                text NOT NULL,
+  situacao            text DEFAULT 'pendente'
+                      CHECK (situacao IN ('confirmado', 'pendente', 'concluido', 'cancelado')),
+  notas               text,
+  observacoes         text,
+  id_sessao           text,
+  lembrete_1_enviado  boolean DEFAULT false,
+  lembrete_2_enviado  boolean DEFAULT false,
+  lembrete_3_enviado  boolean DEFAULT false
+);
+
+CREATE INDEX IF NOT EXISTS agendamentos_id_organizacao_idx ON agendamentos(id_organizacao);
+CREATE INDEX IF NOT EXISTS agendamentos_data_idx           ON agendamentos(data);
+CREATE INDEX IF NOT EXISTS agendamentos_situacao_idx       ON agendamentos(situacao);
+CREATE INDEX IF NOT EXISTS agendamentos_id_sessao_idx      ON agendamentos(id_sessao);
+
+ALTER TABLE agendamentos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_agendamentos" ON agendamentos
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_agendamentos_da_org" ON agendamentos
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON agendamentos TO authenticated;
+
+-- ============================================================
+-- TABELA: configuracoes
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS configuracoes (
+  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao  uuid NOT NULL UNIQUE REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em       timestamptz DEFAULT now(),
+  nome_empresa    text NOT NULL,
+  nome_responsavel text NOT NULL,
+  plano_assinatura text,
+  renovacao_em    timestamptz
+);
+
+ALTER TABLE configuracoes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_configuracoes" ON configuracoes
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_configuracoes_da_org" ON configuracoes
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON configuracoes TO authenticated;
+
+-- ============================================================
+-- TABELA: config_agente_ia
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS config_agente_ia (
+  id                          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao              uuid NOT NULL UNIQUE REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em                   timestamptz DEFAULT now(),
+  atualizado_em               timestamptz DEFAULT now(),
+  nome_agente                 text NOT NULL DEFAULT 'Assistente',
+  personalidade               text NOT NULL DEFAULT 'Sou um assistente virtual educado e prestativo.',
+  pausa_segundos              integer NOT NULL DEFAULT 5,
+  pausa_cliente_segundos      integer DEFAULT 30,
+  mensagem_boas_vindas        text NOT NULL DEFAULT 'Olá! Como posso ajudá-lo?',
+  mensagem_encerramento       text NOT NULL DEFAULT 'Obrigado pelo contato!',
+  chave_openai                text,
+  email_confirmacao_html      text,
+  followup_1_minutos          integer,
+  followup_2_minutos          integer,
+  followup_3_minutos          integer,
+  lembrete_1_minutos          integer,
+  lembrete_2_minutos          integer,
+  lembrete_3_minutos          integer,
+  perguntas_qualificacao      jsonb
+);
+
+CREATE TRIGGER trigger_config_agente_ia_atualizado_em
+  BEFORE UPDATE ON config_agente_ia
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE config_agente_ia ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_config_agente_ia" ON config_agente_ia
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_config_agente_ia_da_org" ON config_agente_ia
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON config_agente_ia TO authenticated;
+
+-- ============================================================
+-- TABELA: instancias_whatsapp
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS instancias_whatsapp (
+  id                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao    uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em         timestamptz DEFAULT now(),
+  atualizado_em     timestamptz DEFAULT now(),
+  id_instancia      text NOT NULL,
+  token             text NOT NULL,
+  nome_instancia    text NOT NULL,
+  campo_admin_01    text NOT NULL,
+  telefone          text NOT NULL,
+  webhook_criado    text,
+  situacao          text NOT NULL DEFAULT 'pendente'
+                    CHECK (situacao IN ('pendente', 'conectado', 'desconectado', 'erro')),
+  qr_code           text,
+  codigo_pareamento text,
+  url_webhook       text
+);
+
+CREATE TRIGGER trigger_instancias_whatsapp_atualizado_em
+  BEFORE UPDATE ON instancias_whatsapp
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE instancias_whatsapp ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_instancias_whatsapp" ON instancias_whatsapp
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_instancias_whatsapp_da_org" ON instancias_whatsapp
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON instancias_whatsapp TO authenticated;
+
+-- ============================================================
+-- TABELA: horarios_trabalho
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS horarios_trabalho (
+  id                      uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao          uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  id_usuario              uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  criado_em               timestamptz DEFAULT now(),
+  atualizado_em           timestamptz DEFAULT now(),
+  duracao_atendimento     integer DEFAULT 60,
+
+  -- Domingo
+  domingo_ativo           boolean DEFAULT false,
+  domingo_inicio_trabalho text,
+  domingo_fim_trabalho    text,
+  domingo_inicio_almoco   text,
+  domingo_fim_almoco      text,
+
+  -- Segunda
+  segunda_ativo           boolean DEFAULT true,
+  segunda_inicio_trabalho text DEFAULT '08:00',
+  segunda_fim_trabalho    text DEFAULT '18:00',
+  segunda_inicio_almoco   text DEFAULT '12:00',
+  segunda_fim_almoco      text DEFAULT '13:00',
+
+  -- Terça
+  terca_ativo             boolean DEFAULT true,
+  terca_inicio_trabalho   text DEFAULT '08:00',
+  terca_fim_trabalho      text DEFAULT '18:00',
+  terca_inicio_almoco     text DEFAULT '12:00',
+  terca_fim_almoco        text DEFAULT '13:00',
+
+  -- Quarta
+  quarta_ativo            boolean DEFAULT true,
+  quarta_inicio_trabalho  text DEFAULT '08:00',
+  quarta_fim_trabalho     text DEFAULT '18:00',
+  quarta_inicio_almoco    text DEFAULT '12:00',
+  quarta_fim_almoco       text DEFAULT '13:00',
+
+  -- Quinta
+  quinta_ativo            boolean DEFAULT true,
+  quinta_inicio_trabalho  text DEFAULT '08:00',
+  quinta_fim_trabalho     text DEFAULT '18:00',
+  quinta_inicio_almoco    text DEFAULT '12:00',
+  quinta_fim_almoco       text DEFAULT '13:00',
+
+  -- Sexta
+  sexta_ativo             boolean DEFAULT true,
+  sexta_inicio_trabalho   text DEFAULT '08:00',
+  sexta_fim_trabalho      text DEFAULT '18:00',
+  sexta_inicio_almoco     text DEFAULT '12:00',
+  sexta_fim_almoco        text DEFAULT '13:00',
+
+  -- Sábado
+  sabado_ativo            boolean DEFAULT false,
+  sabado_inicio_trabalho  text,
+  sabado_fim_trabalho     text,
+  sabado_inicio_almoco    text,
+  sabado_fim_almoco       text,
+
+  UNIQUE(id_organizacao, id_usuario)
+);
+
+CREATE TRIGGER trigger_horarios_trabalho_atualizado_em
+  BEFORE UPDATE ON horarios_trabalho
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE horarios_trabalho ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_horarios_trabalho" ON horarios_trabalho
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_crud_horarios_da_org" ON horarios_trabalho
+  USING (id_organizacao = get_user_organization_id())
+  WITH CHECK (id_organizacao = get_user_organization_id());
+
+GRANT ALL ON horarios_trabalho TO authenticated;
+
+-- ============================================================
+-- TABELA: planos_assinatura
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS planos_assinatura (
+  id                        uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_plano                  text NOT NULL UNIQUE,
+  nome_plano                text NOT NULL,
+  descricao_plano           text,
+  -- Features booleanas
+  atendimento_inteligente   boolean DEFAULT false,
+  agendamento_automatico    boolean DEFAULT false,
+  lembretes_automaticos     boolean DEFAULT false,
+  confirmacao_email         boolean DEFAULT false,
+  base_conhecimento         boolean DEFAULT false,
+  relatorios_avancados      boolean DEFAULT false,
+  integracao_whatsapp       boolean DEFAULT false,
+  multi_usuarios            boolean DEFAULT false,
+  personalizacao_agente     boolean DEFAULT false,
+  analytics                 boolean DEFAULT false,
+  -- Limites numéricos (null = ilimitado)
+  max_agendamentos_mes      integer,
+  max_mensagens_whatsapp_mes integer,
+  max_usuarios              integer,
+  max_contatos              integer,
+  -- Preços
+  preco_mensal              numeric(10,2),
+  preco_anual               numeric(10,2),
+  criado_em                 timestamptz DEFAULT now(),
+  atualizado_em             timestamptz DEFAULT now()
+);
+
+ALTER TABLE planos_assinatura ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "todos_podem_ver_planos" ON planos_assinatura
+  FOR SELECT USING (true);
+
+CREATE POLICY "super_admin_gerencia_planos" ON planos_assinatura
+  USING (is_user_super_admin());
+
+GRANT SELECT ON planos_assinatura TO authenticated;
+GRANT ALL    ON planos_assinatura TO service_role;
+
+-- Dados iniciais dos planos
+INSERT INTO planos_assinatura (
+  id_plano, nome_plano, descricao_plano,
+  atendimento_inteligente, agendamento_automatico, lembretes_automaticos,
+  confirmacao_email, base_conhecimento, relatorios_avancados,
+  integracao_whatsapp, multi_usuarios, personalizacao_agente, analytics,
+  max_agendamentos_mes, max_mensagens_whatsapp_mes, max_usuarios, max_contatos,
+  preco_mensal, preco_anual
+) VALUES
+  -- Plano A — Atendimento básico
+  ('plano_a', 'Plano Starter', 'Atendimento inteligente via WhatsApp',
+   true, false, false, false, false, false, true, false, false, false,
+   50, 500, 1, 100,
+   97.00, 970.00),
+  -- Plano B — + Agendamento
+  ('plano_b', 'Plano Profissional', 'Atendimento + Agendamento automático',
+   true, true, true, false, true, false, true, false, true, false,
+   200, 2000, 3, 500,
+   197.00, 1970.00),
+  -- Plano C — Completo
+  ('plano_c', 'Plano Business', 'Solução completa para empresas',
+   true, true, true, true, true, true, true, true, true, true,
+   1000, 10000, 10, 2000,
+   397.00, 3970.00),
+  -- Plano D — Enterprise
+  ('plano_d', 'Plano Enterprise', 'Sem limites para grandes operações',
+   true, true, true, true, true, true, true, true, true, true,
+   NULL, NULL, NULL, NULL,
+   797.00, 7970.00)
+ON CONFLICT (id_plano) DO UPDATE SET
+  nome_plano                = EXCLUDED.nome_plano,
+  descricao_plano           = EXCLUDED.descricao_plano,
+  atendimento_inteligente   = EXCLUDED.atendimento_inteligente,
+  agendamento_automatico    = EXCLUDED.agendamento_automatico,
+  lembretes_automaticos     = EXCLUDED.lembretes_automaticos,
+  confirmacao_email         = EXCLUDED.confirmacao_email,
+  base_conhecimento         = EXCLUDED.base_conhecimento,
+  relatorios_avancados      = EXCLUDED.relatorios_avancados,
+  integracao_whatsapp       = EXCLUDED.integracao_whatsapp,
+  multi_usuarios            = EXCLUDED.multi_usuarios,
+  personalizacao_agente     = EXCLUDED.personalizacao_agente,
+  analytics                 = EXCLUDED.analytics,
+  max_agendamentos_mes      = EXCLUDED.max_agendamentos_mes,
+  max_mensagens_whatsapp_mes = EXCLUDED.max_mensagens_whatsapp_mes,
+  max_usuarios              = EXCLUDED.max_usuarios,
+  max_contatos              = EXCLUDED.max_contatos,
+  preco_mensal              = EXCLUDED.preco_mensal,
+  preco_anual               = EXCLUDED.preco_anual;
+
+-- ============================================================
+-- TABELA: uso_tokens
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS uso_tokens (
+  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao  uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em       timestamptz DEFAULT now(),
+  total_tokens    integer NOT NULL DEFAULT 0,
+  custo_reais     numeric(15,8) NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS uso_tokens_id_organizacao_idx ON uso_tokens(id_organizacao);
+CREATE INDEX IF NOT EXISTS uso_tokens_criado_em_idx      ON uso_tokens(criado_em);
+
+ALTER TABLE uso_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_uso_tokens" ON uso_tokens
+  USING (is_user_super_admin());
+
+CREATE POLICY "usuarios_ver_uso_tokens_da_org" ON uso_tokens
+  FOR SELECT USING (id_organizacao = get_user_organization_id());
+
+GRANT SELECT ON uso_tokens TO authenticated;
+GRANT ALL    ON uso_tokens TO service_role;
+
+-- ============================================================
+-- TABELA: configuracoes_globais
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS configuracoes_globais (
+  id                       uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  criado_em                timestamptz DEFAULT now(),
+  atualizado_em            timestamptz DEFAULT now(),
+  whatsapp_suporte         text,
+  chave_openai             text,
+  nome_plataforma          text NOT NULL DEFAULT 'FlowAtend',
+  url_logo_plataforma      text,
+  url_logo_plataforma_escuro text,
+  cor_primaria             text DEFAULT '#D9156C',
+  chave_elevenlabs         text
+);
+
+CREATE TRIGGER trigger_configuracoes_globais_atualizado_em
+  BEFORE UPDATE ON configuracoes_globais
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE configuracoes_globais ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_gerencia_configuracoes_globais" ON configuracoes_globais
+  USING (is_user_super_admin());
+
+CREATE POLICY "autenticados_podem_ver_configuracoes_globais" ON configuracoes_globais
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+GRANT SELECT ON configuracoes_globais TO authenticated;
+GRANT ALL    ON configuracoes_globais TO service_role;
+
+-- Registro padrão da plataforma
+INSERT INTO configuracoes_globais (id, nome_plataforma)
+VALUES ('00000000-0000-0000-0000-000000000001', 'FlowAtend')
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- TABELA: documentos (RAG — base de conhecimento geral)
+-- Criada pelo n8n. Aqui provisionamos com estrutura compatível.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS documentos (
+  id        bigserial PRIMARY KEY,
+  conteudo  text,
+  embedding vector(1536),
+  metadados jsonb,
+  titulo    text
+);
+
+ALTER TABLE documentos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_documentos" ON documentos
+  USING (is_user_super_admin());
+
+GRANT ALL ON documentos TO service_role;
+GRANT SELECT, INSERT, UPDATE ON documentos TO authenticated;
+
+-- Funções de busca vetorial
+CREATE OR REPLACE FUNCTION match_documents_geral(
+  query_embedding vector(1536),
+  match_count     int,
+  filter          jsonb DEFAULT '{}'
+)
+RETURNS TABLE (
+  id          bigint,
+  conteudo    text,
+  metadados   jsonb,
+  similarity  float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    documentos.id,
+    documentos.conteudo,
+    documentos.metadados,
+    1 - (documentos.embedding <=> query_embedding) AS similarity
+  FROM documentos
+  WHERE documentos.metadados @> filter
+  ORDER BY documentos.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(1536),
+  match_count     int DEFAULT 5,
+  filter          jsonb DEFAULT '{}'
+)
+RETURNS TABLE (
+  id          bigint,
+  conteudo    text,
+  metadados   jsonb,
+  similarity  float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT * FROM match_documents_geral(query_embedding, match_count, filter);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION match_documents_dynamic(
+  query_embedding vector(1536),
+  table_name      text,
+  match_count     int DEFAULT 5,
+  filter          jsonb DEFAULT '{}'
+)
+RETURNS TABLE (
+  id          bigint,
+  conteudo    text,
+  metadados   jsonb,
+  similarity  float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY EXECUTE format(
+    'SELECT id, conteudo, metadados,
+            1 - (embedding <=> $1) AS similarity
+     FROM %I
+     WHERE metadados @> $2
+     ORDER BY embedding <=> $1
+     LIMIT $3',
+    table_name
+  ) USING query_embedding, filter, match_count;
+END;
+$$;
+
+-- ============================================================
+-- TABELA: clientes_followup
+-- Criada pelo n8n. Provisionamos a estrutura básica aqui.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS clientes_followup (
+  id                 bigserial PRIMARY KEY,
+  id_organizacao     uuid,
+  id_sessao          text,
+  nome               text,
+  numero             text,
+  situacao           text,
+  followup           text,
+  followup1          text,
+  followup2          text,
+  followup3          text,
+  mensagem1          text,
+  mensagem2          text,
+  mensagem3          text,
+  data_envio1        text,
+  data_envio2        text,
+  data_envio3        text,
+  ultima_atividade   text,
+  ultima_mensagem_ia text
+);
+
+ALTER TABLE clientes_followup ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_followup" ON clientes_followup
+  USING (is_user_super_admin());
+
+GRANT ALL ON clientes_followup TO service_role;
+
+-- ============================================================
+-- STORAGE — Bucket para logos de organizações
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'organization-logos',
+  'organization-logos',
+  true,
+  2097152,
+  ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
+)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'autenticados_podem_enviar_logos' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "autenticados_podem_enviar_logos" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'organization-logos');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'autenticados_podem_atualizar_logos' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "autenticados_podem_atualizar_logos" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (bucket_id = 'organization-logos');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'autenticados_podem_excluir_logos' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "autenticados_podem_excluir_logos" ON storage.objects
+      FOR DELETE TO authenticated
+      USING (bucket_id = 'organization-logos');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'logos_publicas' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "logos_publicas" ON storage.objects
+      FOR SELECT
+      USING (bucket_id = 'organization-logos');
+  END IF;
+END $$;
+
+-- ============================================================
+-- TRIGGER AUTOMÁTICO DE PERFIL (opcional)
+-- Cria perfil básico quando usuário se cadastra via Auth UI
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION criar_perfil_ao_registrar()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Só cria perfil se não existir (evita duplicatas no fluxo via edge function)
+  INSERT INTO perfis (id, nome_completo, funcao)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    'admin'
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================
+-- FIM DA INSTALAÇÃO
+-- ============================================================
+-- Próximos passos:
+-- 1. Crie o primeiro super admin via SQL (veja INSTALACAO.md)
+-- 2. Deploy das edge functions (supabase/functions/)
+-- 3. Configure as variáveis de ambiente no .env
+-- ============================================================

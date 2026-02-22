@@ -7,7 +7,7 @@ export interface PlanLimits {
   max_agendamentos_mes: number | null;
   max_mensagens_whatsapp_mes: number | null;
   max_usuarios: number | null;
-  max_pacientes: number | null;
+  max_contatos: number | null;
 }
 
 export interface PlanFeatures {
@@ -28,20 +28,20 @@ export function usePlanFeatures() {
 
   // Buscar configuração do plano da organização
   const { data: planConfig, isLoading } = useQuery({
-    queryKey: ['plan-features', organization?.subscription_plan],
+    queryKey: ['plano-recursos', organization?.plano_assinatura],
     queryFn: async () => {
-      if (!organization?.subscription_plan) return null;
+      if (!organization?.plano_assinatura) return null;
 
       const { data, error } = await supabase
-        .from('subscription_plan_configs')
+        .from('planos_assinatura')
         .select('*')
-        .eq('plan_id', organization.subscription_plan)
+        .eq('id_plano', organization.plano_assinatura)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!organization?.subscription_plan,
+    enabled: !!organization?.plano_assinatura,
   });
 
   // Features do plano
@@ -63,8 +63,8 @@ export function usePlanFeatures() {
     max_agendamentos_mes: planConfig?.max_agendamentos_mes ?? null,
     max_mensagens_whatsapp_mes: planConfig?.max_mensagens_whatsapp_mes ?? null,
     max_usuarios: planConfig?.max_usuarios ?? null,
-    max_pacientes: planConfig?.max_pacientes ?? null,
-  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_pacientes]);
+    max_contatos: planConfig?.max_contatos ?? null,
+  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_contatos]);
 
   // Função para verificar se tem acesso a uma feature
   const hasFeature = (feature: keyof PlanFeatures): boolean => {
@@ -74,7 +74,7 @@ export function usePlanFeatures() {
   // Função para verificar se atingiu um limite (memoizada para evitar loops infinitos)
   const checkLimit = useCallback(async (limitType: keyof PlanLimits): Promise<{ allowed: boolean; current: number; max: number | null }> => {
     const maxValue = limits[limitType];
-    
+
     // Se não tem limite, permite
     if (maxValue === null) {
       return { allowed: true, current: 0, max: null };
@@ -85,19 +85,19 @@ export function usePlanFeatures() {
     try {
       // Buscar contagem atual baseado no tipo de limite
       switch (limitType) {
-        case 'max_pacientes': {
+        case 'max_contatos': {
           const { count } = await supabase
-            .from('patients')
+            .from('contatos')
             .select('*', { count: 'exact', head: true })
-            .eq('organization_id', organization?.id || '');
+            .eq('id_organizacao', organization?.id || '');
           current = count || 0;
           break;
         }
         case 'max_usuarios': {
           const { count } = await supabase
-            .from('profiles')
+            .from('perfis')
             .select('*', { count: 'exact', head: true })
-            .eq('organization_id', organization?.id || '');
+            .eq('id_organizacao', organization?.id || '');
           current = count || 0;
           break;
         }
@@ -107,10 +107,10 @@ export function usePlanFeatures() {
           firstDayOfMonth.setHours(0, 0, 0, 0);
 
           const { count } = await supabase
-            .from('appointments')
+            .from('agendamentos')
             .select('*', { count: 'exact', head: true })
-            .eq('organization_id', organization?.id || '')
-            .gte('created_at', firstDayOfMonth.toISOString());
+            .eq('id_organizacao', organization?.id || '')
+            .gte('criado_em', firstDayOfMonth.toISOString());
           current = count || 0;
           break;
         }
@@ -135,9 +135,7 @@ export function usePlanFeatures() {
     hasFeature,
     checkLimit,
     isLoading,
-    planName: planConfig?.plan_name || 'Sem Plano',
-    planId: organization?.subscription_plan || null,
+    planName: planConfig?.nome_plano || 'Sem Plano',
+    planId: organization?.plano_assinatura || null,
   };
 }
-
-

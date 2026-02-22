@@ -21,13 +21,13 @@ import { useChatMetrics } from "@/hooks/useChatMetrics";
 
 interface AgentConfig {
   id?: string;
-  agent_name: string;
+  nome_agente: string;
   personality: string;
   pause_duration_seconds: number;
   customer_pause_duration_seconds: number;
   greeting_message: string;
   closing_message: string;
-  openai_api_key?: string | null;
+  chave_openai?: string | null;
   reminder_1_minutes: number;
   reminder_2_minutes: number;
   reminder_3_minutes: number;
@@ -38,11 +38,41 @@ interface AgentConfig {
   confirmation_email_html?: string | null;
 }
 
+/** Mapeia linha do banco (colunas em português) para AgentConfig. */
+function dbRowToAgentConfig(row: Record<string, unknown>): AgentConfig {
+  const num = (v: unknown, def: number) => (v != null && !Number.isNaN(Number(v)) ? Number(v) : def);
+  return {
+    ...row,
+    id: row.id as string | undefined,
+    nome_agente: (row.nome_agente as string) ?? "Assistente Virtual",
+    personality: (row.personalidade as string) ?? "profissional",
+    pause_duration_seconds: num(row.pausa_segundos, 1800),
+    customer_pause_duration_seconds: num(row.pausa_cliente_segundos, 300),
+    greeting_message: (row.mensagem_boas_vindas as string) ?? "",
+    closing_message: (row.mensagem_encerramento as string) ?? "",
+    chave_openai: (row.chave_openai as string | null) ?? null,
+    reminder_1_minutes: num(row.lembrete_1_minutos, 15),
+    reminder_2_minutes: num(row.lembrete_2_minutos, 60),
+    reminder_3_minutes: num(row.lembrete_3_minutos, 1440),
+    follow_up_1_minutes: num(row.followup_1_minutos, 60),
+    follow_up_2_minutes: num(row.followup_2_minutos, 1440),
+    follow_up_3_minutes: num(row.followup_3_minutos, 4320),
+    qualification_questions: row.perguntas_qualificacao ?? [],
+    confirmation_email_html: (row.email_confirmacao_html as string | null) ?? null,
+  } as AgentConfig;
+}
+
 const personalityLabels: Record<string, string> = {
   profissional: "Profissional",
   amigavel: "Amigável",
   formal: "Formal",
   descontraido: "Descontraído",
+  empatico: "Empático",
+  tecnico: "Técnico",
+  criativo: "Criativo",
+  consultivo: "Consultivo",
+  motivador: "Motivador",
+  didatico: "Didático",
 };
 
 export default function AgentIA() {
@@ -83,13 +113,13 @@ export default function AgentIA() {
   const [followUp3Value, setFollowUp3Value] = useState(3);
   const [followUp3Unit, setFollowUp3Unit] = useState<'minutos' | 'horas' | 'dias'>('dias');
   const [config, setConfig] = useState<AgentConfig>({
-    agent_name: "Assistente Virtual",
+    nome_agente: "Assistente Virtual",
     personality: "profissional",
     pause_duration_seconds: 1800, // 30 minutos em segundos
     customer_pause_duration_seconds: 300, // 5 minutos em segundos
     greeting_message: "Olá! Sou o assistente virtual da empresa. Como posso ajudá-lo hoje?",
     closing_message: "Foi um prazer atendê-lo! Se precisar de algo mais, estou à disposição.",
-    openai_api_key: null,
+    chave_openai: null,
     reminder_1_minutes: 15,
     reminder_2_minutes: 60,
     reminder_3_minutes: 1440,
@@ -104,11 +134,12 @@ export default function AgentIA() {
     loadConfig();
     loadTotalTokens();
     loadStats();
-  }, [profile?.organization_id, chatMetrics]);
+  }, [profile?.id_organizacao, chatMetrics]);
 
   // Funções auxiliares para converter segundos para minutos e vice-versa
-  const secondsToMinutes = (seconds: number): number => {
-    return Math.round(seconds / 60);
+  const secondsToMinutes = (seconds: number | null | undefined): number => {
+    const n = Number(seconds);
+    return Number.isFinite(n) ? Math.round(n / 60) : 0;
   };
 
   const minutesToSeconds = (minutes: number): number => {
@@ -142,14 +173,16 @@ export default function AgentIA() {
     }
   };
 
-  const formatReminderDisplay = (minutes: number): string => {
-    if (minutes < 60) {
-      return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
-    } else if (minutes < 1440) {
-      const hours = Math.round(minutes / 60);
+  const formatReminderDisplay = (minutes: number | null | undefined): string => {
+    const m = Number(minutes);
+    const min = Number.isFinite(m) && m >= 0 ? m : 0;
+    if (min < 60) {
+      return `${min} ${min === 1 ? 'minuto' : 'minutos'}`;
+    } else if (min < 1440) {
+      const hours = Math.round(min / 60);
       return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
     } else {
-      const days = Math.round(minutes / 1440);
+      const days = Math.round(min / 1440);
       return `${days} ${days === 1 ? 'dia' : 'dias'}`;
     }
   };
@@ -194,16 +227,16 @@ export default function AgentIA() {
   }, [isEditing, editConfig.reminder_1_minutes, editConfig.reminder_2_minutes, editConfig.reminder_3_minutes, editConfig.follow_up_1_minutes, editConfig.follow_up_2_minutes, editConfig.follow_up_3_minutes]);
 
   const loadConfig = async () => {
-    if (!profile?.organization_id) return;
+    if (!profile?.id_organizacao) return;
 
     try {
       setIsLoading(true);
       
       // Buscar configurações da organização
       const { data, error } = await supabase
-        .from("agent_ia_config")
+        .from("config_agente_ia")
         .select("*")
-        .eq("organization_id", profile.organization_id)
+        .eq("id_organizacao", profile.id_organizacao)
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -212,18 +245,17 @@ export default function AgentIA() {
 
       // Buscar API Key global
       const { data: globalSettings } = await supabase
-        .from("global_settings")
-        .select("openai_api_key")
+        .from("configuracoes_globais")
+        .select("chave_openai")
         .single();
 
       if (data) {
-        // Combinar dados da organização com API Key global
-        const configWithGlobalKey = {
+        const mapped = dbRowToAgentConfig({
           ...data,
-          openai_api_key: globalSettings?.openai_api_key || null,
-        };
-        setConfig(configWithGlobalKey as AgentConfig);
-        setEditConfig(configWithGlobalKey as AgentConfig);
+          chave_openai: globalSettings?.chave_openai ?? (data as Record<string, unknown>).chave_openai ?? null,
+        });
+        setConfig(mapped);
+        setEditConfig(mapped);
       }
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
@@ -234,16 +266,16 @@ export default function AgentIA() {
   };
 
   const loadTotalTokens = async () => {
-    if (!profile?.organization_id) return;
+    if (!profile?.id_organizacao) return;
 
     try {
       setIsLoadingTokens(true);
       
       // Buscar todos os registros da organização
       const { data, error } = await supabase
-        .from("token_usage")
+        .from("uso_tokens")
         .select("total_tokens, cost_reais")
-        .eq("organization_id", profile.organization_id);
+        .eq("id_organizacao", profile.id_organizacao);
 
       if (error) throw error;
 
@@ -265,7 +297,7 @@ export default function AgentIA() {
   };
 
   const loadStats = async () => {
-    if (!profile?.organization_id) return;
+    if (!profile?.id_organizacao) return;
 
     try {
       setIsLoadingStats(true);
@@ -276,24 +308,24 @@ export default function AgentIA() {
         setTotalMessages(chatMetrics.totalMessages);
       }
 
-      // Função auxiliar para converter slug para nome da tabela
-      const getTableName = (slug: string): string => {
-        const parts = slug.split('-');
+      // Função auxiliar para converter identificador para nome da tabela
+      const getTableName = (identificador: string): string => {
+        const parts = identificador.split('-');
         if (parts.length > 1) {
           const lastPart = parts[parts.length - 1];
           if (/^\d{10,}$/.test(lastPart)) {
             parts.pop();
           }
         }
-        return parts.join('_') + '_chats';
+        return parts.join('_') + '_conversas';
       };
 
-      if (!organization?.slug) {
+      if (!organization?.identificador) {
         setIsLoadingStats(false);
         return;
       }
 
-      const tableName = getTableName(organization.slug);
+      const tableName = getTableName(organization.identificador);
       
       // Buscar todas as mensagens para cálculos completos
       const { data: allMessages, error: messagesError } = await (supabase as any)
@@ -422,7 +454,7 @@ export default function AgentIA() {
         const { data: qualifiedLeadsData, error: leadsError } = await supabase
           .from("clientes_followup")
           .select("id, situacao")
-          .eq("organization_id", profile.organization_id)
+          .eq("id_organizacao", profile.id_organizacao)
           .in("situacao", ["qualificado", "agendado", "concluido"]);
 
       if (!leadsError && qualifiedLeadsData) {
@@ -450,7 +482,7 @@ export default function AgentIA() {
   };
 
   const handleSave = async () => {
-    if (!profile?.organization_id) {
+    if (!profile?.id_organizacao) {
       toast.error("Erro: organização não identificada");
       return;
     }
@@ -459,26 +491,25 @@ export default function AgentIA() {
       setIsSaving(true);
 
       const configData = {
-        organization_id: profile.organization_id,
-        agent_name: editConfig.agent_name,
-        personality: editConfig.personality,
-        pause_duration_seconds: editConfig.pause_duration_seconds,
-        customer_pause_duration_seconds: editConfig.customer_pause_duration_seconds,
-        greeting_message: editConfig.greeting_message,
-        closing_message: editConfig.closing_message,
-        // openai_api_key não é salvo aqui - apenas super admin pode configurar
-        reminder_1_minutes: editConfig.reminder_1_minutes,
-        reminder_2_minutes: editConfig.reminder_2_minutes,
-        reminder_3_minutes: editConfig.reminder_3_minutes,
-        follow_up_1_minutes: editConfig.follow_up_1_minutes,
-        follow_up_2_minutes: editConfig.follow_up_2_minutes,
-        follow_up_3_minutes: editConfig.follow_up_3_minutes,
-        qualification_questions: editConfig.qualification_questions,
-      } as any;
+        id_organizacao: profile.id_organizacao,
+        nome_agente: editConfig.nome_agente,
+        personalidade: editConfig.personality,
+        pausa_segundos: editConfig.pause_duration_seconds,
+        pausa_cliente_segundos: editConfig.customer_pause_duration_seconds,
+        mensagem_boas_vindas: editConfig.greeting_message,
+        mensagem_encerramento: editConfig.closing_message,
+        lembrete_1_minutos: editConfig.reminder_1_minutes,
+        lembrete_2_minutos: editConfig.reminder_2_minutes,
+        lembrete_3_minutos: editConfig.reminder_3_minutes,
+        followup_1_minutos: editConfig.follow_up_1_minutes,
+        followup_2_minutos: editConfig.follow_up_2_minutes,
+        followup_3_minutos: editConfig.follow_up_3_minutes,
+        perguntas_qualificacao: editConfig.qualification_questions,
+      };
 
       if (config.id) {
         const { error } = await supabase
-          .from("agent_ia_config")
+          .from("config_agente_ia")
           // @ts-ignore
           .update(configData)
           .eq("id", config.id);
@@ -486,7 +517,7 @@ export default function AgentIA() {
         if (error) throw error;
       } else {
         const { data, error } = await supabase
-          .from("agent_ia_config")
+          .from("config_agente_ia")
           // @ts-ignore
           .insert(configData)
           .select()
@@ -494,8 +525,9 @@ export default function AgentIA() {
 
         if (error) throw error;
         if (data) {
-          setConfig(data as unknown as AgentConfig);
-          setEditConfig(data as unknown as AgentConfig);
+          const mapped = dbRowToAgentConfig({ ...data, chave_openai: config.chave_openai ?? null });
+          setConfig(mapped);
+          setEditConfig(mapped);
           setIsEditing(false);
           toast.success("Configurações salvas com sucesso!");
           return;
@@ -573,7 +605,7 @@ export default function AgentIA() {
                   <span className="font-medium">Nome do Agente de IA</span>
                 </div>
                 <p className="text-lg font-semibold text-foreground pl-6">
-                  {config.agent_name}
+                  {config.nome_agente}
                 </p>
               </div>
 
@@ -742,12 +774,12 @@ export default function AgentIA() {
           <div className="space-y-6">
             {/* Nome do Agent */}
             <div className="space-y-2">
-              <Label htmlFor="agent_name">Nome do Agente de IA *</Label>
+              <Label htmlFor="nome_agente">Nome do Agente de IA *</Label>
               <Input
-                id="agent_name"
+                id="nome_agente"
                 placeholder="Ex: Sofia, Assistente Virtual, Dr. Bot"
-                value={editConfig.agent_name}
-                onChange={(e) => setEditConfig({ ...editConfig, agent_name: e.target.value })}
+                value={editConfig.nome_agente}
+                onChange={(e) => setEditConfig({ ...editConfig, nome_agente: e.target.value })}
               />
             </div>
 
@@ -766,6 +798,12 @@ export default function AgentIA() {
                   <SelectItem value="amigavel">Amigável</SelectItem>
                   <SelectItem value="formal">Formal</SelectItem>
                   <SelectItem value="descontraido">Descontraído</SelectItem>
+                  <SelectItem value="empatico">Empático</SelectItem>
+                  <SelectItem value="tecnico">Técnico</SelectItem>
+                  <SelectItem value="criativo">Criativo</SelectItem>
+                  <SelectItem value="consultivo">Consultivo</SelectItem>
+                  <SelectItem value="motivador">Motivador</SelectItem>
+                  <SelectItem value="didatico">Didático</SelectItem>
                 </SelectContent>
               </Select>
             </div>

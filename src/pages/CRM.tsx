@@ -4,7 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LimitAlert } from "@/components/LimitAlert";
-import { usePatients, useCreatePatient } from "@/hooks/usePatients";
+import { useContacts, useCreateContact } from "@/hooks/useContacts";
+import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,7 @@ interface PatientFormData {
   name: string;
   email: string;
   phone: string;
-  status: 'active' | 'inactive';
+  status: 'ativo' | 'inativo';
   observations: string;
 }
 
@@ -59,18 +60,19 @@ export default function CRM() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<KanbanStatus>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [resumoPatient, setResumoPatient] = useState<any | null>(null);
+  const [selectedContact, setSelectedContact] = useState<any | null>(null);
+  const [resumoContact, setResumoContact] = useState<any | null>(null);
   const [limitInfo, setLimitInfo] = useState<{ current: number; max: number | null } | null>(null);
-  const { data: patients = [], isLoading } = usePatients();
+  const { data: contacts = [], isLoading } = useContacts();
   const { profile } = useAuth();
-  const createPatient = useCreatePatient();
+  const createContact = useCreateContact();
   const { checkLimit } = usePlanFeatures();
+  const { singular, plural, s, p } = useEntityLabel();
 
   // Verificar limite ao abrir dialog
   useEffect(() => {
     if (isDialogOpen) {
-      checkLimit('max_pacientes').then(result => {
+      checkLimit('max_contacts').then(result => {
         setLimitInfo({ current: result.current, max: result.max });
       });
     }
@@ -86,56 +88,56 @@ export default function CRM() {
     watch,
   } = useForm<PatientFormData>({
     defaultValues: {
-      status: 'active',
+      status: 'ativo',
     },
   });
 
   const status = watch('status');
 
   const onSubmit = async (data: PatientFormData) => {
-    if (!profile?.organization_id) {
+    if (!profile?.id_organizacao) {
       toast.error('Erro: organização não identificada');
       return;
     }
 
     // Verificar limite antes de criar
-    const limitCheck = await checkLimit('max_pacientes');
+    const limitCheck = await checkLimit('max_contacts');
     if (!limitCheck.allowed) {
-      toast.error(`Limite de ${limitCheck.max} pacientes atingido! Faça upgrade do seu plano.`);
+      toast.error(`Limite de ${limitCheck.max} ${p} atingido! Faça upgrade do seu plano.`);
       return;
     }
 
     try {
-      await createPatient.mutateAsync({
-        name: data.name,
+      await createContact.mutateAsync({
+        nome: data.name,
         email: data.email,
-        phone: data.phone,
-        status: data.status,
-        observations: data.observations || null,
-        organization_id: profile.organization_id,
-        total_visits: 0,
+        telefone: data.phone,
+        situacao: data.status,
+        observacoes: data.observations || null,
+        id_organizacao: profile.id_organizacao,
+        total_interacoes: 0,
       });
 
-      toast.success('Paciente cadastrado com sucesso!');
+      toast.success(`${singular} cadastrado com sucesso!`);
       setIsDialogOpen(false);
       reset();
     } catch (error: any) {
-      console.error('Erro ao criar paciente:', error);
-      toast.error(error.message || 'Erro ao cadastrar paciente');
+      console.error('Erro ao criar contato:', error);
+      toast.error(error.message || `Erro ao cadastrar ${s}`);
     }
   };
 
-  // Filtrar pacientes pela busca e status
-  const filteredPatients = patients.filter((patient) => {
+  // Filtrar contatos pela busca e status
+  const filteredContacts = contacts.filter((contact) => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = (
-      (patient.name?.toLowerCase() || "").includes(search) ||
-      (patient.email?.toLowerCase() || "").includes(search) ||
-      (patient.phone?.toLowerCase() || "").includes(search)
+      (contact.nome?.toLowerCase() || "").includes(search) ||
+      (contact.email?.toLowerCase() || "").includes(search) ||
+      (contact.telefone?.toLowerCase() || "").includes(search)
     );
-    
-    const matchesStatus = statusFilter === "all" || patient.kanban_status === statusFilter;
-    
+
+    const matchesStatus = statusFilter === "all" || contact.status_kanban === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -144,7 +146,7 @@ export default function CRM() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando pacientes...</p>
+          <p className="text-muted-foreground">Carregando {p}...</p>
         </div>
       </div>
     );
@@ -159,28 +161,28 @@ export default function CRM() {
             CRM
           </h1>
           <p className="text-base md:text-lg text-muted-foreground">
-            Gerencie seus pacientes com cuidado
+            Gerencie seus {p} com cuidado
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 w-full sm:w-auto">
               <UserPlus className="h-4 w-4" />
-              Adicionar Paciente
+              Adicionar {singular}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Novo Paciente</DialogTitle>
+              <DialogTitle>Novo {singular}</DialogTitle>
               <DialogDescription>
-                Adicione um novo paciente ao seu sistema de gestão.
+                Adicione um novo {s} ao seu sistema de gestão.
               </DialogDescription>
             </DialogHeader>
             {limitInfo && limitInfo.max && (
               <LimitAlert
                 current={limitInfo.current}
                 max={limitInfo.max}
-                limitName="pacientes"
+                limitName={p}
                 onUpgrade={() => {
                   setIsDialogOpen(false);
                   window.dispatchEvent(new CustomEvent('open-plan-modal'));
@@ -229,7 +231,7 @@ export default function CRM() {
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={status}
-                  onValueChange={(value: 'active' | 'inactive') =>
+                  onValueChange={(value: 'ativo' | 'inativo') =>
                     setValue('status', value)
                   }
                 >
@@ -237,8 +239,8 @@ export default function CRM() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="inactive">Inativo</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -247,7 +249,7 @@ export default function CRM() {
                 <Label htmlFor="observations">Observações</Label>
                 <Textarea
                   id="observations"
-                  placeholder="Anotações sobre o paciente..."
+                  placeholder={`Anotações sobre o ${s}...`}
                   {...register('observations')}
                   rows={3}
                   className="resize-none"
@@ -265,8 +267,8 @@ export default function CRM() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createPatient.isPending}>
-                  {createPatient.isPending ? 'Criando...' : 'Criar Paciente'}
+                <Button type="submit" disabled={createContact.isPending}>
+                  {createContact.isPending ? 'Criando...' : `Criar ${singular}`}
                 </Button>
               </DialogFooter>
             </form>
@@ -278,7 +280,7 @@ export default function CRM() {
       <div className="relative animate-fade-in-up">
         <Search className="absolute left-3 md:left-4 top-1/2 h-4 w-4 md:h-5 md:w-5 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar pacientes por nome, email ou telefone..."
+          placeholder={`Buscar ${p} por nome, email ou telefone...`}
           className="pl-10 md:pl-12 h-11 md:h-12 bg-card border-border/50 focus:border-accent text-sm md:text-base"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -297,11 +299,11 @@ export default function CRM() {
             onClick={() => setStatusFilter("all")}
             className="h-8 text-xs"
           >
-            Todos ({patients.length})
+            Todos ({contacts.length})
           </Button>
 
           {kanbanStatuses.map((status) => {
-            const count = patients.filter(p => p.kanban_status === status.id).length;
+            const count = contacts.filter(p => p.status_kanban === status.id).length;
             return (
               <Button
                 key={status.id}
@@ -340,48 +342,48 @@ export default function CRM() {
       {/* Stats */}
       <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-2 md:grid-cols-4 animate-fade-in-up">
         <div className="card-luxury p-3 md:p-4">
-          <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total de Pacientes</p>
+          <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total de {plural}</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-foreground">
-            {patients.length}
+            {contacts.length}
           </p>
         </div>
         <div className="card-luxury p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Ativos</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-success">
-            {patients.filter(p => p.status === 'active').length}
+            {contacts.filter(c => c.situacao === 'ativo').length}
           </p>
         </div>
         <div className="card-luxury p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Inativos</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-muted-foreground">
-            {patients.filter(p => p.status === 'inactive').length}
+            {contacts.filter(c => c.situacao === 'inativo').length}
           </p>
         </div>
         <div className="card-luxury p-3 md:p-4">
-          <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total Visitas</p>
+          <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total Interações</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-accent">
-            {patients.reduce((sum, p) => sum + p.total_visits, 0)}
+            {contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0)}
           </p>
         </div>
       </div>
 
       {/* Patient Cards Grid */}
-      {filteredPatients.length === 0 ? (
+      {filteredContacts.length === 0 ? (
         <div className="text-center py-12 card-luxury">
           <UserPlus className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
           <p className="text-lg font-medium text-foreground mb-2">
-            {searchTerm ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"}
+            {searchTerm ? `Nenhum ${s} encontrado` : `Nenhum ${s} cadastrado`}
           </p>
           <p className="text-sm text-muted-foreground">
-            {searchTerm ? "Tente buscar com outros termos" : "Adicione seu primeiro paciente para começar"}
+            {searchTerm ? "Tente buscar com outros termos" : `Adicione seu primeiro ${s} para começar`}
           </p>
         </div>
       ) : (
         <div className="grid gap-4 md:gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredPatients.map((patient, index) => {
+          {filteredContacts.map((contact, index) => {
             // Determinar cor baseada no status do kanban
             const getCardColor = () => {
-              if (!patient.kanban_status) {
+              if (!contact.status_kanban) {
                 return {
                   gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
                   border: "border-blue-500/20",
@@ -390,7 +392,7 @@ export default function CRM() {
                 };
               }
               
-              switch (patient.kanban_status) {
+              switch (contact.status_kanban) {
                 case "novo_contato":
                   return {
                     gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
@@ -444,14 +446,14 @@ export default function CRM() {
             };
 
             const colors = getCardColor();
-            const statusInfo = patient.kanban_status 
-              ? kanbanStatuses.find(s => s.id === patient.kanban_status)
+            const statusInfo = contact.status_kanban
+              ? kanbanStatuses.find(ks => ks.id === contact.status_kanban)
               : null;
 
             return (
               <div
-                key={patient.id}
-                onClick={() => setSelectedPatient(patient)}
+                key={contact.id}
+                onClick={() => setSelectedContact(contact)}
                 className={cn(
                   "group relative overflow-hidden rounded-xl border-2 p-5 md:p-6 lg:p-7",
                   "bg-gradient-to-br",
@@ -476,8 +478,8 @@ export default function CRM() {
                       "flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl font-display text-lg md:text-xl font-bold shadow-lg",
                       colors.avatar
                     )}>
-                      {patient.name
-                        ? patient.name.split(" ")
+                      {contact.nome
+                        ? contact.nome.split(" ")
                             .map((n) => n[0])
                             .join("")
                             .toUpperCase()
@@ -487,18 +489,18 @@ export default function CRM() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold text-foreground text-base md:text-lg truncate mb-1">
-                        {patient.name || "Sem nome"}
+                        {contact.nome || "Sem nome"}
                       </h3>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={cn(
                             "text-xs font-semibold px-2 py-0.5 rounded-full",
-                            patient.status === "active"
+                            contact.situacao === "ativo"
                               ? "bg-green-500/10 text-green-600 border border-green-500/20"
                               : "bg-gray-500/10 text-gray-600 border border-gray-500/20"
                           )}
                         >
-                          {patient.status === "active" ? "Ativo" : "Inativo"}
+                          {contact.situacao === "ativo" ? "Ativo" : "Inativo"}
                         </span>
                         {statusInfo && (
                           <Badge 
@@ -519,7 +521,7 @@ export default function CRM() {
                     colors.avatar,
                     "border border-white/20"
                   )}>
-                    {patient.total_visits} {patient.total_visits === 1 ? "visita" : "visitas"}
+                    {contact.total_interacoes} {contact.total_interacoes === 1 ? "interação" : "interações"}
                   </div>
                 </div>
 
@@ -533,7 +535,7 @@ export default function CRM() {
                       <Mail className={cn("h-3.5 w-3.5", colors.accent)} />
                     </div>
                     <span className="truncate text-xs md:text-sm text-foreground font-medium flex-1">
-                      {patient.email || "Sem email"}
+                      {contact.email || "Sem email"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5 p-2 rounded-lg bg-background/50 hover:bg-background/80 transition-colors">
@@ -544,12 +546,12 @@ export default function CRM() {
                       <Phone className={cn("h-3.5 w-3.5", colors.accent)} />
                     </div>
                     <span className="text-xs md:text-sm text-foreground font-medium">
-                      {formatPhoneNumber(patient.phone) || "Sem telefone"}
+                      {formatPhoneNumber(contact.telefone) || "Sem telefone"}
                     </span>
                   </div>
-                  
+
                   {/* Observações */}
-                  {patient.observations && (
+                  {contact.observacoes && (
                     <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-background/50 mt-2 border border-border/20">
                       <div className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-lg shrink-0",
@@ -558,7 +560,7 @@ export default function CRM() {
                         <FileText className={cn("h-3.5 w-3.5", colors.accent)} />
                       </div>
                       <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 flex-1">
-                        {patient.observations}
+                        {contact.observacoes}
                       </p>
                     </div>
                   )}
@@ -569,18 +571,18 @@ export default function CRM() {
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-medium">
-                        Última visita: {patient.last_visit ? new Date(patient.last_visit).toLocaleDateString('pt-BR') : 'Nunca'}
+                        Última interação: {contact.ultima_interacao ? new Date(contact.ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}
                       </span>
                     </div>
                     
                     {/* Botão Ver Resumo */}
-                    {patient.resumo && (
+                    {contact.resumo && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setResumoPatient(patient);
+                          setResumoContact(contact);
                         }}
                         className={cn(
                           "w-full gap-2 text-xs font-semibold border-2 transition-all hover:scale-105",
@@ -598,7 +600,7 @@ export default function CRM() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedPatient(patient);
+                        setSelectedContact(contact);
                       }}
                       className={cn(
                         "w-full gap-2 text-xs font-semibold hover:bg-background/80",
@@ -615,39 +617,39 @@ export default function CRM() {
         </div>
       )}
 
-      {/* Modal de Detalhes do Paciente */}
-      <Dialog open={selectedPatient !== null} onOpenChange={() => setSelectedPatient(null)}>
+      {/* Modal de Detalhes do Contato */}
+      <Dialog open={selectedContact !== null} onOpenChange={() => setSelectedContact(null)}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 font-display text-base font-semibold text-accent">
-                {selectedPatient?.name
-                  ? selectedPatient.name.split(" ")
+                {selectedContact?.nome
+                  ? selectedContact.nome.split(" ")
                       .map((n: string) => n[0])
                       .join("")
                       .toUpperCase()
                   : "?"
                 }
               </div>
-              {selectedPatient?.name || "Paciente"}
+              {selectedContact?.nome || singular}
             </DialogTitle>
             <DialogDescription>
-              Informações completas do paciente
+              Informações completas do {s}
             </DialogDescription>
           </DialogHeader>
-          
-          {selectedPatient && (
+
+          {selectedContact && (
             <div className="space-y-4">
               {/* Status */}
               <div className="flex items-center gap-4">
-                <Badge 
+                <Badge
                   variant="outline"
-                  className={selectedPatient.status === 'active' ? 'border-green-500/50 text-green-600' : 'border-gray-500/50 text-gray-600'}
+                  className={selectedContact.situacao === 'ativo' ? 'border-green-500/50 text-green-600' : 'border-gray-500/50 text-gray-600'}
                 >
-                  {selectedPatient.status === 'active' ? 'Ativo' : 'Inativo'}
+                  {selectedContact.situacao === 'ativo' ? 'Ativo' : 'Inativo'}
                 </Badge>
-                {selectedPatient.kanban_status && (() => {
-                  const statusInfo = kanbanStatuses.find(s => s.id === selectedPatient.kanban_status);
+                {selectedContact.status_kanban && (() => {
+                  const statusInfo = kanbanStatuses.find(ks => ks.id === selectedContact.status_kanban);
                   return statusInfo ? (
                     <Badge variant="outline" className={statusInfo.color}>
                       {statusInfo.title}
@@ -664,14 +666,14 @@ export default function CRM() {
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-foreground">
-                      {selectedPatient.email || "Sem email"}
+                      {selectedContact.email || "Sem email"}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-foreground">
-                      {formatPhoneNumber(selectedPatient.phone) || "Sem telefone"}
+                      {formatPhoneNumber(selectedContact.telefone) || "Sem telefone"}
                     </span>
                   </div>
                 </div>
@@ -680,15 +682,15 @@ export default function CRM() {
               {/* Estatísticas */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-border/50 bg-background p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Total de Visitas</p>
-                  <p className="text-2xl font-bold text-accent">{selectedPatient.total_visits}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Total de Interações</p>
+                  <p className="text-2xl font-bold text-accent">{selectedContact.total_interacoes}</p>
                 </div>
-                
+
                 <div className="rounded-lg border border-border/50 bg-background p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Última Visita</p>
+                  <p className="text-xs text-muted-foreground mb-1">Última Interação</p>
                   <p className="text-sm font-semibold text-foreground">
-                    {selectedPatient.last_visit 
-                      ? new Date(selectedPatient.last_visit).toLocaleDateString('pt-BR')
+                    {selectedContact.ultima_interacao
+                      ? new Date(selectedContact.ultima_interacao).toLocaleDateString('pt-BR')
                       : 'Nunca'
                     }
                   </p>
@@ -696,21 +698,21 @@ export default function CRM() {
               </div>
 
               {/* Observações */}
-              {selectedPatient.observations && (
+              {selectedContact.observacoes && (
                 <div className="space-y-2 rounded-lg border border-border/50 bg-background p-4">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     <h3 className="text-sm font-semibold text-foreground">Observações</h3>
                   </div>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {selectedPatient.observations}
+                    {selectedContact.observacoes}
                   </p>
                 </div>
               )}
 
               {/* Data de Cadastro */}
               <div className="text-xs text-muted-foreground">
-                Cadastrado em: {new Date(selectedPatient.created_at).toLocaleDateString('pt-BR', {
+                Cadastrado em: {new Date(selectedContact.criado_em).toLocaleDateString('pt-BR', {
                   day: '2-digit',
                   month: 'long',
                   year: 'numeric',
@@ -722,7 +724,7 @@ export default function CRM() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedPatient(null)}>
+            <Button variant="outline" onClick={() => setSelectedContact(null)}>
               Fechar
             </Button>
           </DialogFooter>
@@ -730,7 +732,7 @@ export default function CRM() {
       </Dialog>
 
       {/* Modal de Resumo da Conversa */}
-      <Dialog open={resumoPatient !== null} onOpenChange={() => setResumoPatient(null)}>
+      <Dialog open={resumoContact !== null} onOpenChange={() => setResumoContact(null)}>
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -738,17 +740,17 @@ export default function CRM() {
               Resumo da Conversa
             </DialogTitle>
             <DialogDescription>
-              {resumoPatient?.name && `Resumo da conversa com ${resumoPatient.name}`}
+              {resumoContact?.nome && `Resumo da conversa com ${resumoContact.nome}`}
             </DialogDescription>
           </DialogHeader>
-          
-          {resumoPatient && (
+
+          {resumoContact && (
             <div className="space-y-4">
-              {/* Informações do Paciente */}
+              {/* Informações do Contato */}
               <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/5 border border-accent/20">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 font-display text-base font-semibold text-accent">
-                  {resumoPatient.name
-                    ? resumoPatient.name.split(" ")
+                  {resumoContact.nome
+                    ? resumoContact.nome.split(" ")
                         .map((n: string) => n[0])
                         .join("")
                         .toUpperCase()
@@ -756,8 +758,8 @@ export default function CRM() {
                   }
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">{resumoPatient.name || "Paciente"}</h3>
-                  <p className="text-sm text-muted-foreground">{formatPhoneNumber(resumoPatient.phone)}</p>
+                  <h3 className="font-semibold text-foreground">{resumoContact.nome || singular}</h3>
+                  <p className="text-sm text-muted-foreground">{formatPhoneNumber(resumoContact.telefone)}</p>
                 </div>
               </div>
 
@@ -767,10 +769,10 @@ export default function CRM() {
                   <MessageSquare className="h-4 w-4 text-accent" />
                   <h3 className="text-sm font-semibold text-foreground">Resumo Gerado</h3>
                 </div>
-                
+
                 <div className="prose prose-sm max-w-none">
                   <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {resumoPatient.resumo}
+                    {resumoContact.resumo}
                   </p>
                 </div>
               </div>
@@ -781,10 +783,10 @@ export default function CRM() {
                   <FileText className="h-3 w-3" />
                   <span>Gerado automaticamente</span>
                 </div>
-                {resumoPatient.last_visit && (
+                {resumoContact.ultima_interacao && (
                   <div className="flex items-center gap-1">
                     <span>•</span>
-                    <span>Última atualização: {new Date(resumoPatient.last_visit).toLocaleDateString('pt-BR')}</span>
+                    <span>Última atualização: {new Date(resumoContact.ultima_interacao).toLocaleDateString('pt-BR')}</span>
                   </div>
                 )}
               </div>
@@ -792,7 +794,7 @@ export default function CRM() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResumoPatient(null)}>
+            <Button variant="outline" onClick={() => setResumoContact(null)}>
               Fechar
             </Button>
           </DialogFooter>

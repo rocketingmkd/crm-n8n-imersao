@@ -1,167 +1,80 @@
-# Flowgrammers - Gestão Inteligente
+# FlowAtend — Gestão Inteligente de Atendimento
 
-Dashboard elegante e moderno para gestão de empresas, desenvolvido pela **Flowgrammers**. 100% otimizado para dispositivos móveis e desktop.
+Plataforma SaaS multi-tenant para gestão inteligente de empresas de atendimento, desenvolvida pela **Flowgrammers**.
 
-## 🏢 Sobre
+## Sobre
 
-**Flowgrammers** é uma solução completa de gestão para empresas, desenvolvida com tecnologia de ponta, oferecendo uma experiência premium e intuitiva.
+**FlowAtend** é uma solução completa que combina agenda, CRM, kanban, agente de IA com WhatsApp e painel de super admin com observabilidade em tempo real do servidor n8n.
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-### 🎨 Tema Claro/Escuro
-- Alternância entre tema claro e escuro
-- Preferência salva no localStorage
-- Ícone de toggle no cabeçalho da sidebar
-- Cores elegantes e premium em ambos os temas
+### Área da Organização
+- **Dashboard** — KPIs, agenda do dia, ações rápidas
+- **Agenda** — Calendário mês/semana/dia, CRUD de agendamentos
+- **CRM** — Gestão de contatos, busca, filtros por status
+- **Kanban** — Board visual de estágios do contato
+- **Agente IA** — Configuração de nome, personalidade, mensagens e follow-ups
+- **Base de Conhecimento** — Upload de PDFs para RAG do agente
+- **Integrações** — WhatsApp (oficial/não-oficial), webhooks
 
-### 📱 100% Responsivo
-- **Mobile-First Design**: Interface otimizada para dispositivos móveis
-- **Desktop Otimizado**: Layout com sidebar fixa para telas grandes
-- **Menu Hamburger**: Navegação em slide-out para mobile
-- **Touch Optimized**: Interações otimizadas para toque
-- **Breakpoints**: 
-  - Mobile: < 640px
-  - Tablet: 640px - 1024px
-  - Desktop: > 1024px
+### Área Super Admin
+- **Dashboard** — Estatísticas globais e gráficos de consumo de tokens
+- **Empresas** — CRUD completo com paginação e busca
+- **Planos** — Visualização dos planos de assinatura
+- **Tokens** — Consumo de tokens de IA por organização
+- **Observabilidade** — CPU, RAM, disco e workers n8n em tempo real (polling 5s)
+- **Insights** — Workflows, execuções, taxa de falha e tempo médio
+- **Gestão VPS** — Ativar/desativar/executar workflows n8n remotamente
+- **Configurações** — Whitelabel: nome, logos, WhatsApp de suporte, chave OpenAI
 
-### 📊 Dashboard
-- KPIs principais com animações
-- Agenda do dia
-- Ações rápidas
-- Cards responsivos e interativos
+## Stack
 
-### 📅 Agenda
-- Calendário mensal interativo
-- Visualizações: Dia, Semana, Mês
-- Lista de próximos compromissos
-- Indicadores visuais de status
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React 18 + TypeScript + Vite (SWC) |
+| Estilo | Tailwind CSS 3 + shadcn/ui |
+| Server state | TanStack React Query v5 |
+| Roteamento | React Router DOM v6 |
+| Backend/DB | Supabase (PostgreSQL + Auth + Realtime) |
+| Automação | n8n (webhooks) |
+| Build | Vite, porta dev 8080 |
 
-### 👥 CRM
-- Gestão de pacientes
-- Busca inteligente
-- Cards informativos com detalhes de contato
-- Status de atividade
-
-### 💳 Assinaturas
-- Três planos disponíveis
-- Comparação visual de recursos
-- Indicador de plano atual
-- Design responsivo de cards
-
-### 🔌 Integrações
-- WhatsApp (Oficial e Não-oficial)
-- OpenAI
-- Webhooks customizados
-- Toggle de ativação
-- Badges de status
-
-## 🚀 Tecnologias
-
-- **React 18** - Framework principal
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Estilização responsiva
-- **Vite** - Build tool
-- **React Router** - Navegação
-- **Radix UI** - Componentes acessíveis
-- **Lucide React** - Ícones modernos
-- **Supabase** - Backend e autenticação
-
-## 💻 Como Executar
+## Como Executar
 
 ```bash
 # Instalar dependências
 npm install
 
-# Executar em desenvolvimento
-npm run dev
+# Desenvolvimento
+npm run dev   # localhost:8080
 
 # Build para produção
 npm run build
-
-# Preview do build
-npm run preview
 ```
 
-## 📱 Otimizações Mobile
+## Configuração
 
-### CSS
-- `-webkit-tap-highlight-color: transparent` - Remove highlight em toque
-- `touch-action: manipulation` - Melhora performance de toque
-- `overflow-x: hidden` - Previne scroll horizontal
-- Safe area insets para devices com notch
-- Hover states apenas para dispositivos com hover
+Crie um arquivo `.env` na raiz:
 
-### HTML
-- Meta tags viewport otimizadas
-- Support para PWA
-- Theme color adaptativo
-- Apple-specific meta tags
+```env
+VITE_SUPABASE_URL=https://SEU_PROJECT_ID.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+VITE_SUPABASE_PROJECT_ID=SEU_PROJECT_ID
+VITE_N8N_WEBHOOK_URL=https://seu-n8n.com/webhook/
 
-### Layout
-- Header fixo no mobile com 64px de altura
-- Sidebar transformada em menu lateral
-- Padding e margins adaptivos
-- Tipografia escalável (rem/em)
-- Elementos de toque com mínimo 44px
+## Instalação do Banco
 
-## 🎨 Sistema de Cores
+Execute `supabase/install_banco_completo.sql` uma única vez em um projeto Supabase limpo.
+Veja o guia completo em `supabase/INSTALACAO.md`.
 
-### Tema Claro
-- Background: Bege claro elegante
-- Foreground: Azul escuro profundo
-- Accent: Dourado premium
+## Arquitetura
 
-### Tema Escuro
-- Background: Azul escuro profundo
-- Foreground: Bege claro
-- Accent: Dourado brilhante
+- **Multi-tenant**: cada organização tem dados isolados via RLS no Supabase
+- **Whitelabel**: nome, logos e contato de suporte configuráveis via painel
+- **Entidade configurável**: o rótulo "Cliente/Clientes" é personalizável por organização
+- **Banco em Português**: todas as tabelas, colunas e enums em snake_case PT-BR
+- **n8n integrado**: automações de atendimento, agendamento, follow-up e RAG via webhooks
 
-## 📂 Estrutura do Projeto
+## Licença
 
-```
-src/
-├── components/
-│   ├── ui/           # Componentes Radix UI
-│   ├── Layout.tsx    # Layout principal responsivo
-│   ├── NavLink.tsx   # Links de navegação
-│   └── KPICard.tsx   # Cards de métricas
-├── contexts/
-│   ├── ThemeContext.tsx  # Contexto de tema
-│   └── AuthContext.tsx   # Contexto de autenticação
-├── pages/
-│   ├── Dashboard.tsx
-│   ├── Agenda.tsx
-│   ├── CRM.tsx
-│   ├── Conhecimento.tsx
-│   ├── AgentIA.tsx
-│   ├── Kanban.tsx
-│   └── super-admin/  # Painel super admin
-├── hooks/            # Custom hooks
-├── lib/              # Utilitários
-├── integrations/     # Integrações (Supabase)
-└── types/            # TypeScript types
-```
-
-## 🔧 Configuração
-
-O projeto está configurado com:
-- ESLint para linting
-- TypeScript strict mode
-- Path aliases (@/)
-- Tailwind CSS com plugins de animação
-- Supabase para backend e autenticação
-- Sistema multi-tenant
-
-## 📄 Licença
-
-Este projeto é privado e proprietário.
-
-## 👨‍💻 Desenvolvido por
-
-**Flowgrammers**
-
----
-
-**Nota**: Este projeto foi otimizado para oferecer a melhor experiência possível tanto em dispositivos móveis quanto em desktops, com atenção especial a performance, acessibilidade e design premium.
-
-**Flowgrammers** - Solução completa de gestão para empresas.
+Projeto privado e proprietário — **Flowgrammers**.
