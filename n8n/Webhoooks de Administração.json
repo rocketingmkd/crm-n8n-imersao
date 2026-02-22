@@ -2361,8 +2361,8 @@
               "name": "Bem Estar",
               "identificador": "bem-estar-1766491702113",
               "is_active": true,
-              "logo_url": null,
-              "created_at": "2025-12-23T12:08:22.221404+00:00"
+              "url_logo": null,
+              "criado_em": "2025-12-23T12:08:22.221404+00:00"
             }
           },
           "webhookUrl": "https://webhook.u4digital.com.br/webhook/rag-cliente",
@@ -2402,13 +2402,13 @@
           "body": {
             "organization": {
               "id": "e88b2f3e-480b-466e-9426-926232f98f8d",
-              "created_at": "2026-01-07T14:37:58.649819+00:00",
+              "criado_em": "2026-01-07T14:37:58.649819+00:00",
               "name": "Clinica Flowgrammers",
               "identificador": "clinica-flowgrammers-1767796678599",
               "settings": {},
               "is_active": true,
-              "logo_url": null,
-              "subscription_plan": "plano_c",
+              "url_logo": null,
+              "plano_assinatura": "plano_c",
               "plan_features": {
                 "analytics": false,
                 "multi_usuarios": false,
@@ -2421,24 +2421,24 @@
                 "agendamento_automatico": false,
                 "atendimento_inteligente": false
               },
-              "contact_email": null,
-              "support_whatsapp": null,
+              "email_contato": null,
+              "whatsapp_suporte": null,
               "service_duration": 30
             },
             "agent_ia_config": {
               "id": "2c1f93c0-ad0d-4267-8798-f77130fac92f",
-              "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
-              "created_at": "2026-01-07T14:54:18.895879+00:00",
-              "updated_at": "2026-01-07T14:54:18.895879+00:00",
-              "agent_name": "Assistente Virtual",
+              "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d",
+              "criado_em": "2026-01-07T14:54:18.895879+00:00",
+              "atualizado_em": "2026-01-07T14:54:18.895879+00:00",
+              "nome_agente": "Assistente Virtual",
               "personality": "profissional",
               "greeting_message": "Olá! Sou o assistente virtual da clínica. Como posso ajudá-lo hoje?",
-              "closing_message": "Foi um prazer atendê-lo! Se precisar de algo mais, estou à disposição.",
+              "mensagem_encerramento": "Foi um prazer atendê-lo! Se precisar de algo mais, estou à disposição.",
               "reminder_1_minutes": 15,
               "reminder_2_minutes": 60,
               "reminder_3_minutes": 1440,
               "qualification_questions": [],
-              "openai_api_key": null,
+              "chave_openai": null,
               "confirmation_email_html": null,
               "customer_pause_duration_seconds": 300,
               "pause_duration_seconds": 1800,
@@ -2448,37 +2448,37 @@
             },
             "whatsapp_instance": {
               "id": "d8115f8c-6223-4d79-9d7f-119c7adf941b",
-              "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
-              "created_at": "2026-01-07T15:31:09.578594+00:00",
-              "updated_at": "2026-01-12T12:14:59.113132+00:00",
-              "instance_id": "rc148cc79ad230c",
+              "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d",
+              "criado_em": "2026-01-07T15:31:09.578594+00:00",
+              "atualizado_em": "2026-01-12T12:14:59.113132+00:00",
+              "id_instancia": "rc148cc79ad230c",
               "token": "8a236921-8e18-4131-9fb8-1c61514452a8",
-              "instance_name": "clinica-flowgrammers",
+              "nome_instancia": "clinica-flowgrammers",
               "admin_field_01": "Clinica Flowgrammers",
               "phone": "(11) 98256-1489",
-              "webhook_created": "2026-01-07 15:31:09.268Z",
+              "webhook_criado": "2026-01-07 15:31:09.268Z",
               "status": "connected",
               "qr_code": null,
-              "pairing_code": "ZMS9-W9ZM",
+              "codigo_pareamento": "ZMS9-W9ZM",
               "webhook_url": "https://webhook.agentes-n8n.com.br/webhook/clinica-flowgrammers"
             },
             "settings": {
               "id": "6d9dbceb-a0e3-42ef-bc17-4f7f1ee68354",
-              "created_at": "2026-01-07T14:37:58.760587+00:00",
+              "criado_em": "2026-01-07T14:37:58.760587+00:00",
               "company_name": "Clinica Flowgrammers",
               "owner_name": "DR RICARDO",
-              "subscription_plan": "premium",
+              "plano_assinatura": "premium",
               "subscription_renews_at": null,
-              "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d"
+              "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d"
             },
             "profiles": [
               {
                 "id": "cd3318e4-bb64-4700-b2b4-f563ee2d9d6d",
-                "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
-                "created_at": "2026-01-07T14:37:58.705961+00:00",
-                "full_name": "DR RICARDO",
+                "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d",
+                "criado_em": "2026-01-07T14:37:58.705961+00:00",
+                "nome_completo": "DR RICARDO",
                 "role": "admin",
-                "avatar_url": null,
+                "url_avatar": null,
                 "is_active": true,
                 "is_super_admin": false
               }

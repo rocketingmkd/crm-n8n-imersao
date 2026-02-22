@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, Server } from "lucide-react";
+import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, Server, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AppLogo } from "@/components/AppLogo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const menuItems = [
   { path: "/super-admin/insights", label: "Insights n8n", icon: BarChart3 },
   { path: "/super-admin/gestao-vps", label: "Gestão de VPS", icon: Server },
   { path: "/super-admin/settings", label: "Configs", icon: Sliders },
+  { path: "/super-admin/minha-conta", label: "Minha conta", icon: UserCircle },
 ];
 
 export default function SuperAdminLayout() {
@@ -95,9 +97,12 @@ export default function SuperAdminLayout() {
               "flex items-center transition-all duration-300",
               isSidebarCollapsed ? "justify-center" : "gap-3"
             )}>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary shrink-0">
-                <Shield className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <Avatar className="h-9 w-9 shrink-0 border border-border">
+                <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                  {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
+                </AvatarFallback>
+              </Avatar>
               {!isSidebarCollapsed && (
                 <div className="flex-1 overflow-hidden">
                   <p className="truncate text-xs font-semibold text-foreground">

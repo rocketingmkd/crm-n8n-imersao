@@ -127,7 +127,7 @@
             },
             {
               "id": "9e09db91-a5d3-4c7f-8561-89b730dcd4a3",
-              "name": "session_id",
+              "name": "id_sessao",
               "value": "={{ $('Merge').last().json.id }}",
               "type": "string"
             },
@@ -327,12 +327,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "instance_name",
+              "keyName": "nome_instancia",
               "condition": "eq",
               "keyValue": "={{ $json.empresa }}"
             }
@@ -357,15 +357,15 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $json.id_organizacao }}"
             },
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $('Executa Workflow').item.json.remotejId }}"
             }
           ]
@@ -436,7 +436,7 @@
     },
     {
       "parameters": {
-        "tableId": "contacts",
+        "tableId": "contatos",
         "fieldsUi": {
           "fieldValues": [
             {
@@ -444,11 +444,11 @@
               "fieldValue": "={{ $json.data }}"
             },
             {
-              "fieldId": "phone",
+              "fieldId": "telefone",
               "fieldValue": "={{ $('Executa Workflow').item.json.remotejId }}"
             },
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Busca Instancia').item.json.id_organizacao }}"
             }
           ]
@@ -880,7 +880,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  session_id VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
+        "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  id_sessao VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -993,7 +993,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "session_id": "={{ $('Merge').item.json.id }}",
+            "id_sessao": "={{ $('Merge').item.json.id }}",
             "message": "={{ $json }}"
           },
           "matchingColumns": [
@@ -1011,8 +1011,8 @@
               "removed": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "id_sessao",
+              "displayName": "id_sessao",
               "required": true,
               "defaultMatch": false,
               "display": true,
@@ -1133,7 +1133,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "session_id": "={{ $('Merge').item.json.id }}",
+            "id_sessao": "={{ $('Merge').item.json.id }}",
             "message": "={{ $json }}"
           },
           "matchingColumns": [
@@ -1151,8 +1151,8 @@
               "removed": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "id_sessao",
+              "displayName": "id_sessao",
               "required": true,
               "defaultMatch": false,
               "display": true,
@@ -1884,7 +1884,7 @@
               },
               {
                 "id": "9e09db91-a5d3-4c7f-8561-89b730dcd4a3",
-                "name": "session_id",
+                "name": "id_sessao",
                 "value": "={{ $('Merge').last().json.id }}",
                 "type": "string"
               },
@@ -2084,12 +2084,12 @@
       {
         "parameters": {
           "operation": "getAll",
-          "tableId": "whatsapp_instances",
+          "tableId": "instancias_whatsapp",
           "returnAll": true,
           "filters": {
             "conditions": [
               {
-                "keyName": "instance_name",
+                "keyName": "nome_instancia",
                 "condition": "eq",
                 "keyValue": "={{ $json.empresa }}"
               }
@@ -2114,15 +2114,15 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "keyValue": "={{ $json.id_organizacao }}"
               },
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $('Executa Workflow').item.json.remotejId }}"
               }
             ]
@@ -2193,7 +2193,7 @@
       },
       {
         "parameters": {
-          "tableId": "contacts",
+          "tableId": "contatos",
           "fieldsUi": {
             "fieldValues": [
               {
@@ -2201,11 +2201,11 @@
                 "fieldValue": "={{ $json.data }}"
               },
               {
-                "fieldId": "phone",
+                "fieldId": "telefone",
                 "fieldValue": "={{ $('Executa Workflow').item.json.remotejId }}"
               },
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Busca Instancia').item.json.id_organizacao }}"
               }
             ]
@@ -2638,7 +2638,7 @@
       {
         "parameters": {
           "operation": "executeQuery",
-          "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  session_id VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
+          "query": "CREATE TABLE IF NOT EXISTS public.{{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats (\n  id SERIAL NOT NULL,\n  id_sessao VARCHAR(255) NOT NULL,\n  message JSONB NOT NULL,\n  data TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),\n  CONSTRAINT {{ $('Executa Workflow').item.json.empresa.replace(/-/g, '_').toLowerCase() }}_chats_pkey PRIMARY KEY (id)\n) TABLESPACE pg_default;\n",
           "options": {}
         },
         "type": "n8n-nodes-base.postgres",
@@ -2751,7 +2751,7 @@
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "session_id": "={{ $('Merge').item.json.id }}",
+              "id_sessao": "={{ $('Merge').item.json.id }}",
               "message": "={{ $json }}"
             },
             "matchingColumns": [
@@ -2769,8 +2769,8 @@
                 "removed": true
               },
               {
-                "id": "session_id",
-                "displayName": "session_id",
+                "id": "id_sessao",
+                "displayName": "id_sessao",
                 "required": true,
                 "defaultMatch": false,
                 "display": true,
@@ -2891,7 +2891,7 @@
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "session_id": "={{ $('Merge').item.json.id }}",
+              "id_sessao": "={{ $('Merge').item.json.id }}",
               "message": "={{ $json }}"
             },
             "matchingColumns": [
@@ -2909,8 +2909,8 @@
                 "removed": true
               },
               {
-                "id": "session_id",
-                "displayName": "session_id",
+                "id": "id_sessao",
+                "displayName": "id_sessao",
                 "required": true,
                 "defaultMatch": false,
                 "display": true,

@@ -10,11 +10,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $json.telefone }}"
             }
           ]
@@ -126,7 +126,7 @@
               "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
             },
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Busca Paciente').last().json.id_organizacao }}"
             }
           ]
@@ -169,7 +169,7 @@
               "fieldValue": "0"
             },
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Executa Fluxo').item.json.company_id }}"
             },
             {
@@ -385,11 +385,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $json.telefone }}"
               }
             ]
@@ -501,7 +501,7 @@
                 "fieldValue": "={{ $('Busca Paciente').last().json.name }}"
               },
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Busca Paciente').last().json.id_organizacao }}"
               }
             ]
@@ -544,7 +544,7 @@
                 "fieldValue": "0"
               },
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Executa Fluxo').item.json.company_id }}"
               },
               {

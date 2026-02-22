@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLogo } from '@/components/AppLogo';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Camera, X } from 'lucide-react';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -15,6 +17,9 @@ export default function Register() {
     confirmPassword: '',
     organizationName: '',
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -26,10 +31,32 @@ export default function Register() {
     }));
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Selecione uma imagem (PNG, JPG, GIF ou WebP).');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('A foto deve ter no máximo 2 MB.');
+      return;
+    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações
     if (formData.password !== formData.confirmPassword) {
       alert('As senhas não coincidem');
       return;
@@ -48,9 +75,8 @@ export default function Register() {
         password: formData.password,
         fullName: formData.fullName,
         organizationName: formData.organizationName,
+        avatarFile: avatarFile ?? undefined,
       });
-      
-      // Redirecionar para login
       navigate('/login');
     } catch (error) {
       // Erro já tratado no AuthContext
@@ -78,6 +104,60 @@ export default function Register() {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {/* Foto do usuário */}
+            <div className="space-y-2 flex flex-col items-center">
+              <Label className="text-foreground">Sua foto (opcional)</Label>
+              <div className="relative">
+                <Avatar className="h-20 w-20 border-2 border-border">
+                  {avatarPreview ? (
+                    <AvatarImage src={avatarPreview} alt="Preview" className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="bg-muted text-muted-foreground text-xl">
+                    {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                {avatarPreview ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-1 -right-1 h-6 w-6 rounded-full"
+                    onClick={removeAvatar}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+              {!avatarPreview && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Escolher foto
+                </Button>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="organizationName" className="text-foreground">Nome da Empresa *</Label>
               <Input

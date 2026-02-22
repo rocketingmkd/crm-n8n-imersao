@@ -38,6 +38,7 @@ import TokenUsage from "./pages/super-admin/TokenUsage";
 import N8nInsights from "./pages/super-admin/N8nInsights";
 import GestaoVps from "./pages/super-admin/GestaoVps";
 import SuperAdminSettings from "./pages/super-admin/Settings";
+import MinhaConta from "./pages/MinhaConta";
 
 import NotFound from "./pages/NotFound";
 
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/super-admin/insights" element={<N8nInsights />} />
                 <Route path="/super-admin/gestao-vps" element={<GestaoVps />} />
                 <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
+                <Route path="/super-admin/minha-conta" element={<MinhaConta />} />
               </Route>
 
               {/* Rotas de Organização (antiga "/" agora "/app/*") */}
@@ -90,6 +92,7 @@ const App = () => (
                 <Route path="/app/crm" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/crm/kanban" element={<Navigate to="/app/clientes/kanban" replace />} />
                 <Route path="/app/integrations" element={<Integrations />} />
+                <Route path="/app/minha-conta" element={<MinhaConta />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

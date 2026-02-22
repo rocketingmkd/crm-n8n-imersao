@@ -962,7 +962,7 @@ export type Database = {
       }
       delete_vault_item: { Args: { p_id: string }; Returns: boolean }
       gerar_identificador: { Args: { name: string }; Returns: string }
-      get_user_organization_id: { Args: never; Returns: string }
+      obter_id_organizacao_usuario: { Args: never; Returns: string }
       get_vault_item_by_id: {
         Args: { p_id: string }
         Returns: {
@@ -993,7 +993,7 @@ export type Database = {
           website_url: string
         }[]
       }
-      is_user_super_admin: { Args: never; Returns: boolean }
+      usuario_e_super_admin: { Args: never; Returns: boolean }
       match_documents: {
         Args: { filter?: Json; match_count?: number; query_embedding: string }
         Returns: {

@@ -23,7 +23,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -51,11 +51,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $json.id }}"
             }
           ]
@@ -253,17 +253,17 @@
           "query": {},
           "body": {
             "id": "3c8a827b-6981-4de6-a937-9b5afe7702f4",
-            "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
-            "start_datetime": "2026-01-14T09:00:00-03:00",
-            "end_datetime": "2026-01-14T10:00:00-03:00",
-            "contact_id": "dadb0b0c-6896-4612-b207-278992e4c7a5",
-            "contact_name": "Richard Snows",
-            "contact_email": "preciso do seu e-mail para concluir o agendamento.",
+            "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d",
+            "inicio": "2026-01-14T09:00:00-03:00",
+            "fim": "2026-01-14T10:00:00-03:00",
+            "id_contato": "dadb0b0c-6896-4612-b207-278992e4c7a5",
+            "nome_contato": "Richard Snows",
+            "email_contato": "preciso do seu e-mail para concluir o agendamento.",
             "contact_phone": "551152863018@s.whatsapp.net",
             "type": "Retorno",
             "status": "confirmed",
             "observations": "Teste",
-            "created_at": "2026-01-13T13:58:00.039Z"
+            "criado_em": "2026-01-13T13:58:00.039Z"
           },
           "webhookUrl": "https://webhook.agentes-n8n.com.br/webhook/criar-agenda",
           "executionMode": "production"
@@ -336,7 +336,7 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "organizations",
+          "tableId": "organizacoes",
           "filters": {
             "conditions": [
               {
@@ -364,11 +364,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "whatsapp_instances",
+          "tableId": "instancias_whatsapp",
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "keyValue": "={{ $json.id }}"
               }
             ]

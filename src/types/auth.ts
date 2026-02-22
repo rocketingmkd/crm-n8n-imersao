@@ -37,6 +37,8 @@ export interface AuthContextType {
   signUp: (data: SignUpData) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  /** Recarrega perfil e organização do usuário logado (útil após editar conta). */
+  refreshProfile: () => Promise<void>;
 }
 
 // Tipo específico para criar super admin
@@ -59,4 +61,6 @@ export interface SignUpData {
   password: string;
   fullName: string;
   organizationName: string;
+  /** Foto do usuário (opcional). Será enviada para o storage e a URL salva no perfil. */
+  avatarFile?: File | null;
 }

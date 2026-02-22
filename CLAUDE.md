@@ -54,18 +54,18 @@ npm run preview
 
 ```
 src/
-├── App.tsx                    # Rotas principais (React Router)
+├── App.tsx                    # Rotas principais (React Router) + AplicadorCores
 ├── components/
 │   ├── ui/                    # Componentes shadcn/ui
 │   ├── Layout.tsx             # Sidebar/nav para usuários de org
 │   ├── SuperAdminLayout.tsx   # Sidebar/nav do super admin
-│   ├── AppLogo.tsx            # Logo whitelabel (variant="org"|"platform")
+│   ├── AppLogo.tsx            # Logo whitelabel (variant="org"|"platform") + fallback onError
 │   ├── ProtectedRoute.tsx     # Requer usuário autenticado
 │   ├── SuperAdminRoute.tsx    # Requer super_admin = true
 │   ├── OrgRoute.tsx           # Requer id_organizacao preenchido
 │   ├── PlanGuard.tsx          # Verifica feature/limite do plano
 │   ├── LimitAlert.tsx         # Alerta de limite do plano
-│   ├── SupportButton.tsx      # Botão WhatsApp suporte (global_settings)
+│   ├── SupportButton.tsx      # Botão WhatsApp suporte (configuracoes_globais)
 │   └── KPICard.tsx
 ├── contexts/
 │   ├── AuthContext.tsx        # Auth state global (Supabase)
@@ -81,11 +81,12 @@ src/
 │   ├── usePlanFeatures.ts     # Features e limites do plano
 │   ├── useChatMetrics.ts      # Métricas de conversas (tabelas dinâmicas)
 │   ├── useObservability.ts    # Métricas CPU/RAM/Disco/Workers (polling 5s)
-│   └── useN8nInsights.ts      # Workflows e execuções n8n (polling 60s)
+│   ├── useN8nInsights.ts      # Workflows e execuções n8n (polling 60s)
+│   └── useCoresPataforma.ts   # Cor primária da UI (busca DB + aplica CSS vars)
 ├── lib/
 │   ├── config.ts              # Todas as variáveis de ambiente (VER ABAIXO)
 │   ├── supabase.ts            # Cliente Supabase
-│   ├── utils.ts               # cn(), formatPhoneNumber()
+│   ├── utils.ts               # cn(), formatPhoneNumber(), resolverUrlImagem()
 │   └── dateUtils.ts
 ├── pages/
 │   ├── auth/                  # Login, Register, ForgotPassword
@@ -114,13 +115,12 @@ src/
     └── types.ts               # Tipos gerados do Supabase
 n8n/                           # Workflows n8n (JSONs para importar)
 supabase/
-├── install_banco_completo.sql # Instala todo o banco UMA VEZ (banco limpo)
-├── INSTALACAO.md              # Guia de instalação passo a passo
-├── functions/                 # Edge Functions (Deno)
-│   ├── create-organization/
-│   ├── manage-organization-users/
-│   └── update-organization/
-└── migrations/                # Histórico (não executar manualmente)
+├── instalar_banco_de_dados.sql  # Instala todo o banco UMA VEZ (banco limpo)
+├── INSTALACAO.md                # Guia de instalação passo a passo
+└── functions/                   # Edge Functions (Deno)
+    ├── criar-organizacao/
+    ├── gerenciar-usuarios-organizacao/
+    └── atualizar-organizacao/
 ```
 
 ---
@@ -167,8 +167,15 @@ VITE_GESTAO_VPS_WEBHOOK_URL=       # Comandos de gestão VPS (fallback: base+ges
 ## Banco de dados (Supabase)
 
 ### Instalação
-Execute `supabase/install_banco_completo.sql` **uma única vez** em um projeto Supabase limpo.
+Execute `supabase/instalar_banco_de_dados.sql` **uma única vez** em um projeto Supabase limpo.
 Siga o guia em `supabase/INSTALACAO.md`.
+
+### Funções SQL auxiliares
+| Função | Descrição |
+|--------|-----------|
+| `obter_id_organizacao_usuario()` | Retorna o `id_organizacao` do usuário autenticado |
+| `usuario_e_super_admin()` | Retorna `true` se o usuário autenticado é super admin |
+| `trigger_atualizado_em()` | Atualiza `atualizado_em` automaticamente em updates |
 
 ### Tabelas principais
 
@@ -188,6 +195,17 @@ Siga o guia em `supabase/INSTALACAO.md`.
 | `documentos` | Base de conhecimento (RAG, pgvector) |
 | `clientes_followup` | Follow-up de clientes via n8n |
 | `{identificador}_conversas` | Tabelas dinâmicas de chat por organização (criadas pelo n8n) |
+
+### configuracoes_globais — campos importantes
+| Campo | Descrição | Padrão |
+|-------|-----------|--------|
+| `nome_plataforma` | Nome exibido no header e browser | `FlowAtend` |
+| `whatsapp_suporte` | Número WhatsApp do suporte (botão flutuante) | — |
+| `chave_openai` | API Key OpenAI global | — |
+| `chave_elevenlabs` | API Key ElevenLabs para síntese de voz | — |
+| `cor_primaria` | Cor primária da UI em hex (`#RRGGBB`) | `#D9156C` |
+| `url_logo_plataforma` | Logo para fundo escuro | — |
+| `url_logo_plataforma_escuro` | Logo para fundo claro | — |
 
 ### Convenções de nomenclatura do banco
 
@@ -240,13 +258,25 @@ Toda comunicação com n8n é via HTTP POST para webhooks. O frontend **nunca ch
 Respostas que começam com `❌` são tratadas como erro. Qualquer resposta HTTP (mesmo 4xx) indica que o n8n está online para fins de health check.
 
 ### Workflows n8n disponíveis (pasta `n8n/`)
-- `Gestao VPS - COMPLETA.json` — gestão de workflows via comandos
-- `Observabilidade em tempo real.json` — métricas do servidor
-- `Observability API (standalone - Execute Command + n8n Workers).json`
-- `Insights API (Workflows + Executions).json` — insights de execuções
 - `Webhoooks de Administração.json` — criação de orgs e workflows
-- `Atendimento - Básico.json` / `Intermediário.json` / `Completo.json` — fluxos de atendimento
-- `Instalação do Banco de Dados.json` — instala o banco via n8n
+- `Instalação do Banco de Dados.json` — provisiona tabelas dinâmicas por org
+- `Classificação Mensagem.json` — roteamento de mensagens recebidas
+- `Debounce.json` — agrupa mensagens antes de processar
+- `Atendimento - Básico.json` — atendimento simples via WhatsApp
+- `Atendimento - Intermediáro (RAG + Atendimento).json` — atendimento com RAG
+- `Atendimento - Completo (RAG + Agendamento).json` — atendimento com RAG + agendamento
+- `Gestão de Agendas.json` — CRUD de agendamentos via n8n
+- `Criar Agenda.json` — criação de agendamento por mensagem
+- `Envio Lembrete.json` — lembretes automáticos de agendamentos
+- `Disparo de Follow Up.json` — follow-up automático de clientes
+- `Insere Followup Cliente.json` — insere cliente na fila de follow-up
+- `Gestao de Tokens.json` — contabiliza tokens OpenAI por org
+- `Gestao VPS - COMPLETA.json` — gestão de workflows via comandos
+- `Error - Gestao VPS.json` — tratamento de erros da gestão VPS
+- `Observabilidade em tempo real.json` — métricas do servidor
+- `Observability API (Webhook).json` — webhook de observabilidade
+- `Observability API (standalone - Execute Command + n8n Workers).json`
+- `Insights API (Workflows + Executions).json` — insights de execuções n8n
 
 ---
 
@@ -306,7 +336,7 @@ toast.error("Erro");
 | `/super-admin/observability` | CPU, RAM, Disco, Workers n8n (tempo real) |
 | `/super-admin/insights` | Workflows, execuções, falhas, tempo médio |
 | `/super-admin/gestao-vps` | Gerenciar workflows n8n remotamente |
-| `/super-admin/settings` | Configurações globais (whitelabel, OpenAI, logos) |
+| `/super-admin/settings` | Configurações globais (whitelabel, cores, chaves de API, logos) |
 
 ---
 
@@ -336,6 +366,40 @@ O módulo mais complexo do super admin. Envia comandos para o webhook n8n.
 // Logo da plataforma (usa configuracoes_globais.url_logo_plataforma)
 <AppLogo variant="platform" />
 ```
+
+- Suporta URLs do Google Drive (convertidas automaticamente via `resolverUrlImagem()`)
+- Fallback automático para o logo padrão em caso de erro de carregamento (`onError`)
+
+---
+
+## resolverUrlImagem — URLs de imagem
+
+```typescript
+import { resolverUrlImagem } from "@/lib/utils";
+
+const src = resolverUrlImagem(url) ?? defaultSrc;
+```
+
+Converte URLs do Google Drive para formato direto compatível com `<img src>`:
+- `https://lh3.google.com/u/0/d/FILE_ID` → `https://drive.google.com/uc?export=view&id=FILE_ID`
+- `https://drive.google.com/file/d/FILE_ID/view` → mesmo
+- Qualquer outra URL passa sem alteração
+
+---
+
+## useCoresPataforma — cor primária dinâmica
+
+```typescript
+import { useCoresPataforma, aplicarCorPrimaria } from "@/hooks/useCoresPataforma";
+
+// No App.tsx (via AplicadorCores): aplica a cor do DB no boot
+useCoresPataforma();
+
+// Para preview ao vivo (ex: Settings.tsx):
+aplicarCorPrimaria('#D9156C', isDark);
+```
+
+Aplica as CSS variables `--primary`, `--accent`, `--ring`, `--sidebar-primary`, `--sidebar-ring`, `--sidebar-accent` e `--sidebar-accent-foreground` via `document.documentElement.style.setProperty()`.
 
 ---
 
@@ -373,4 +437,4 @@ const { singular, plural, s, p } = useRotuloEntidade();
 - Não usar `style={{}}` inline — usar Tailwind
 - Não criar abstrações prematuras para uso único
 - Não usar nomes em inglês para campos de banco — tudo em PT snake_case
-- Não executar as migrations individualmente — usar `install_banco_completo.sql` em banco limpo
+- Não executar migrations individuais — usar `instalar_banco_de_dados.sql` em banco limpo

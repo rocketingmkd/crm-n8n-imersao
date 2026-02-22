@@ -12,7 +12,7 @@
         "workflowInputs": {
           "values": [
             {
-              "name": "organization_id"
+              "name": "id_organizacao"
             },
             {
               "name": "input"
@@ -50,11 +50,11 @@
     },
     {
       "parameters": {
-        "tableId": "token_usage",
+        "tableId": "uso_tokens",
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Executa Fluxo').item.json.id_organizacao }}"
             },
             {
@@ -217,7 +217,7 @@
     "Executa Fluxo": [
       {
         "json": {
-          "organization_id": "e88b2f3e-480b-466e-9426-926232f98f8d",
+          "id_organizacao": "e88b2f3e-480b-466e-9426-926232f98f8d",
           "input": "Olá tudo bem ?",
           "output": "Olá! Sou o assistente virtual da clínica. Como posso ajudá-lo hoje? Qual é o seu nome?",
           "llmModel": "gpt-4o"
@@ -279,7 +279,7 @@
           "workflowInputs": {
             "values": [
               {
-                "name": "organization_id"
+                "name": "id_organizacao"
               },
               {
                 "name": "input"
@@ -317,11 +317,11 @@
       },
       {
         "parameters": {
-          "tableId": "token_usage",
+          "tableId": "uso_tokens",
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Executa Fluxo').item.json.id_organizacao }}"
               },
               {

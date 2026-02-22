@@ -30,7 +30,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "returnAll": true,
         "filters": {
           "conditions": [
@@ -40,12 +40,12 @@
               "keyValue": "pending"
             },
             {
-              "keyName": "start_datetime",
+              "keyName": "inicio",
               "condition": "gte",
               "keyValue": "={{ $now.minus({hours: 1}).toISO() }}"
             },
             {
-              "keyName": "start_datetime",
+              "keyName": "inicio",
               "condition": "lte",
               "keyValue": "={{ $now.plus({days: 2}).toISO() }}"
             }
@@ -70,7 +70,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "agent_ia_config",
+        "tableId": "config_agente_ia",
         "returnAll": true
       },
       "type": "n8n-nodes-base.supabase",
@@ -104,7 +104,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -132,11 +132,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $('Calcula Lembretes').item.json.org_id }}"
             }
           ]
@@ -201,7 +201,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "filters": {
           "conditions": [
             {
@@ -259,15 +259,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "={{$('Normaliza dados para o Agente').first().json.mensagem}}",
-            "organization_id": "={{ $('Calcula Lembretes').item.json.org_id }}",
+            "id_organizacao": "={{ $('Calcula Lembretes').item.json.org_id }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4.1-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,

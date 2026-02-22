@@ -25,7 +25,7 @@ Plataforma SaaS multi-tenant para gestão inteligente de empresas de atendimento
 - **Observabilidade** — CPU, RAM, disco e workers n8n em tempo real (polling 5s)
 - **Insights** — Workflows, execuções, taxa de falha e tempo médio
 - **Gestão VPS** — Ativar/desativar/executar workflows n8n remotamente
-- **Configurações** — Whitelabel: nome, logos, WhatsApp de suporte, chave OpenAI
+- **Configurações** — Whitelabel: nome, logos, cor primária, WhatsApp de suporte, chave OpenAI, chave ElevenLabs
 
 ## Stack
 
@@ -60,17 +60,22 @@ Crie um arquivo `.env` na raiz:
 VITE_SUPABASE_URL=https://SEU_PROJECT_ID.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
 VITE_SUPABASE_PROJECT_ID=SEU_PROJECT_ID
+
 VITE_N8N_WEBHOOK_URL=https://seu-n8n.com/webhook/
+VITE_GESTAO_VPS_WEBHOOK_URL=https://seu-n8n.com/webhook/gestao-vps-completa
+```
 
 ## Instalação do Banco
 
-Execute `supabase/install_banco_completo.sql` uma única vez em um projeto Supabase limpo.
+Execute `supabase/instalar_banco_de_dados.sql` uma única vez em um projeto Supabase limpo.
 Veja o guia completo em `supabase/INSTALACAO.md`.
 
 ## Arquitetura
 
 - **Multi-tenant**: cada organização tem dados isolados via RLS no Supabase
-- **Whitelabel**: nome, logos e contato de suporte configuráveis via painel
+- **Whitelabel**: nome, logos, cor primária e contato de suporte configuráveis via painel
+- **Cor dinâmica**: a cor primária da UI é salva no banco e aplicada via CSS variables no boot
+- **Logos flexíveis**: suporte a URLs diretas e URLs do Google Drive (convertidas automaticamente)
 - **Entidade configurável**: o rótulo "Cliente/Clientes" é personalizável por organização
 - **Banco em Português**: todas as tabelas, colunas e enums em snake_case PT-BR
 - **n8n integrado**: automações de atendimento, agendamento, follow-up e RAG via webhooks

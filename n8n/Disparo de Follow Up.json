@@ -88,7 +88,7 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.id_organizacao }}"
             }
@@ -113,12 +113,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "agent_ia_config",
+        "tableId": "config_agente_ia",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $('Busca as organizações').item.json.id }}"
             }
@@ -489,12 +489,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.id_organizacao }}"
             }
@@ -519,7 +519,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -547,11 +547,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $json.id }}"
             }
           ]
@@ -835,15 +835,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "=Nome do Paciente: {{ $json.nome }}\nWhatsApp do Paciente: {{ $json.numero }}\nÚltima interação: {{ $json.ultima_atividade}}\nFollow Up: {{ $json.followup }}",
-            "organization_id": "={{ $('Itera sobre os itens').item.json.id_organizacao }}",
+            "id_organizacao": "={{ $('Itera sobre os itens').item.json.id_organizacao }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4.1-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -966,15 +966,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "=Nome do Paciente: {{ $json.nome }}\nWhatsApp do Paciente: {{ $json.numero }}\nÚltima interação: {{ $json.ultima_atividade}}\nFollow Up: {{ $json.followup }}",
-            "organization_id": "={{ $('Itera sobre os itens 2').item.json.id_organizacao }}",
+            "id_organizacao": "={{ $('Itera sobre os itens 2').item.json.id_organizacao }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4.1-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1058,15 +1058,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "=Nome do Paciente: {{ $json.nome }}\nWhatsApp do Paciente: {{ $json.numero }}\nÚltima interação: {{ $json.ultima_atividade}}\nFollow Up: {{ $json.followup }}",
-            "organization_id": "={{ $('Itera sobre os itens 3').item.json.id_organizacao }}",
+            "id_organizacao": "={{ $('Itera sobre os itens 3').item.json.id_organizacao }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4.1-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,

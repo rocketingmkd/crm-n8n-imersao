@@ -234,7 +234,7 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.body.company }}"
             }
@@ -356,7 +356,7 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
             }
           ]
@@ -381,12 +381,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $('Roteador de Tipos de Operacao').item.json.body.company }}"
             }
@@ -562,11 +562,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $json.telefone }}"
             }
           ]
@@ -591,11 +591,11 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "condition": "eq",
               "keyValue": "={{ $('Webhook - Agendas').item.json.body.telefone }}"
             }
@@ -612,11 +612,11 @@
               "fieldValue": "={{ $json.email_paciente }}"
             },
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
             },
             {
-              "fieldId": "kanban_status",
+              "fieldId": "status_kanban",
               "fieldValue": "agendado"
             }
           ]
@@ -663,12 +663,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.body.company }}"
             }
@@ -728,11 +728,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $('Webhook - Agendas').last().json.body.telefone }}"
             }
           ]
@@ -760,7 +760,7 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
             }
           ]
@@ -853,11 +853,11 @@
     },
     {
       "parameters": {
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "organization_id",
+              "fieldId": "id_organizacao",
               "fieldValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
             },
             {
@@ -869,11 +869,11 @@
               "fieldValue": "={{ $json.time }}"
             },
             {
-              "fieldId": "contact_id",
+              "fieldId": "id_contato",
               "fieldValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
             },
             {
-              "fieldId": "contact_name",
+              "fieldId": "nome_contato",
               "fieldValue": "={{ $json.nome_contato }}"
             },
             {
@@ -881,11 +881,11 @@
               "fieldValue": "={{ $('Webhook - Agendas').last().json.body.tipo_atendimento }}"
             },
             {
-              "fieldId": "start_datetime",
+              "fieldId": "inicio",
               "fieldValue": "={{ $json.inicio }}"
             },
             {
-              "fieldId": "end_datetime",
+              "fieldId": "fim",
               "fieldValue": "={{ $json.fim }}"
             }
           ]
@@ -909,7 +909,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -922,7 +922,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "kanban_status",
+              "fieldId": "status_kanban",
               "fieldValue": "agendado"
             },
             {
@@ -954,7 +954,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -1054,7 +1054,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    organization_id: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    start_datetime: `${datePart}T${timePart}:00-03:00`,\n    end_datetime: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
+        "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    id_organizacao: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    inicio: `${datePart}T${timePart}:00-03:00`,\n    fim: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1068,11 +1068,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $json.body.telefone }}"
             }
           ]
@@ -1096,12 +1096,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "limit": 1,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.id_organizacao }}"
             }
@@ -1130,7 +1130,7 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $json.id_organizacao }}"
             }
           ]
@@ -1167,7 +1167,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "filters": {
           "conditions": [
             {
@@ -1176,7 +1176,7 @@
               "keyValue": "={{ $('Busca Organizacao').item.json.id }}"
             },
             {
-              "keyName": "contact_id",
+              "keyName": "id_contato",
               "condition": "eq",
               "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
             }
@@ -1193,11 +1193,11 @@
               "fieldValue": "={{ $json.new_time }}"
             },
             {
-              "fieldId": "start_datetime",
+              "fieldId": "inicio",
               "fieldValue": "={{ $json.new_start }}"
             },
             {
-              "fieldId": "end_datetime",
+              "fieldId": "fim",
               "fieldValue": "={{ $json.new_end }}"
             },
             {
@@ -1224,7 +1224,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -1325,11 +1325,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "phone",
+              "keyName": "telefone",
               "keyValue": "={{ $json.body.telefone }}"
             }
           ]
@@ -1353,12 +1353,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "condition": "eq",
               "keyValue": "={{ $json.id_organizacao }}"
             }
@@ -1383,7 +1383,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "tableId": "appointments",
+        "tableId": "agendamentos",
         "filters": {
           "conditions": [
             {
@@ -1412,7 +1412,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -1440,7 +1440,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -1453,7 +1453,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "kanban_status",
+              "fieldId": "status_kanban",
               "fieldValue": "consulta_cancelado"
             },
             {
@@ -1664,7 +1664,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -1677,7 +1677,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "kanban_status",
+              "fieldId": "status_kanban",
               "fieldValue": "={{ $('Webhook - Agendas').item.json.body.status_kanban }}"
             },
             {
@@ -1746,7 +1746,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -1759,7 +1759,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "kanban_status",
+              "fieldId": "status_kanban",
               "fieldValue": "agendado"
             },
             {
@@ -2618,7 +2618,7 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "condition": "eq",
                 "keyValue": "={{ $json.body.company }}"
               }
@@ -2740,7 +2740,7 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "keyValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
               }
             ]
@@ -2765,12 +2765,12 @@
       {
         "parameters": {
           "operation": "getAll",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "returnAll": true,
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "condition": "eq",
                 "keyValue": "={{ $('Roteador de Tipos de Operacao').item.json.body.company }}"
               }
@@ -2946,11 +2946,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $json.telefone }}"
               }
             ]
@@ -2975,11 +2975,11 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "condition": "eq",
                 "keyValue": "={{ $('Webhook - Agendas').item.json.body.telefone }}"
               }
@@ -2996,11 +2996,11 @@
                 "fieldValue": "={{ $json.email_paciente }}"
               },
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Webhook - Agendas').item.json.body.company }}"
               },
               {
-                "fieldId": "kanban_status",
+                "fieldId": "status_kanban",
                 "fieldValue": "agendado"
               }
             ]
@@ -3047,12 +3047,12 @@
       {
         "parameters": {
           "operation": "getAll",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "returnAll": true,
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "condition": "eq",
                 "keyValue": "={{ $json.body.company }}"
               }
@@ -3112,11 +3112,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $('Webhook - Agendas').last().json.body.telefone }}"
               }
             ]
@@ -3144,7 +3144,7 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "keyValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
               }
             ]
@@ -3237,11 +3237,11 @@
       },
       {
         "parameters": {
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "organization_id",
+                "fieldId": "id_organizacao",
                 "fieldValue": "={{ $('Webhook - Agendas').last().json.body.company }}"
               },
               {
@@ -3253,11 +3253,11 @@
                 "fieldValue": "={{ $json.time }}"
               },
               {
-                "fieldId": "contact_id",
+                "fieldId": "id_contato",
                 "fieldValue": "={{ $('Webhook - Agendas').last().json.body.sessionId }}"
               },
               {
-                "fieldId": "contact_name",
+                "fieldId": "nome_contato",
                 "fieldValue": "={{ $json.nome_contato }}"
               },
               {
@@ -3265,11 +3265,11 @@
                 "fieldValue": "={{ $('Webhook - Agendas').last().json.body.tipo_atendimento }}"
               },
               {
-                "fieldId": "start_datetime",
+                "fieldId": "inicio",
                 "fieldValue": "={{ $json.inicio }}"
               },
               {
-                "fieldId": "end_datetime",
+                "fieldId": "fim",
                 "fieldValue": "={{ $json.fim }}"
               }
             ]
@@ -3293,7 +3293,7 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
@@ -3306,7 +3306,7 @@
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "kanban_status",
+                "fieldId": "status_kanban",
                 "fieldValue": "agendado"
               },
               {
@@ -3338,7 +3338,7 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "organizations",
+          "tableId": "organizacoes",
           "filters": {
             "conditions": [
               {
@@ -3438,7 +3438,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    organization_id: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    start_datetime: `${datePart}T${timePart}:00-03:00`,\n    end_datetime: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
+          "jsCode": "// -------- 1. RECUPERAR DADOS -------- //\nconst body = $('Webhook - Agendas').first().json.body;\nconst rawISO = body.data_e_hora;\n\n// Tenta pegar a duração do nó anterior (Get Organization Config)\nlet duration = 30; // Valor padrão de segurança\n\ntry {\n  // Pega o valor do banco. Se vier nulo, usa 30.\n  const dbDuration = $('Busca horários de trabalho').first().json.duracao_atendimento;\n  if (dbDuration) {\n    duration = parseInt(dbDuration, 10);\n  }\n} catch (error) {\n  console.log(\"Não foi possível ler a duração do banco, usando 30min.\");\n}\n\n// -------- 2. CÁLCULO DE DATA/HORA -------- //\nconst datePart = rawISO.split('T')[0];\nconst timePart = rawISO.split('T')[1].substring(0, 5);\n\nconst [h, m] = timePart.split(':').map(Number);\n\n// Criamos uma data base para somar os minutos\nconst dateObj = new Date(2000, 0, 1, h, m, 0);\ndateObj.setMinutes(dateObj.getMinutes() + duration);\n\n// Formatar Hora Final (HH:mm)\nconst endH = String(dateObj.getHours()).padStart(2, '0');\nconst endM = String(dateObj.getMinutes()).padStart(2, '0');\nconst endTimePart = `${endH}:${endM}:00`;\n\n// -------- 3. MONTAR RETORNO -------- //\nreturn [{\n  json: {\n    id_organizacao: body.company,\n    patient_id: body.sessionId,\n    patient_name: body.nome_paciente,\n    type: body.tipo_atendimento,\n    email: body.email_paciente,\n    phone: body.telefone,\n    observacoes: body[\"observações\"],\n    \n    date: datePart,\n    time: timePart,\n    \n    // ISOs calculados com a duração dinâmica\n    inicio: `${datePart}T${timePart}:00-03:00`,\n    fim: `${datePart}T${endTimePart}-03:00`,\n    \n    duration_used: duration // Para você conferir se pegou 120\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -3452,11 +3452,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $json.body.telefone }}"
               }
             ]
@@ -3480,12 +3480,12 @@
       {
         "parameters": {
           "operation": "getAll",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "limit": 1,
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "condition": "eq",
                 "keyValue": "={{ $json.id_organizacao }}"
               }
@@ -3514,7 +3514,7 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "keyValue": "={{ $json.id_organizacao }}"
               }
             ]
@@ -3551,7 +3551,7 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "filters": {
             "conditions": [
               {
@@ -3560,7 +3560,7 @@
                 "keyValue": "={{ $('Busca Organizacao').item.json.id }}"
               },
               {
-                "keyName": "contact_id",
+                "keyName": "id_contato",
                 "condition": "eq",
                 "keyValue": "={{ $('Busca Paciente - Reagendamento').item.json.id }}"
               }
@@ -3577,11 +3577,11 @@
                 "fieldValue": "={{ $json.new_time }}"
               },
               {
-                "fieldId": "start_datetime",
+                "fieldId": "inicio",
                 "fieldValue": "={{ $json.new_start }}"
               },
               {
-                "fieldId": "end_datetime",
+                "fieldId": "fim",
                 "fieldValue": "={{ $json.new_end }}"
               },
               {
@@ -3608,7 +3608,7 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "organizations",
+          "tableId": "organizacoes",
           "filters": {
             "conditions": [
               {
@@ -3709,11 +3709,11 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
-                "keyName": "phone",
+                "keyName": "telefone",
                 "keyValue": "={{ $json.body.telefone }}"
               }
             ]
@@ -3737,12 +3737,12 @@
       {
         "parameters": {
           "operation": "getAll",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "returnAll": true,
           "filters": {
             "conditions": [
               {
-                "keyName": "organization_id",
+                "keyName": "id_organizacao",
                 "condition": "eq",
                 "keyValue": "={{ $json.id_organizacao }}"
               }
@@ -3767,7 +3767,7 @@
       {
         "parameters": {
           "operation": "delete",
-          "tableId": "appointments",
+          "tableId": "agendamentos",
           "filters": {
             "conditions": [
               {
@@ -3796,7 +3796,7 @@
       {
         "parameters": {
           "operation": "get",
-          "tableId": "organizations",
+          "tableId": "organizacoes",
           "filters": {
             "conditions": [
               {
@@ -3824,7 +3824,7 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
@@ -3837,7 +3837,7 @@
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "kanban_status",
+                "fieldId": "status_kanban",
                 "fieldValue": "consulta_cancelado"
               },
               {
@@ -4048,7 +4048,7 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
@@ -4061,7 +4061,7 @@
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "kanban_status",
+                "fieldId": "status_kanban",
                 "fieldValue": "={{ $('Webhook - Agendas').item.json.body.status_kanban }}"
               },
               {
@@ -4130,7 +4130,7 @@
       {
         "parameters": {
           "operation": "update",
-          "tableId": "contacts",
+          "tableId": "contatos",
           "filters": {
             "conditions": [
               {
@@ -4143,7 +4143,7 @@
           "fieldsUi": {
             "fieldValues": [
               {
-                "fieldId": "kanban_status",
+                "fieldId": "status_kanban",
                 "fieldValue": "agendado"
               },
               {

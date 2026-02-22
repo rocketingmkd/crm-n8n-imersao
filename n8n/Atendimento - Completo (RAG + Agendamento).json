@@ -264,12 +264,12 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "whatsapp_instances",
+        "tableId": "instancias_whatsapp",
         "returnAll": true,
         "filters": {
           "conditions": [
             {
-              "keyName": "instance_name",
+              "keyName": "nome_instancia",
               "condition": "eq",
               "keyValue": "={{ $json.body.instanceName }}"
             }
@@ -294,11 +294,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $json.id_organizacao }}"
             }
           ]
@@ -323,11 +323,11 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "agent_ia_config",
+        "tableId": "config_agente_ia",
         "filters": {
           "conditions": [
             {
-              "keyName": "organization_id",
+              "keyName": "id_organizacao",
               "keyValue": "={{ $('Filtra dados da instancias de Whatsapp').item.json.id_organizacao }}"
             }
           ]
@@ -351,7 +351,7 @@
     {
       "parameters": {
         "operation": "get",
-        "tableId": "organizations",
+        "tableId": "organizacoes",
         "filters": {
           "conditions": [
             {
@@ -750,13 +750,13 @@
             },
             {
               "id": "9034c617-3f66-4dc2-ad62-f5a33bf6a88f",
-              "name": "session_id",
+              "name": "id_sessao",
               "value": "={{ $('Classifica Mensagem').item.json.id_sessao }}",
               "type": "string"
             },
             {
               "id": "745b4136-d12a-418e-bb90-99f116b96790",
-              "name": "organization_id",
+              "name": "id_organizacao",
               "value": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
               "type": "string"
             }
@@ -776,7 +776,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -1263,15 +1263,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "={{$('Normaliza Dados para o Agente').first().json.mensagem}}",
-            "organization_id": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
+            "id_organizacao": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4o"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1630,7 +1630,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT \n  session_id,\n  message->>'type' AS papel,\n  message->>'content' AS texto\nFROM {{ $('Webhook UAZAPI').last().json.body.instanceName.replace(/-/g, '_').toLowerCase() }}_chats\nWHERE \n  session_id = '{{ $('Classifica Mensagem').item.json.id_sessao }}'\n  AND data::date = CURRENT_DATE\nORDER BY id ASC;",
+        "query": "SELECT \n  id_sessao,\n  message->>'type' AS papel,\n  message->>'content' AS texto\nFROM {{ $('Webhook UAZAPI').last().json.body.instanceName.replace(/-/g, '_').toLowerCase() }}_chats\nWHERE \n  id_sessao = '{{ $('Classifica Mensagem').item.json.id_sessao }}'\n  AND data::date = CURRENT_DATE\nORDER BY id ASC;",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -1820,7 +1820,7 @@
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "contatos",
         "filters": {
           "conditions": [
             {
@@ -1833,7 +1833,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "summary",
+              "fieldId": "resumo",
               "fieldValue": "={{ $('Chain de Resumo').last().json.text }}"
             }
           ]
@@ -2280,13 +2280,13 @@
             },
             {
               "id": "9034c617-3f66-4dc2-ad62-f5a33bf6a88f",
-              "name": "session_id",
+              "name": "id_sessao",
               "value": "={{ $('Classifica Mensagem').item.json.id_sessao }}",
               "type": "string"
             },
             {
               "id": "745b4136-d12a-418e-bb90-99f116b96790",
-              "name": "organization_id",
+              "name": "id_organizacao",
               "value": "={{ $('Filtra dados da instancias de Whatsapp').item.json.id_organizacao }}",
               "type": "string"
             }
@@ -2733,15 +2733,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "={{ $('Agrega em uma unica lista').item.json.data }}",
-            "organization_id": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
+            "id_organizacao": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
             "output": "={{$json.text}}",
             "llmModel": "gpt-4o-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -3068,15 +3068,15 @@
           "mappingMode": "defineBelow",
           "value": {
             "input": "={{ $('Normaliza Dados para o Agente').item.json.mensagem }}",
-            "organization_id": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
+            "id_organizacao": "={{ $('Filtra dados da instancias de Whatsapp').last().json.id_organizacao }}",
             "output": "={{$json.output}}",
             "llmModel": "gpt-4o-mini"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "organization_id",
-              "displayName": "organization_id",
+              "id": "id_organizacao",
+              "displayName": "id_organizacao",
               "required": false,
               "defaultMatch": false,
               "display": true,

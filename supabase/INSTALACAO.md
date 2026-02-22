@@ -110,17 +110,17 @@ supabase login
 supabase link --project-ref SEU_PROJECT_ID
 
 # Deploy de todas as functions
-supabase functions deploy create-organization
-supabase functions deploy manage-organization-users
-supabase functions deploy update-organization
+supabase functions deploy criar-organizacao
+supabase functions deploy gerenciar-usuarios-organizacao
+supabase functions deploy atualizar-organizacao
 ```
 
 #### Configurar "Verify JWT" nas Edge Functions
 
 No dashboard Supabase:
 1. Vá em **Edge Functions**
-2. Para `create-organization`: desative **Verify JWT** (a função valida manualmente)
-3. Para `manage-organization-users` e `update-organization`: idem
+2. Para `criar-organizacao`: desative **Verify JWT** (a função valida manualmente)
+3. Para `gerenciar-usuarios-organizacao` e `atualizar-organizacao`: idem
 
 ---
 
@@ -135,15 +135,14 @@ VITE_SUPABASE_PROJECT_ID=SEU_PROJECT_ID
 
 # Webhooks n8n
 VITE_N8N_WEBHOOK_URL=https://seu-n8n.com/webhook/
-VITE_GESTAO_VPS_WEBHOOK_URL=https://seu-n8n.com/webhook/gestao-vps-completa
 ```
 
 ---
 
-### 7. Configurar Storage (logos)
+### 7. Configurar Storage (logos e avatares)
 
-O bucket `organization-logos` é criado automaticamente pelo script SQL.
-Verifique em **Storage** que o bucket existe e está como **Public**.
+Os buckets `organization-logos` (logos das empresas) e `avatars` (fotos dos usuários) são criados automaticamente pelo script SQL.
+Verifique em **Storage** que os buckets existem e estão como **Public**. Se o upload de foto em "Minha conta" falhar, confira se o bucket `avatars` existe e se as políticas de Storage (INSERT para authenticated na pasta do usuário) estão ativas.
 
 ---
 
@@ -190,4 +189,4 @@ Verifique se o RLS está configurado corretamente. As policies dependem das fun�
 Desative **Verify JWT** na edge function pelo dashboard.
 
 ### Tabelas de conversas (`*_conversas`)
-Essas tabelas são criadas dinamicamente pelo n8n ao cadastrar uma organização. Não são incluídas no install pois dependem do `slug` de cada organização.
+Essas tabelas são criadas dinamicamente pelo n8n ao cadastrar uma organização. Não são incluídas no install pois dependem do `codigo` de cada organização.

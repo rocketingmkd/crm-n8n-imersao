@@ -18,10 +18,12 @@ import {
   Sparkles,
   Sun,
   Moon,
-  X
+  X,
+  UserCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,7 @@ const allNavigationItems = [
   { name: "Agente de IA", href: "/app/agent-ia", icon: Bot, requiredFeature: null },
   { name: "Conhecimento", href: "/app/conhecimento", icon: BookOpen, requiredFeature: 'base_conhecimento' as const },
   { name: "WhatsApp", href: "/app/integrations", icon: Plug, requiredFeature: null },
+  { name: "Minha conta", href: "/app/minha-conta", icon: UserCircle, requiredFeature: null },
 ];
 
 function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: { 
@@ -145,18 +148,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             "flex items-center transition-all duration-300",
             isCollapsed ? "justify-center" : "gap-3"
           )}>
-            {organization?.url_logo ? (
-              <img
-                src={organization.url_logo}
-                alt={organization.nome}
-                className={cn(
-                  "w-auto object-contain transition-all duration-300",
-                  isCollapsed ? "h-8 max-w-[40px]" : "h-9 max-w-[140px]"
-                )}
-              />
-            ) : (
-              <AppLogo variant="org" height={isCollapsed ? 28 : 36} />
-            )}
+            <AppLogo variant="org" height={isCollapsed ? 28 : 36} />
           </div>
 
           {organization && !isCollapsed && (
@@ -285,11 +277,12 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             "flex items-center rounded-lg bg-muted/50 transition-all duration-300",
             isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5"
           )}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-              <span className="text-xs font-bold text-primary-foreground">
-                {profile?.nome_completo?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
+            <Avatar className="h-8 w-8 shrink-0 border border-border">
+              <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground truncate">
@@ -480,11 +473,7 @@ export default function Layout() {
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
-          {organization?.url_logo ? (
-            <img src={organization.url_logo} alt={organization.nome} className="h-8 w-auto max-w-[120px] object-contain" />
-          ) : (
-            <AppLogo variant="org" height={28} />
-          )}
+          <AppLogo variant="org" height={28} />
         </div>
         
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

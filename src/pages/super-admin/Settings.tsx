@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY } from "@/components/AppLogo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -73,8 +74,9 @@ export default function SuperAdminSettings() {
         chave_elevenlabs: data.chave_elevenlabs || null,
       }).eq('id', '00000000-0000-0000-0000-000000000001');
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['cores-plataforma'] });
-      toast.success('Configurações salvas!');
+      queryClient.invalidateQueries({ queryKey: ["cores-plataforma"] });
+      queryClient.invalidateQueries({ queryKey: CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY });
+      toast.success("Configurações salvas!");
     } catch (error: any) {
       toast.error(error.message || 'Erro ao salvar');
     } finally {

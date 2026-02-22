@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Cadastro
-  const signUp = async ({ email, password, fullName, organizationName }: SignUpData) => {
+  const signUp = async ({ email, password, fullName, organizationName, avatarFile }: SignUpData) => {
     try {
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -134,7 +134,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (perfilError) throw perfilError;
 
-      // 5. Criar configurações padrão para a organização
+      // 5. Upload da foto (avatar) se fornecida
+      let avatarUrl: string | null = null;
+      if (avatarFile && avatarFile.size > 0) {
+        const ext = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const path = `${authData.user.id}/avatar.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+          avatarUrl = urlData?.publicUrl ?? null;
+          if (avatarUrl) {
+            await supabase.from('perfis').update({ url_avatar: avatarUrl }).eq('id', authData.user.id);
+          }
+        }
+      }
+
+      // 6. Criar configurações padrão para a organização
       const { error: configError } = await supabase
         .from('configuracoes')
         .insert({
@@ -188,6 +205,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshProfile = async () => {
+    if (user?.id) await loadUserData(user.id);
+  };
+
   // Reset de senha
   const resetPassword = async (email: string) => {
     try {
@@ -214,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

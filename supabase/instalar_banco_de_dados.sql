@@ -2,7 +2,7 @@
 -- FlowAtend — Instalação do Banco de Dados
 -- ============================================================
 -- Execute este arquivo UMA VEZ em um banco Supabase limpo.
--- Representa o estado final após todas as migrations (001–037).
+-- Representa o estado final e definitivo do banco de dados.
 -- Inclui: tabelas, funções, RLS, storage bucket de logos.
 -- ============================================================
 
@@ -41,8 +41,8 @@ BEGIN
 END;
 $$;
 
--- Retorna o organization_id do usuário autenticado
-CREATE OR REPLACE FUNCTION get_user_organization_id()
+-- Retorna o id_organizacao do usuário autenticado
+CREATE OR REPLACE FUNCTION obter_id_organizacao_usuario()
 RETURNS uuid
 LANGUAGE sql
 SECURITY DEFINER
@@ -54,7 +54,7 @@ AS $$
 $$;
 
 -- Verifica se o usuário autenticado é super admin
-CREATE OR REPLACE FUNCTION is_user_super_admin()
+CREATE OR REPLACE FUNCTION usuario_e_super_admin()
 RETURNS boolean
 LANGUAGE sql
 SECURITY DEFINER
@@ -99,10 +99,10 @@ CREATE TABLE IF NOT EXISTS organizacoes (
 ALTER TABLE organizacoes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_organizacoes" ON organizacoes
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_ver_propria_organizacao" ON organizacoes
-  FOR SELECT USING (id = get_user_organization_id());
+  FOR SELECT USING (id = obter_id_organizacao_usuario());
 
 GRANT ALL ON organizacoes TO authenticated;
 
@@ -129,16 +129,16 @@ CREATE TABLE IF NOT EXISTS perfis (
 ALTER TABLE perfis ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_perfis" ON perfis
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_ver_perfis_da_org" ON perfis
-  FOR SELECT USING (id_organizacao = get_user_organization_id());
+  FOR SELECT USING (id_organizacao = obter_id_organizacao_usuario());
 
 CREATE POLICY "usuarios_atualizar_proprio_perfil" ON perfis
   FOR UPDATE USING (id = auth.uid());
 
 CREATE POLICY "usuarios_criar_perfil_na_org" ON perfis
-  FOR INSERT WITH CHECK (id_organizacao = get_user_organization_id());
+  FOR INSERT WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON perfis TO authenticated;
 
@@ -173,11 +173,11 @@ CREATE INDEX IF NOT EXISTS contatos_situacao_idx        ON contatos(situacao);
 ALTER TABLE contatos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_contatos" ON contatos
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_contatos_da_org" ON contatos
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON contatos TO authenticated;
 
@@ -214,11 +214,11 @@ CREATE INDEX IF NOT EXISTS agendamentos_id_sessao_idx      ON agendamentos(id_se
 ALTER TABLE agendamentos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_agendamentos" ON agendamentos
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_agendamentos_da_org" ON agendamentos
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON agendamentos TO authenticated;
 
@@ -239,11 +239,11 @@ CREATE TABLE IF NOT EXISTS configuracoes (
 ALTER TABLE configuracoes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_configuracoes" ON configuracoes
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_configuracoes_da_org" ON configuracoes
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON configuracoes TO authenticated;
 
@@ -280,11 +280,11 @@ CREATE TRIGGER trigger_config_agente_ia_atualizado_em
 ALTER TABLE config_agente_ia ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_config_agente_ia" ON config_agente_ia
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_config_agente_ia_da_org" ON config_agente_ia
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON config_agente_ia TO authenticated;
 
@@ -317,11 +317,11 @@ CREATE TRIGGER trigger_instancias_whatsapp_atualizado_em
 ALTER TABLE instancias_whatsapp ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_instancias_whatsapp" ON instancias_whatsapp
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_instancias_whatsapp_da_org" ON instancias_whatsapp
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON instancias_whatsapp TO authenticated;
 
@@ -396,11 +396,11 @@ CREATE TRIGGER trigger_horarios_trabalho_atualizado_em
 ALTER TABLE horarios_trabalho ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_horarios_trabalho" ON horarios_trabalho
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_crud_horarios_da_org" ON horarios_trabalho
-  USING (id_organizacao = get_user_organization_id())
-  WITH CHECK (id_organizacao = get_user_organization_id());
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT ALL ON horarios_trabalho TO authenticated;
 
@@ -442,7 +442,7 @@ CREATE POLICY "todos_podem_ver_planos" ON planos_assinatura
   FOR SELECT USING (true);
 
 CREATE POLICY "super_admin_gerencia_planos" ON planos_assinatura
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 GRANT SELECT ON planos_assinatura TO authenticated;
 GRANT ALL    ON planos_assinatura TO service_role;
@@ -514,10 +514,10 @@ CREATE INDEX IF NOT EXISTS uso_tokens_criado_em_idx      ON uso_tokens(criado_em
 ALTER TABLE uso_tokens ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_uso_tokens" ON uso_tokens
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "usuarios_ver_uso_tokens_da_org" ON uso_tokens
-  FOR SELECT USING (id_organizacao = get_user_organization_id());
+  FOR SELECT USING (id_organizacao = obter_id_organizacao_usuario());
 
 GRANT SELECT ON uso_tokens TO authenticated;
 GRANT ALL    ON uso_tokens TO service_role;
@@ -546,12 +546,17 @@ CREATE TRIGGER trigger_configuracoes_globais_atualizado_em
 ALTER TABLE configuracoes_globais ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_gerencia_configuracoes_globais" ON configuracoes_globais
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 CREATE POLICY "autenticados_podem_ver_configuracoes_globais" ON configuracoes_globais
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
+-- Permite leitura pública (ex: logo na página de login, cor da plataforma)
+CREATE POLICY "anonimos_podem_ver_configuracoes_globais" ON configuracoes_globais
+  FOR SELECT TO anon USING (true);
+
 GRANT SELECT ON configuracoes_globais TO authenticated;
+GRANT SELECT ON configuracoes_globais TO anon;
 GRANT ALL    ON configuracoes_globais TO service_role;
 
 -- Registro padrão da plataforma
@@ -575,7 +580,7 @@ CREATE TABLE IF NOT EXISTS documentos (
 ALTER TABLE documentos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_documentos" ON documentos
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 GRANT ALL ON documentos TO service_role;
 GRANT SELECT, INSERT, UPDATE ON documentos TO authenticated;
@@ -683,7 +688,7 @@ CREATE TABLE IF NOT EXISTS clientes_followup (
 ALTER TABLE clientes_followup ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "super_admin_acesso_total_followup" ON clientes_followup
-  USING (is_user_super_admin());
+  USING (usuario_e_super_admin());
 
 GRANT ALL ON clientes_followup TO service_role;
 
@@ -730,6 +735,64 @@ DO $$ BEGIN
     CREATE POLICY "logos_publicas" ON storage.objects
       FOR SELECT
       USING (bucket_id = 'organization-logos');
+  END IF;
+END $$;
+
+-- ============================================================
+-- STORAGE — Bucket para fotos de perfil (avatares)
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars',
+  'avatars',
+  true,
+  2097152,
+  ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'usuarios_podem_enviar_avatar' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "usuarios_podem_enviar_avatar" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (
+        bucket_id = 'avatars'
+        AND (
+          (storage.foldername(name))[1] = auth.uid()::text
+          OR name LIKE auth.uid()::text || '/%'
+        )
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'usuarios_podem_atualizar_avatar' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "usuarios_podem_atualizar_avatar" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (
+        bucket_id = 'avatars'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'usuarios_podem_excluir_avatar' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "usuarios_podem_excluir_avatar" ON storage.objects
+      FOR DELETE TO authenticated
+      USING (
+        bucket_id = 'avatars'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'avatars_publicos' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "avatars_publicos" ON storage.objects
+      FOR SELECT
+      USING (bucket_id = 'avatars');
   END IF;
 END $$;
 
