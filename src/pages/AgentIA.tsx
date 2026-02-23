@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { identificadorParaTabela } from "@/lib/conversas";
 import { toast } from "sonner";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
 
@@ -309,23 +310,12 @@ export default function AgentIA() {
       }
 
       // Função auxiliar para converter identificador para nome da tabela
-      const getTableName = (identificador: string): string => {
-        const parts = identificador.split('-');
-        if (parts.length > 1) {
-          const lastPart = parts[parts.length - 1];
-          if (/^\d{10,}$/.test(lastPart)) {
-            parts.pop();
-          }
-        }
-        return parts.join('_') + '_conversas';
-      };
-
       if (!organization?.identificador) {
         setIsLoadingStats(false);
         return;
       }
 
-      const tableName = getTableName(organization.identificador);
+      const tableName = identificadorParaTabela(organization.identificador);
       
       // Buscar todas as mensagens para cálculos completos
       const { data: allMessages, error: messagesError } = await (supabase as any)

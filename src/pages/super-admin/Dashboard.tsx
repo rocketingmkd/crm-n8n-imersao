@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { fetchContagemMensagensPorOrg } from "@/lib/conversas";
 import { toast } from "sonner";
 
 type PeriodFilter = "7d" | "14d" | "30d" | "90d" | "all";
@@ -60,7 +61,7 @@ export default function SuperAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [tokenRecords, setTokenRecords] = useState<{ id_organizacao: string; total_tokens: number; custo_reais: number; criado_em: string }[]>([]);
-  const [msgRecords, setMsgRecords] = useState<{ id_organizacao: string; criado_em?: string }[]>([]);
+  const [msgCountByOrgId, setMsgCountByOrgId] = useState<Record<string, number>>({});
   const [docRecords, setDocRecords] = useState<{ id?: number; metadados?: { organizacao?: string }; titulo?: string | null }[]>([]);
   const [counts, setCounts] = useState<{
     totalOrgs: number;
@@ -77,7 +78,6 @@ export default function SuperAdminDashboard() {
         const [
           orgsRes,
           tokensRes,
-          msgRes,
           docsRes,
           countOrgs,
           countActive,
@@ -87,7 +87,6 @@ export default function SuperAdminDashboard() {
         ] = await Promise.all([
           supabase.from("organizacoes").select("id, nome, identificador, criado_em, ativo").order("nome"),
           supabase.from("uso_tokens").select("id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
-          supabase.from("mensagens").select("id_organizacao, criado_em").then((r) => r),
           supabase.from("documentos").select("id, metadados, titulo").then((r) => r),
           supabase.from("organizacoes").select("*", { count: "exact", head: true }),
           supabase.from("organizacoes").select("*", { count: "exact", head: true }).eq("ativo", true),
@@ -97,9 +96,9 @@ export default function SuperAdminDashboard() {
         ]);
         if (orgsRes.error) throw orgsRes.error;
         if (tokensRes.error) throw tokensRes.error;
-        setOrgs(orgsRes.data || []);
+        const orgList = orgsRes.data || [];
+        setOrgs(orgList);
         setTokenRecords(tokensRes.data || []);
-        setMsgRecords(msgRes.error ? [] : (msgRes.data || []));
         setDocRecords(docsRes.error ? [] : (docsRes.data || []));
         setCounts({
           totalOrgs: countOrgs.count ?? 0,
@@ -108,6 +107,13 @@ export default function SuperAdminDashboard() {
           totalPatients: countPatients.count ?? 0,
           totalAppointments: countAppointments.count ?? 0,
         });
+        const since = period === "all" ? undefined : getDaysAgo(parseInt(period));
+        const msgCounts = await fetchContagemMensagensPorOrg(
+          supabase,
+          orgList.map((o) => ({ id: o.id, identificador: o.identificador ?? null })),
+          { since }
+        );
+        setMsgCountByOrgId(msgCounts);
       } catch (e) {
         console.error(e);
         toast.error("Erro ao carregar dados do dashboard");
@@ -116,7 +122,7 @@ export default function SuperAdminDashboard() {
       }
     };
     load();
-  }, []);
+  }, [period]);
 
   const orgMap = useMemo(() => new Map(orgs.map((o) => [o.id, o])), [orgs]);
 
@@ -128,13 +134,6 @@ export default function SuperAdminDashboard() {
     if (selectedOrg !== "all") data = data.filter((r) => r.id_organizacao === selectedOrg);
     return data;
   }, [tokenRecords, since, selectedOrg]);
-
-  const filteredMessages = useMemo(() => {
-    let data = msgRecords;
-    if (since) data = data.filter((r) => r.criado_em && new Date(r.criado_em) >= since);
-    if (selectedOrg !== "all") data = data.filter((r) => r.id_organizacao === selectedOrg);
-    return data;
-  }, [msgRecords, since, selectedOrg]);
 
   const filesByOrg = useMemo(() => {
     const byIdentificador: Record<string, Set<string>> = {};
@@ -155,7 +154,10 @@ export default function SuperAdminDashboard() {
 
   const totalTokens = filteredTokens.reduce((s, r) => s + (r.total_tokens || 0), 0);
   const totalCost = filteredTokens.reduce((s, r) => s + (Number(r.custo_reais) || 0), 0);
-  const totalMensagens = filteredMessages.length;
+  const totalMensagens = useMemo(() => {
+    if (selectedOrg === "all") return Object.values(msgCountByOrgId).reduce((a, b) => a + b, 0);
+    return msgCountByOrgId[selectedOrg] ?? 0;
+  }, [msgCountByOrgId, selectedOrg]);
   const totalArquivosRag = useMemo(() => {
     if (selectedOrg === "all") return Object.values(filesByOrg).reduce((a, b) => a + b, 0);
     return filesByOrg[selectedOrg] ?? 0;

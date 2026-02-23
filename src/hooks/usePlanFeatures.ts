@@ -1,6 +1,7 @@
 import { useAuth } from "./useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { fetchContagemMensagensPorOrg, primeiroDiaDoMesAtual } from "@/lib/conversas";
 import { useCallback, useMemo } from "react";
 
 export interface PlanLimits {
@@ -117,8 +118,13 @@ export function usePlanFeatures() {
           break;
         }
         case 'max_mensagens_whatsapp_mes': {
-          // TODO: Implementar quando houver tabela de mensagens por org/mês
-          current = 0;
+          if (!organization?.id || !organization?.identificador) break;
+          const counts = await fetchContagemMensagensPorOrg(
+            supabase,
+            [{ id: organization.id, identificador: organization.identificador }],
+            { since: primeiroDiaDoMesAtual() }
+          );
+          current = counts[organization.id] ?? 0;
           break;
         }
         case 'max_arquivos_conhecimento': {

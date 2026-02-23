@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { fetchContagemMensagensPorOrg, primeiroDiaDoMesAtual } from "@/lib/conversas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -146,6 +147,12 @@ export default function Relatorios() {
         if (id) docsPorIdentificador[id] = (docsPorIdentificador[id] || 0) + 1;
       });
 
+      const usoMensagensPorOrg = await fetchContagemMensagensPorOrg(
+        supabase,
+        (orgs || []).map((o: any) => ({ id: o.id, identificador: o.identificador ?? null })),
+        { since: primeiroDiaDoMesAtual() }
+      );
+
       return (orgs || []).map((org: any) => {
         const plan = org.plano_assinatura ? planMap.get(org.plano_assinatura) : null;
         return {
@@ -158,7 +165,7 @@ export default function Relatorios() {
           max_usuarios: plan?.max_usuarios ?? null,
           max_contatos: plan?.max_contatos ?? null,
           max_arquivos: plan?.max_arquivos ?? null,
-          uso_mensagens: 0,
+          uso_mensagens: usoMensagensPorOrg[org.id] ?? 0,
           uso_usuarios: perfisPorOrg[org.id] || 0,
           uso_contatos: contatosPorOrg[org.id] || 0,
           uso_arquivos: docsPorIdentificador[org.identificador] || 0,

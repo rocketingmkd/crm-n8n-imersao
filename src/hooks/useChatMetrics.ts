@@ -1,23 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { identificadorParaTabela } from "@/lib/conversas";
 import { useAuth } from "./useAuth";
-
-// Função para converter identificador da organização para nome da tabela de conversas
-function identificadorParaTabela(identificador: string): string {
-  // Remover o número do final (timestamp)
-  const parts = identificador.split('-');
-  
-  // Remover o último elemento se for um número grande (timestamp)
-  if (parts.length > 1) {
-    const lastPart = parts[parts.length - 1];
-    if (/^\d{10,}$/.test(lastPart)) {
-      parts.pop();
-    }
-  }
-  
-  // Juntar com underscore e adicionar _chats
-  return parts.join('_') + '_conversas';
-}
 
 interface ChatMessage {
   id: string;

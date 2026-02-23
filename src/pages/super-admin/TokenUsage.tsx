@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import { fetchContagemMensagensPorOrg } from "@/lib/conversas";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -86,20 +87,20 @@ export default function TokenUsage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [period]);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [tokenRes, orgsRes, docsRes, msgRes] = await Promise.all([
+      const [tokenRes, orgsRes, docsRes] = await Promise.all([
         supabase.from("uso_tokens").select("id, id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
         supabase.from("organizacoes").select("id, nome, identificador, url_logo"),
         supabase.from("documentos").select("id, metadados, titulo"),
-        supabase.from("mensagens").select("id_organizacao").then((r) => r),
       ]);
       if (tokenRes.error) throw tokenRes.error;
       setRecords(tokenRes.data || []);
-      setOrgs(orgsRes.error ? [] : (orgsRes.data || []));
+      const orgList = orgsRes.error ? [] : (orgsRes.data || []);
+      setOrgs(orgList);
 
       // Arquivos RAG: contar por arquivo único (organização + nome do arquivo/título), não por linha
       const filesByIdentificador: Record<string, Set<string>> = {};
@@ -116,13 +117,9 @@ export default function TokenUsage() {
       Object.entries(filesByIdentificador).forEach(([org, set]) => { byIdentificador[org] = set.size; });
       setDocCountByIdentificador(byIdentificador);
 
-      // Mensagens: contar por id_organizacao
-      const byOrgId: Record<string, number> = {};
-      if (!msgRes.error && msgRes.data) {
-        (msgRes.data as { id_organizacao: string }[]).forEach((r) => {
-          if (r.id_organizacao) byOrgId[r.id_organizacao] = (byOrgId[r.id_organizacao] || 0) + 1;
-        });
-      }
+      // Mensagens: contagem dinâmica nas tabelas {identificador}_conversas (n8n)
+      const since = period === "all" ? undefined : getDaysAgo(parseInt(period));
+      const byOrgId = await fetchContagemMensagensPorOrg(supabase, orgList.map((o) => ({ id: o.id, identificador: o.identificador ?? null })), { since });
       setMsgCountByOrgId(byOrgId);
     } catch (error) {
       console.error("Erro:", error);
@@ -268,7 +265,7 @@ export default function TokenUsage() {
   const kpis = [
     { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap },
     { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign },
-    { title: "Consumo de mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabela mensagens", icon: MessageSquare },
+    { title: "Consumo de mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabelas {empresa}_conversas (n8n)", icon: MessageSquare },
     { title: "Arquivos no RAG", value: totalArquivosRag.toLocaleString("pt-BR"), sub: "Arquivos únicos por empresa", icon: FileText },
     { title: "Média por Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp },
     { title: "Empresas Ativas", value: orgGroups.length, icon: Activity },
