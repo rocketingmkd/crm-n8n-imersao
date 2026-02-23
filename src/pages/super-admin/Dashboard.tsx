@@ -85,6 +85,7 @@ export default function SuperAdminDashboard() {
     totalAppointments: number;
   }>({ totalOrgs: 0, activeOrgs: 0, totalUsers: 0, totalPatients: 0, totalAppointments: 0 });
   const [filteredCounts, setFilteredCounts] = useState<{ users: number; patients: number; appointments: number }>({ users: 0, patients: 0, appointments: 0 });
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -136,8 +137,10 @@ export default function SuperAdminDashboard() {
   // Fetch filtered counts when org filter changes
   useEffect(() => {
     const loadFiltered = async () => {
+      setIsFilterLoading(true);
       if (selectedOrg === "all") {
         setFilteredCounts({ users: counts.totalUsers, patients: counts.totalPatients, appointments: counts.totalAppointments });
+        setIsFilterLoading(false);
         return;
       }
       try {
@@ -153,6 +156,8 @@ export default function SuperAdminDashboard() {
         });
       } catch (e) {
         console.error(e);
+      } finally {
+        setIsFilterLoading(false);
       }
     };
     loadFiltered();
@@ -272,16 +277,16 @@ export default function SuperAdminDashboard() {
   }
 
   const kpis = [
-    { title: "Organizações", value: selectedOrg === "all" ? counts.totalOrgs : 1, description: selectedOrg === "all" ? `${counts.activeOrgs} ativas` : "Filtrada", icon: Building2 },
-    { title: "Usuários", value: filteredCounts.users, description: selectedOrg === "all" ? "Cadastrados" : "Na organização", icon: Users },
-    { title: "Clientes", value: filteredCounts.patients, description: selectedOrg === "all" ? "Em todas as orgs" : "Na organização", icon: Activity },
-    { title: "Compromissos", value: filteredCounts.appointments, description: selectedOrg === "all" ? "Agendamentos" : "Na organização", icon: TrendingUp },
-    { title: "Tokens", value: totalTokens.toLocaleString("pt-BR"), description: "No período", icon: Zap },
-    { title: "Custo (R$)", value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: "No período", icon: DollarSign },
-    { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), description: "No período", icon: MessageSquare },
-    { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), description: "Arquivos únicos", icon: FileText },
-    { title: "Média Custo/Emp.", value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: "Visão média", icon: DollarSign },
-    { title: "Média Tokens/Emp.", value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: "Visão média", icon: Zap },
+    { title: "Organizações", value: selectedOrg === "all" ? counts.totalOrgs : 1, description: selectedOrg === "all" ? `${counts.activeOrgs} ativas` : "Filtrada", icon: Building2, filterable: true },
+    { title: "Usuários", value: filteredCounts.users, description: selectedOrg === "all" ? "Cadastrados" : "Na organização", icon: Users, filterable: true },
+    { title: "Clientes", value: filteredCounts.patients, description: selectedOrg === "all" ? "Em todas as orgs" : "Na organização", icon: Activity, filterable: true },
+    { title: "Compromissos", value: filteredCounts.appointments, description: selectedOrg === "all" ? "Agendamentos" : "Na organização", icon: TrendingUp, filterable: true },
+    { title: "Tokens", value: totalTokens.toLocaleString("pt-BR"), description: "No período", icon: Zap, filterable: false },
+    { title: "Custo (R$)", value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: "No período", icon: DollarSign, filterable: false },
+    { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), description: "No período", icon: MessageSquare, filterable: false },
+    { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), description: "Arquivos únicos", icon: FileText, filterable: false },
+    { title: "Média Custo/Emp.", value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: "Visão média", icon: DollarSign, filterable: false },
+    { title: "Média Tokens/Emp.", value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: "Visão média", icon: Zap, filterable: false },
   ];
 
   return (
@@ -340,7 +345,11 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
               <div className="text-lg md:text-2xl font-bold text-foreground truncate" title={String(kpi.value)}>
-                {kpi.value}
+                {isFilterLoading && kpi.filterable ? (
+                  <div className="h-6 w-12 rounded-md bg-muted/50 animate-pulse" />
+                ) : (
+                  kpi.value
+                )}
               </div>
               <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.description}</p>
             </div>
