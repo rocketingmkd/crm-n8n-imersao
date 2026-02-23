@@ -28,7 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LimitAlert } from "@/components/LimitAlert";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export default function Conhecimento() {
   const { profile, organization } = useAuth();
