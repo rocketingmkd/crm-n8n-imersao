@@ -24,7 +24,7 @@ import {
 import { ListTodo, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function TiposAtendimento() {
+export default function TiposAtendimento({ embedded = false }: { embedded?: boolean }) {
   const { data: tipos = [], isLoading } = useTiposAtendimento();
   const criar = useCriarTipoAtendimento();
   const atualizar = useAtualizarTipoAtendimento();
@@ -81,16 +81,18 @@ export default function TiposAtendimento() {
   };
 
   return (
-    <div className="container max-w-4xl py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <ListTodo className="h-7 w-7 text-primary" />
-          Tipos de Atendimento
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Cadastre os tipos de atendimento usados na Agenda e no Dashboard (ex.: Consulta, Retorno, Exame).
-        </p>
-      </div>
+    <div className={embedded ? "space-y-6" : "container max-w-4xl py-6 space-y-6"}>
+      {!embedded && (
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <ListTodo className="h-7 w-7 text-primary" />
+            Tipos de Atendimento
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Cadastre os tipos de atendimento usados na Agenda e no Dashboard (ex.: Consulta, Retorno, Exame).
+          </p>
+        </div>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

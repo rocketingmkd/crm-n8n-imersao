@@ -48,7 +48,6 @@ import { AppLogo } from "@/components/AppLogo";
 const allNavigationItems = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
   { name: "Agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
-  { name: "Tipos de Atendimento", href: "/app/tipos-atendimento", icon: ListTodo, requiredFeature: 'agendamento_automatico' as const },
   { name: "CRM / Clientes", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
   { name: "Configurações", href: "/app/configuracoes", icon: Settings, requiredFeature: null },
 ];
