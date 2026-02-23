@@ -97,7 +97,7 @@ export default function Plans() {
         .select("*")
         .order("id_plano", { ascending: true });
       if (error) throw error;
-      return data as PlanConfig[];
+      return (data as unknown) as PlanConfig[];
     },
   });
 
@@ -139,7 +139,7 @@ export default function Plans() {
         .select()
         .single();
       if (error) throw error;
-      return data as PlanConfig;
+      return (data as unknown) as PlanConfig;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

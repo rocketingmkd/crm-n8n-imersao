@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCoresPataforma } from "@/hooks/useCoresPataforma";
+import { useFonteSistema } from "@/hooks/useFonteSistema";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -48,6 +49,7 @@ const queryClient = new QueryClient();
 
 function AplicadorCores() {
   useCoresPataforma();
+  useFonteSistema();
   return null;
 }
 

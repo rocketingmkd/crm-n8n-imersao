@@ -464,7 +464,7 @@ export default function Layout() {
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop Sidebar */}
       <aside className={cn(
-        "hidden lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-screen lg:bg-card sidebar-shadow transition-all duration-300",
+        "hidden lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-screen liquid-glass-sidebar transition-all duration-300",
         isSidebarCollapsed ? "lg:w-[60px]" : "lg:w-60"
       )}>
         <SidebarContent 
@@ -474,7 +474,7 @@ export default function Layout() {
       </aside>
 
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between liquid-glass-subtle px-4 lg:hidden">
         <div className="flex items-center gap-2.5">
           <AppLogo variant="org" height={28} />
         </div>
@@ -485,7 +485,7 @@ export default function Layout() {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[260px] p-0 bg-card border-border">
+          <SheetContent side="left" className="w-[260px] p-0 liquid-glass-strong border-border">
             <SidebarContent onNavigate={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
