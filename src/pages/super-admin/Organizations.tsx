@@ -29,6 +29,13 @@ interface Organization {
 
 const PAGE_SIZES = [10, 20, 50];
 
+const PLAN_COLORS: Record<string, string> = {
+  plano_a: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  plano_b: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  plano_c: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30",
+  plano_d: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+};
+
 export default function Organizations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toggleOrgId, setToggleOrgId] = useState<string | null>(null);
@@ -194,9 +201,13 @@ export default function Organizations() {
                       <span className="text-muted-foreground font-mono text-xs">{org.identificador || org.id.slice(0, 8)}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-medium">
-                        {org.plano_assinatura ? (planNameById[org.plano_assinatura] || org.plano_assinatura) : "—"}
-                      </Badge>
+                      {org.plano_assinatura ? (
+                        <Badge variant="outline" className={`text-[10px] font-semibold ${PLAN_COLORS[org.plano_assinatura] || "bg-muted/50 text-foreground border-border"}`}>
+                          {planNameById[org.plano_assinatura] || org.plano_assinatura}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
                       {new Date(org.criado_em).toLocaleDateString("pt-BR")}
