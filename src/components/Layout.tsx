@@ -467,7 +467,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background liquid-bg">
       {/* Desktop Sidebar */}
       <aside className={cn(
         "hidden lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-screen liquid-glass-sidebar transition-all duration-300",

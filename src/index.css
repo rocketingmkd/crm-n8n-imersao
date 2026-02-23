@@ -373,6 +373,19 @@
     overflow: hidden;
   }
 
+  .kpi-glow::after {
+    content: '';
+    position: absolute;
+    right: -12px;
+    bottom: -12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 9999px;
+    opacity: 0.2;
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
   /* Card luxury alias → liquid glass */
   .card-luxury {
     position: relative;
@@ -409,5 +422,19 @@
   .card-luxury > * {
     position: relative;
     z-index: 1;
+  }
+
+  /* Override: bg-background sub-containers get glass treatment */
+  .liquid-glass .bg-background,
+  .liquid-glass-strong .bg-background,
+  .card-luxury .bg-background {
+    background: hsla(var(--glass-bg)) !important;
+    backdrop-filter: blur(8px);
+    border-radius: 0.75rem;
+  }
+
+  /* text-caption alias */
+  .text-caption {
+    @apply text-muted-foreground font-medium uppercase tracking-wider;
   }
 }

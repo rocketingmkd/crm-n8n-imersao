@@ -335,7 +335,7 @@ export default function N8nInsights() {
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className={`relative overflow-hidden rounded-xl border ${kpi.color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}>
+            <div key={kpi.title} className="liquid-glass p-3 md:p-4 transition-all duration-200 hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
                 <div className={`rounded-lg ${kpi.color.bg} p-1.5 md:p-2`}>
@@ -344,7 +344,6 @@ export default function N8nInsights() {
               </div>
               <div className="text-lg md:text-2xl font-bold text-foreground truncate">{kpi.value}</div>
               {kpi.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.sub}</p>}
-              <div className={`absolute -right-3 -bottom-3 h-16 w-16 rounded-full ${kpi.color.bg} opacity-30 blur-xl`} />
             </div>
           );
         })}
