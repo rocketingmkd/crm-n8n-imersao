@@ -37,7 +37,6 @@ import { LimitAlert } from "@/components/LimitAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { supabase } from "@/lib/supabase";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import { identificadorParaTabela } from "@/lib/conversas";
 import { toast } from "sonner";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
@@ -120,7 +119,7 @@ function ConhecimentoTab() {
     if (!organization?.identificador) return;
     try {
       setIsLoadingDocuments(true);
-      const { data, error } = await supabaseClient.from("documentos").select('*').eq('metadados->>organizacao', organization.identificador);
+      const { data, error } = await supabase.from("documentos").select('*').eq('metadados->>organizacao', organization.identificador);
       if (error) throw error;
       const uniqueDocuments = data ? Array.from(new Map(data.map(doc => [doc.titulo, doc])).values()) : [];
       setDocuments(uniqueDocuments);
@@ -140,7 +139,7 @@ function ConhecimentoTab() {
     if (!organization?.identificador) return;
     try {
       setIsLoadingDocumentContent(true);
-      const { data, error } = await supabaseClient.from("documentos").select('*').eq('metadados->>organizacao', organization.identificador).eq('titulo', doc.titulo);
+      const { data, error } = await supabase.from("documentos").select('*').eq('metadados->>organizacao', organization.identificador).eq('titulo', doc.titulo);
       if (error) throw error;
       const combinedContent = data?.map(row => row.conteudo || "").filter(c => c.trim()).join("\n\n");
       setDocumentToView({ ...doc, conteudo: combinedContent, pageCount: data?.length || 0 });

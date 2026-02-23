@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database';
 
 type Agendamento = Database['public']['Tables']['agendamentos']['Row'];
 type AgendamentoInsert = Database['public']['Tables']['agendamentos']['Insert'];
