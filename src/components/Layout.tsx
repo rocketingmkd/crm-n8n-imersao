@@ -5,7 +5,7 @@ import {
   LayoutDashboard, 
   Calendar, 
   Users, 
-  Plug, 
+  Settings, 
   Menu,
   LogOut,
   ChevronRight,
@@ -50,9 +50,7 @@ const allNavigationItems = [
   { name: "Agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
   { name: "Tipos de Atendimento", href: "/app/tipos-atendimento", icon: ListTodo, requiredFeature: 'agendamento_automatico' as const },
   { name: "CRM / Clientes", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
-  { name: "Agente de IA", href: "/app/agent-ia", icon: Bot, requiredFeature: null },
-  { name: "WhatsApp", href: "/app/integrations", icon: Plug, requiredFeature: null },
-  { name: "Minha conta", href: "/app/minha-conta", icon: UserCircle, requiredFeature: null },
+  { name: "Configurações", href: "/app/configuracoes", icon: Settings, requiredFeature: null },
 ];
 
 function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: { 
@@ -152,48 +150,83 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
           </div>
 
           {!isCollapsed && (
-            <div className="mt-3 liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
-              {organization && (
-                <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
-                  <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
-                </div>
-              )}
-              <div className="flex items-center gap-2.5">
-                <Avatar className="h-8 w-8 shrink-0 border border-white/10">
-                  <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                    {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">
-                    {profile?.nome_completo || 'Usuário'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate capitalize">
-                    {profile?.funcao || 'profissional'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isCollapsed && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="mt-3 flex justify-center">
+            <div className="mt-3 space-y-2">
+              <div className="liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
+                {organization && (
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
+                    <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
+                  </div>
+                )}
+                <div className="flex items-center gap-2.5">
                   <Avatar className="h-8 w-8 shrink-0 border border-white/10">
                     <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                       {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {profile?.nome_completo || 'Usuário'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate capitalize">
+                      {profile?.funcao || 'profissional'}
+                    </p>
+                  </div>
                 </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                {profile?.nome_completo || 'Usuário'}
-              </TooltipContent>
-            </Tooltip>
+              </div>
+              <NavLink
+                to="/app/minha-conta"
+                className={cn(
+                  "group flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-200 px-3 py-2",
+                  location.pathname === "/app/minha-conta"
+                    ? "bg-primary text-primary-foreground shadow-pink"
+                    : "text-muted-foreground liquid-glass-subtle hover:text-foreground"
+                )}
+              >
+                <UserCircle className={cn(
+                  "h-[18px] w-[18px] shrink-0",
+                  location.pathname === "/app/minha-conta" ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                )} />
+                <span className="truncate">Minha Conta</span>
+              </NavLink>
+            </div>
+          )}
+
+          {isCollapsed && (
+            <div className="mt-3 space-y-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex justify-center">
+                    <Avatar className="h-8 w-8 shrink-0 border border-white/10">
+                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                        {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  {profile?.nome_completo || 'Usuário'}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to="/app/minha-conta"
+                    className={cn(
+                      "group flex items-center justify-center rounded-xl p-2.5 transition-all duration-200",
+                      location.pathname === "/app/minha-conta"
+                        ? "bg-primary text-primary-foreground shadow-pink"
+                        : "text-muted-foreground liquid-glass-subtle hover:text-foreground"
+                    )}
+                  >
+                    <UserCircle className="h-[18px] w-[18px]" />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>Minha Conta</TooltipContent>
+              </Tooltip>
+            </div>
           )}
         </div>
 
@@ -243,7 +276,14 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             return linkContent;
           })}
 
-          {/* Plan inside menu */}
+        </nav>
+
+        {/* Footer: Plan + Theme + Logout */}
+        <div className={cn(
+          "border-t border-sidebar-border space-y-1 transition-all duration-300",
+          isCollapsed ? "p-2" : "p-3"
+        )}>
+          {/* Plan */}
           {currentPlan && !isCollapsed && (
             <div
               onClick={() => setIsPlanModalOpen(true)}
@@ -267,13 +307,6 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               <TooltipContent side="right" sideOffset={8}>{currentPlan.nome_plano}</TooltipContent>
             </Tooltip>
           )}
-        </nav>
-
-        {/* Footer: Theme + Logout only */}
-        <div className={cn(
-          "border-t border-sidebar-border space-y-1 transition-all duration-300",
-          isCollapsed ? "p-2" : "p-3"
-        )}>
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>

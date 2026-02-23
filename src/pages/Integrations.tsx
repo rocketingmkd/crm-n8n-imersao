@@ -50,8 +50,9 @@ interface DBInstance {
   pairing_code: string | null;
 }
 
-export default function Integrations() {
+export default function Integrations({ embedded = false }: { embedded?: boolean }) {
   const { organization, profile } = useAuth();
+  const padding = embedded ? "" : "p-4 md:p-6 lg:p-8";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingInstance, setIsLoadingInstance] = useState(true);
@@ -572,7 +573,7 @@ export default function Integrations() {
   // Se tiver detalhes da instância, mostra card detalhado
   if (instanceDetails && dbInstance?.situacao === "conectado") {
     return (
-      <div className="space-y-6 p-4 md:p-6 lg:p-8 animate-fade-in">
+      <div className={`space-y-6 ${padding} animate-fade-in`}>
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -686,7 +687,7 @@ export default function Integrations() {
     const isConnected = dbInstance.situacao === "conectado";
 
     return (
-      <div className="space-y-6 p-4 md:p-6 lg:p-8 animate-fade-in">
+      <div className={`space-y-6 ${padding} animate-fade-in`}>
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -877,7 +878,7 @@ export default function Integrations() {
   return (
     <PlanGuard feature="integracao_whatsapp">
       <>
-        <div className="flex items-center justify-center min-h-screen p-4 md:p-6 lg:p-8">
+        <div className={`flex items-center justify-center min-h-screen ${padding}`}>
           <div className="text-center space-y-8 max-w-md animate-fade-in">
             {/* Icon with glow */}
             <div className="flex justify-center">

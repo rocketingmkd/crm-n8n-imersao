@@ -417,7 +417,7 @@ function ConhecimentoTab() {
 }
 
 // ─── Main Component ──────────────────────────────────────
-export default function AgentIA() {
+export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
   const { profile, organization } = useAuth();
   const { hasFeature } = usePlanFeatures();
   const [isLoading, setIsLoading] = useState(true);
@@ -598,20 +598,24 @@ export default function AgentIA() {
 
   const hasBaseConhecimento = hasFeature('base_conhecimento');
 
+  const wrapperClass = embedded ? "space-y-6" : "space-y-6 p-4 md:p-6 lg:p-8";
+
   return (
     <PlanGuard feature="atendimento_inteligente">
-      <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        {/* Header */}
-        <div className="animate-fade-in">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"><Bot className="h-6 w-6 text-accent" /></div>
-              <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Agente de IA Virtual</h1>
+      <div className={wrapperClass}>
+        {/* Header - only show when not embedded */}
+        {!embedded && (
+          <div className="animate-fade-in">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"><Bot className="h-6 w-6 text-accent" /></div>
+                <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Agente de IA Virtual</h1>
+              </div>
+              <Badge className="bg-accent/10 text-accent border-accent/20"><Sparkles className="h-3 w-3 mr-1" /> Premium</Badge>
             </div>
-            <Badge className="bg-accent/10 text-accent border-accent/20"><Sparkles className="h-3 w-3 mr-1" /> Premium</Badge>
+            <p className="text-base md:text-lg text-muted-foreground">{isEditing ? "Editando configurações do assistente virtual" : "Configurações do seu assistente virtual"}</p>
           </div>
-          <p className="text-base md:text-lg text-muted-foreground">{isEditing ? "Editando configurações do assistente virtual" : "Configurações do seu assistente virtual"}</p>
-        </div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="atendimento" className="space-y-6">
