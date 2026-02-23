@@ -213,6 +213,24 @@ export default function SuperAdminDashboard() {
       .slice(0, 10);
   }, [filteredTokens, orgMap]);
 
+  const msgChartData = useMemo(() => {
+    const filtered = selectedOrg !== "all" ? orgs.filter((o) => o.id === selectedOrg) : orgs;
+    return filtered
+      .map((o) => ({ name: o.nome.length > 18 ? o.nome.slice(0, 18) + "..." : o.nome, mensagens: msgCountByOrgId[o.id] ?? 0 }))
+      .filter((d) => d.mensagens > 0)
+      .sort((a, b) => b.mensagens - a.mensagens)
+      .slice(0, 10);
+  }, [orgs, msgCountByOrgId, selectedOrg]);
+
+  const filesChartData = useMemo(() => {
+    const filtered = selectedOrg !== "all" ? orgs.filter((o) => o.id === selectedOrg) : orgs;
+    return filtered
+      .map((o) => ({ name: o.nome.length > 18 ? o.nome.slice(0, 18) + "..." : o.nome, arquivos: filesByOrg[o.id] ?? 0 }))
+      .filter((d) => d.arquivos > 0)
+      .sort((a, b) => b.arquivos - a.arquivos)
+      .slice(0, 10);
+  }, [orgs, filesByOrg, selectedOrg]);
+
   const recentOrgs = useMemo(() => {
     return [...orgs]
       .sort((a, b) => new Date(b.criado_em ?? 0).getTime() - new Date(a.criado_em ?? 0).getTime())
@@ -400,6 +418,59 @@ export default function SuperAdminDashboard() {
                   <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
                   <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, "Custo"]} />
                   <Bar dataKey="cost" fill="hsl(350, 89%, 60%)" radius={[0, 4, 4, 0]} opacity={0.9} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts — Mensagens e Arquivos por Empresa */}
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <MessageSquare className="h-4 w-4 text-blue-500" />
+              Mensagens por Empresa
+            </CardTitle>
+            <CardDescription className="text-xs">Total de mensagens por organização</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {msgChartData.length === 0 ? (
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado disponível</div>
+            ) : (
+              <ChartContainer config={{ mensagens: { label: "Mensagens", color: "hsl(217, 91%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
+                <BarChart data={msgChartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="mensagens" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <FileText className="h-4 w-4 text-teal-500" />
+              Arquivos de Conhecimento por Empresa
+            </CardTitle>
+            <CardDescription className="text-xs">Documentos RAG únicos por organização</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {filesChartData.length === 0 ? (
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado disponível</div>
+            ) : (
+              <ChartContainer config={{ arquivos: { label: "Arquivos", color: "hsl(168, 76%, 42%)" } }} className="h-[200px] md:h-[280px] w-full">
+                <BarChart data={filesChartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="arquivos" fill="hsl(168, 76%, 42%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ChartContainer>
             )}
