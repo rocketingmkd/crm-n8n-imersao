@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Database } from '@/types/database';
+import type { Database } from '@/integrations/supabase/types';
 
 type Contato = Database['public']['Tables']['contatos']['Row'];
 type ContatoInsert = Database['public']['Tables']['contatos']['Insert'];
