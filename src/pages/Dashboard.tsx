@@ -179,7 +179,7 @@ export default function Dashboard() {
 
       {/* Agenda de Hoje - Movida para o início */}
       {hasAgendamento && (
-        <Card className="card-luxury p-4 md:p-6 lg:p-8 animate-fade-in-up border-accent/20 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
               <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function Dashboard() {
                 })}
             </div>
           )}
-        </Card>
+        </div>
       )}
 
       {/* KPI Grid - Adaptado ao plano */}
@@ -395,7 +395,7 @@ export default function Dashboard() {
       {/* Área Principal - Adaptada ao plano */}
       {!hasAgendamento && (
         /* Resumo de Atendimentos (para planos sem agendamento) */
-        <Card className="card-luxury p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+        <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
           <div className="mb-4 md:mb-6">
             <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2">
               Resumo de Atendimentos
@@ -484,7 +484,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Quick Actions - Adaptadas ao plano */}

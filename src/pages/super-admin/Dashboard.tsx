@@ -287,11 +287,11 @@ export default function SuperAdminDashboard() {
           return (
             <div
               key={kpi.title}
-              className={`relative overflow-hidden rounded-xl border ${color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
+              className="liquid-glass p-3 md:p-4 transition-all duration-200 hover:scale-[1.02] group"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
-                <div className={`rounded-lg ${color.bg} p-1.5 md:p-2 transition-colors group-hover:${color.bg}`}>
+                <div className={`rounded-lg ${color.bg} p-1.5 md:p-2 transition-colors`}>
                   <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${color.text}`} />
                 </div>
               </div>
@@ -299,8 +299,6 @@ export default function SuperAdminDashboard() {
                 {kpi.value}
               </div>
               <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.description}</p>
-              {/* Decoração sutil */}
-              <div className={`absolute -right-3 -bottom-3 h-16 w-16 rounded-full ${color.bg} opacity-30 blur-xl`} />
             </div>
           );
         })}
