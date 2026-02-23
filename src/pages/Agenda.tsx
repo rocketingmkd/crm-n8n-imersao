@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -1091,16 +1092,14 @@ export default function Agenda() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Data Início *</Label>
-                <Input
+                <DatePicker
                   id="start_date"
-                  type="date"
                   value={formData.start_date}
-                  onChange={(e) => setFormData(prev => ({ 
+                  onChange={(v) => setFormData(prev => ({ 
                     ...prev, 
-                    start_date: e.target.value,
-                    end_date: e.target.value // Preencher data fim automaticamente
+                    start_date: v,
+                    end_date: v
                   }))}
-                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -1119,12 +1118,10 @@ export default function Agenda() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="end_date">Data Fim *</Label>
-                <Input
+                <DatePicker
                   id="end_date"
-                  type="date"
                   value={formData.end_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                  className="w-full"
+                  onChange={(v) => setFormData(prev => ({ ...prev, end_date: v }))}
                 />
               </div>
               <div className="space-y-2">

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DateTimePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -284,7 +285,12 @@ export default function DashboardTarefas() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="data_finalizacao">Data de Finalização</Label>
-              <Input id="data_finalizacao" type="datetime-local" value={dataFinalizacao} onChange={(e) => setDataFinalizacao(e.target.value)} />
+              <DateTimePicker
+                id="data_finalizacao"
+                value={dataFinalizacao}
+                onChange={(v) => setDataFinalizacao(v)}
+                placeholder="Selecionar data e hora"
+              />
             </div>
 
             {dataFinalizacao && (
