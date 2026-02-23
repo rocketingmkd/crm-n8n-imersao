@@ -71,52 +71,72 @@ export default function SuperAdminLayout() {
             )}
           </Button>
 
-          {/* Header - Logo only */}
-          <div className={cn(
-            "flex h-14 items-center justify-between border-b border-border transition-all duration-300",
-            isSidebarCollapsed ? "px-2 justify-center" : "px-4"
-          )}>
-            <AppLogo variant="platform" height={isSidebarCollapsed ? 24 : 30} />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* User Info */}
+          {/* Header: Logo + User (matching org Layout) */}
           <div className={cn(
             "border-b border-border transition-all duration-300",
-            isSidebarCollapsed ? "p-2" : "p-4"
+            isSidebarCollapsed ? "px-2 py-4" : "px-4 py-4"
           )}>
             <div className={cn(
               "flex items-center transition-all duration-300",
               isSidebarCollapsed ? "justify-center" : "gap-3"
             )}>
-              <Avatar className="h-9 w-9 shrink-0 border border-border">
-                <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                  {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
-                </AvatarFallback>
-              </Avatar>
-              {!isSidebarCollapsed && (
-                <div className="flex-1 overflow-hidden">
-                  <p className="truncate text-xs font-semibold text-foreground">
-                    {profile?.nome_completo || "Admin"}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Admin</p>
-                </div>
-              )}
+              <AppLogo variant="platform" height={isSidebarCollapsed ? 24 : 30} />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted ml-auto"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
+
+            {!isSidebarCollapsed && (
+              <div className="mt-3 liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
+                <div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Plataforma</p>
+                  <p className="text-xs font-semibold text-foreground truncate">Super Admin</p>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="h-8 w-8 shrink-0 border border-white/10">
+                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                      {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {profile?.nome_completo || "Admin"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">Administrador</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isSidebarCollapsed && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="mt-3 flex justify-center">
+                    <Avatar className="h-8 w-8 shrink-0 border border-white/10">
+                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                        {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  {profile?.nome_completo || "Admin"}
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
 
           {/* Navigation */}
           <nav className={cn(
-            "flex-1 space-y-0.5 transition-all duration-300",
-            isSidebarCollapsed ? "p-2" : "p-3"
+            "flex-1 space-y-1 overflow-y-auto py-4 transition-all duration-300",
+            isSidebarCollapsed ? "px-2" : "px-3"
           )}>
             {!isSidebarCollapsed && (
               <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -135,15 +155,18 @@ export default function SuperAdminLayout() {
                     setIsSidebarOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center rounded-lg text-[13px] font-medium transition-all duration-200",
+                    "flex w-full items-center rounded-xl text-[13px] font-medium transition-all duration-200",
                     isSidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-pink"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground liquid-glass-subtle hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-[18px] w-[18px] shrink-0" />
-                  {!isSidebarCollapsed && <span>{item.label}</span>}
+                  <Icon className={cn(
+                    "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
+                    isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                  )} />
+                  {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                 </button>
               );
 
@@ -159,40 +182,38 @@ export default function SuperAdminLayout() {
             })}
           </nav>
 
-          {/* Footer */}
+          {/* Footer: Theme + Logout */}
           <div className={cn(
             "border-t border-border space-y-1 transition-all duration-300",
             isSidebarCollapsed ? "p-2" : "p-3"
           )}>
-            {/* Theme Toggle */}
             {isSidebarCollapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={toggleTheme} className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted">
+                  <Button variant="ghost" size="icon" onClick={toggleTheme} className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                     {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>{theme === "dark" ? "Modo claro" : "Modo escuro"}</TooltipContent>
               </Tooltip>
             ) : (
-              <Button variant="ghost" size="sm" onClick={toggleTheme} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs">
+              <Button variant="ghost" size="sm" onClick={toggleTheme} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs rounded-xl">
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {theme === "dark" ? "Modo claro" : "Modo escuro"}
               </Button>
             )}
 
-            {/* Logout */}
             {isSidebarCollapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button onClick={handleLogout} variant="ghost" size="icon" className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                  <Button onClick={handleLogout} variant="ghost" size="icon" className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl">
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>Sair</TooltipContent>
               </Tooltip>
             ) : (
-              <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs">
+              <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs rounded-xl">
                 <LogOut className="h-4 w-4" />
                 Sair
               </Button>
