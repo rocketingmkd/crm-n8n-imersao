@@ -143,6 +143,9 @@ export interface Database {
           status_kanban: 'novo_contato' | 'qualificado' | 'em_atendimento' | 'agendado' | 'aguardando_confirmacao' | 'concluido'
           observacoes: string | null
           resumo: string | null
+          tipo_pessoa: 'fisica' | 'juridica'
+          cpf_cnpj: string | null
+          url_foto: string | null
         }
         Insert: {
           id?: string
@@ -157,6 +160,9 @@ export interface Database {
           status_kanban?: 'novo_contato' | 'qualificado' | 'em_atendimento' | 'agendado' | 'aguardando_confirmacao' | 'concluido'
           observacoes?: string | null
           resumo?: string | null
+          tipo_pessoa?: 'fisica' | 'juridica'
+          cpf_cnpj?: string | null
+          url_foto?: string | null
         }
         Update: {
           id?: string
@@ -171,6 +177,9 @@ export interface Database {
           status_kanban?: 'novo_contato' | 'qualificado' | 'em_atendimento' | 'agendado' | 'aguardando_confirmacao' | 'concluido'
           observacoes?: string | null
           resumo?: string | null
+          tipo_pessoa?: 'fisica' | 'juridica'
+          cpf_cnpj?: string | null
+          url_foto?: string | null
         }
       }
       agendamentos: {
