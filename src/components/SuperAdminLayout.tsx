@@ -52,7 +52,7 @@ export default function SuperAdminLayout() {
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed left-0 top-0 z-50 h-full flex flex-col transform liquid-glass-sidebar transition-all duration-300 lg:relative lg:translate-x-0",
+            "fixed left-0 top-0 z-50 h-full flex flex-col overflow-visible transform liquid-glass-sidebar transition-all duration-300 lg:relative lg:translate-x-0",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full",
             isSidebarCollapsed ? "lg:w-[60px]" : "lg:w-60"
           )}
