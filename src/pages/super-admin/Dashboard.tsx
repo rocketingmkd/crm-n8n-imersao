@@ -84,6 +84,7 @@ export default function SuperAdminDashboard() {
     totalPatients: number;
     totalAppointments: number;
   }>({ totalOrgs: 0, activeOrgs: 0, totalUsers: 0, totalPatients: 0, totalAppointments: 0 });
+  const [filteredCounts, setFilteredCounts] = useState<{ users: number; patients: number; appointments: number }>({ users: 0, patients: 0, appointments: 0 });
 
   useEffect(() => {
     const load = async () => {
@@ -131,6 +132,31 @@ export default function SuperAdminDashboard() {
     };
     load();
   }, [period]);
+
+  // Fetch filtered counts when org filter changes
+  useEffect(() => {
+    const loadFiltered = async () => {
+      if (selectedOrg === "all") {
+        setFilteredCounts({ users: counts.totalUsers, patients: counts.totalPatients, appointments: counts.totalAppointments });
+        return;
+      }
+      try {
+        const [usersRes, patientsRes, appointmentsRes] = await Promise.all([
+          supabase.from("perfis").select("*", { count: "exact", head: true }).eq("super_admin", false).eq("id_organizacao", selectedOrg),
+          supabase.from("contatos").select("*", { count: "exact", head: true }).eq("id_organizacao", selectedOrg),
+          supabase.from("agendamentos").select("*", { count: "exact", head: true }).eq("id_organizacao", selectedOrg),
+        ]);
+        setFilteredCounts({
+          users: usersRes.count ?? 0,
+          patients: patientsRes.count ?? 0,
+          appointments: appointmentsRes.count ?? 0,
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadFiltered();
+  }, [selectedOrg, counts]);
 
   const orgMap = useMemo(() => new Map(orgs.map((o) => [o.id, o])), [orgs]);
   const since = useMemo(() => (period === "all" ? null : getDaysAgo(parseInt(period))), [period]);
@@ -247,9 +273,9 @@ export default function SuperAdminDashboard() {
 
   const kpis = [
     { title: "Organizações", value: selectedOrg === "all" ? counts.totalOrgs : 1, description: selectedOrg === "all" ? `${counts.activeOrgs} ativas` : "Filtrada", icon: Building2 },
-    { title: "Usuários", value: counts.totalUsers, description: "Cadastrados", icon: Users },
-    { title: "Clientes", value: counts.totalPatients, description: "Em todas as orgs", icon: Activity },
-    { title: "Compromissos", value: counts.totalAppointments, description: "Agendamentos", icon: TrendingUp },
+    { title: "Usuários", value: filteredCounts.users, description: selectedOrg === "all" ? "Cadastrados" : "Na organização", icon: Users },
+    { title: "Clientes", value: filteredCounts.patients, description: selectedOrg === "all" ? "Em todas as orgs" : "Na organização", icon: Activity },
+    { title: "Compromissos", value: filteredCounts.appointments, description: selectedOrg === "all" ? "Agendamentos" : "Na organização", icon: TrendingUp },
     { title: "Tokens", value: totalTokens.toLocaleString("pt-BR"), description: "No período", icon: Zap },
     { title: "Custo (R$)", value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: "No período", icon: DollarSign },
     { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), description: "No período", icon: MessageSquare },
