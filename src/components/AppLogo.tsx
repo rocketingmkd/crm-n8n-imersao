@@ -40,20 +40,23 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
 
   const [platformAttempt, setPlatformAttempt] = useState(0);
   const [orgAttempt, setOrgAttempt] = useState(0);
+  const [imgError, setImgError] = useState(false);
 
+  // Usa view pública (legível por anon) para o logo carregar na tela de login.
+  // Também buscado quando variant é "org" para usar na sidebar do cliente quando a org não tem logo.
   const { data: logoConfig, error: logoQueryError } = useQuery({
     queryKey: [...CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY, theme],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("configuracoes_globais")
+        .from("configuracoes_globais_branding")
         .select("url_logo_plataforma, url_logo_plataforma_escuro")
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: variant === "platform",
+    enabled: variant === "platform" || variant === "org",
     staleTime: 30_000,
-    retry: 1,
+    retry: 2,
   });
 
   useEffect(() => {
@@ -62,37 +65,47 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
     }
   }, [logoQueryError]);
 
-  const platformLogoUrl =
-    variant === "platform" && logoConfig
-      ? theme === "dark"
-        ? (logoConfig.url_logo_plataforma ?? logoConfig.url_logo_plataforma_escuro)
-        : (logoConfig.url_logo_plataforma_escuro ?? logoConfig.url_logo_plataforma)
-      : null;
+  const platformLogoUrl = logoConfig
+    ? theme === "dark"
+      ? (logoConfig.url_logo_plataforma ?? logoConfig.url_logo_plataforma_escuro)
+      : (logoConfig.url_logo_plataforma_escuro ?? logoConfig.url_logo_plataforma)
+    : null;
 
   useEffect(() => {
-    if (platformLogoUrl) {
-      const urls = buildUrlAttempts(platformLogoUrl);
-      console.log("[AppLogo] Tentativas de URL para logo da plataforma:", urls);
-    }
     setPlatformAttempt(0);
+    setImgError(false);
   }, [platformLogoUrl]);
 
-  useEffect(() => { setOrgAttempt(0); }, [organization?.url_logo]);
+  useEffect(() => {
+    setOrgAttempt(0);
+    setImgError(false);
+  }, [organization?.url_logo]);
 
   const defaultSrc = theme === "dark" ? defaultLogoWhite : defaultLogoDark;
 
+  // Mesmo estilo do FlowgrammersLogo: só altura fixa e largura automática (proporção da imagem)
+  const imgStyle = { height: `${height}px`, width: "auto" };
+
   if (variant === "org") {
     const orgUrls = buildUrlAttempts(organization?.url_logo);
-    const src = orgUrls[orgAttempt] ?? defaultSrc;
+    const platformUrlsOrg = buildUrlAttempts(platformLogoUrl);
+    // Se a organização não tem logo, usa o logo da plataforma (Settings); senão usa o default
+    const src = imgError ? defaultSrc : (orgUrls[orgAttempt] ?? platformUrlsOrg[platformAttempt] ?? defaultSrc);
     return (
       <img
+        key={src}
         src={src}
         alt={organization?.nome ?? "Logo"}
-        style={{ height, width: "auto" }}
+        style={imgStyle}
         className={`object-contain shrink-0 ${className}`}
         onError={() => {
-          console.warn(`[AppLogo] org tentativa ${orgAttempt} falhou:`, src);
-          setOrgAttempt((a) => a + 1);
+          if (orgUrls.length > 0 && orgAttempt < orgUrls.length - 1) {
+            setOrgAttempt((a) => a + 1);
+          } else if (platformUrlsOrg.length > 0 && platformAttempt < platformUrlsOrg.length - 1) {
+            setPlatformAttempt((a) => a + 1);
+          } else {
+            setImgError(true);
+          }
         }}
       />
     );
@@ -100,15 +113,33 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
 
   const platformUrls = buildUrlAttempts(platformLogoUrl);
   const src = platformUrls[platformAttempt] ?? defaultSrc;
+
+  // Fallback: sempre mostrar algo na tela de login (logo padrão ou texto)
+  if (!src || imgError) {
+    return (
+      <span
+        className={`inline-flex items-center font-semibold text-foreground ${className}`}
+        style={{ height, fontSize: Math.max(14, height * 0.5) }}
+        aria-label="Logo"
+      >
+        FlowAtend
+      </span>
+    );
+  }
+
   return (
     <img
+      key={src}
       src={src}
       alt="Logo"
-      style={{ height, width: "auto" }}
+      style={imgStyle}
       className={`object-contain shrink-0 ${className}`}
       onError={() => {
-        console.warn(`[AppLogo] platform tentativa ${platformAttempt} falhou:`, src);
-        setPlatformAttempt((a) => a + 1);
+        if (platformAttempt < platformUrls.length - 1) {
+          setPlatformAttempt((a) => a + 1);
+        } else {
+          setImgError(true);
+        }
       }}
     />
   );

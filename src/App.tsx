@@ -28,12 +28,14 @@ import AgentIA from "./pages/AgentIA";
 import Conhecimento from "./pages/Conhecimento";
 import Integrations from "./pages/Integrations";
 import Observability from "./pages/Observability";
+import TiposAtendimento from "./pages/TiposAtendimento";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/super-admin/Dashboard";
 import Organizations from "./pages/super-admin/Organizations";
 import OrganizationForm from "./pages/super-admin/OrganizationForm";
 import Plans from "./pages/super-admin/Plans";
+import Relatorios from "./pages/super-admin/Relatorios";
 import TokenUsage from "./pages/super-admin/TokenUsage";
 import N8nInsights from "./pages/super-admin/N8nInsights";
 import GestaoVps from "./pages/super-admin/GestaoVps";
@@ -71,6 +73,7 @@ const App = () => (
                 <Route path="/super-admin/organizations/new" element={<OrganizationForm />} />
                 <Route path="/super-admin/organizations/:id/edit" element={<OrganizationForm />} />
                 <Route path="/super-admin/plans" element={<Plans />} />
+                <Route path="/super-admin/relatorios" element={<Relatorios />} />
                 <Route path="/super-admin/token-usage" element={<TokenUsage />} />
                 <Route path="/super-admin/observability" element={<Observability />} />
                 <Route path="/super-admin/insights" element={<N8nInsights />} />
@@ -84,6 +87,7 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="/app/dashboard" element={<Dashboard />} />
                 <Route path="/app/agenda" element={<Agenda />} />
+                <Route path="/app/tipos-atendimento" element={<TiposAtendimento />} />
                 <Route path="/app/clientes/crm" element={<CRM />} />
                 <Route path="/app/clientes/kanban" element={<Kanban />} />
                 <Route path="/app/agent-ia" element={<AgentIA />} />

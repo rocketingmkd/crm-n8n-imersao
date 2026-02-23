@@ -3,6 +3,7 @@ import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
+import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
@@ -29,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 
 interface AppointmentFormData {
   start_date: string;
@@ -37,8 +38,8 @@ interface AppointmentFormData {
   end_date: string;
   end_time: string;
   id_contato: string;
-  tipo: string;
-  observacoes: string;
+  type: string;
+  observations: string;
 }
 
 interface PatientFormData {
@@ -52,6 +53,7 @@ interface PatientFormData {
 export default function Dashboard() {
   const { data: allAppointments = [], isLoading: loadingAppointments } = useAppointments();
   const { data: contacts = [], isLoading: loadingContacts } = useContacts();
+  const { data: tiposAtendimento = [] } = useTiposAtendimento();
   const { data: chatMetrics, isLoading: loadingChats } = useChatMetrics();
   const { features } = usePlanFeatures();
   const { profile } = useAuth();
@@ -106,7 +108,7 @@ export default function Dashboard() {
         inicio: `${data.start_date}T${data.start_time}:00-03:00`,
         fim: `${data.end_date}T${data.end_time}:00-03:00`,
         id_contato: data.id_contato,
-        nome_contato: contacts.find(c => c.id === data.id_contato)?.name || '',
+        nome_contato: contacts.find(c => c.id === data.id_contato)?.nome || contacts.find(c => c.id === data.id_contato)?.telefone || '',
         tipo: data.type,
         situacao: 'pendente',
         observacoes: data.observations,
@@ -645,7 +647,7 @@ export default function Dashboard() {
                 <SelectContent>
                   {contacts.map((contact) => (
                     <SelectItem key={contact.id} value={contact.id}>
-                      {contact.name || 'Sem nome'}
+                      {contact.nome || contact.telefone || 'Sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -709,10 +711,22 @@ export default function Dashboard() {
 
             <div className="space-y-2">
               <Label htmlFor="type">Tipo de Atendimento *</Label>
-              <Input
-                id="type"
-                placeholder="Ex: Consulta, Retorno, Exame"
-                {...appointmentForm.register("type", { required: "Tipo é obrigatório" })}
+              <Controller
+                name="type"
+                control={appointmentForm.control}
+                rules={{ required: "Tipo é obrigatório" }}
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder={tiposAtendimento.filter(t => t.ativo).length ? "Selecione o tipo" : "Cadastre em Tipos de Atendimento"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiposAtendimento.filter(t => t.ativo).map((t) => (
+                        <SelectItem key={t.id} value={t.nome}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
               {appointmentForm.formState.errors.type && (
                 <p className="text-xs text-red-500">{appointmentForm.formState.errors.type.message}</p>

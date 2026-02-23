@@ -1,0 +1,184 @@
+{
+  "name": "Criar Credenciais Dinâmicas",
+  "nodes": [
+    {
+      "id": "358b8708-41ed-4538-b973-c356d36345a5",
+      "name": "Webhook Criar Credenciais",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "criar-credenciais",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "bfe4dca0-faa6-4265-8d7a-aa651537bff4"
+    },
+    {
+      "id": "3b24fef2-b6d6-439b-92dc-a9e30c85c83b",
+      "name": "Buscar Chaves Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      },
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "configuracoes_globais",
+        "returnAll": false,
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "00000000-0000-0000-0000-000000000001"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "59edcf46-f675-4b45-897c-aaac2b35c866",
+      "name": "Criar ou Atualizar Credenciais",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Busca credenciais existentes no n8n e cria/atualiza OpenAI e ElevenLabs\nconst supabaseData = $('Buscar Chaves Supabase').first().json;\nconst chaveOpenai = supabaseData.chave_openai;\nconst chaveElevenLabs = supabaseData.chave_elevenlabs;\nconst baseUrl = $vars.n8nBaseUrl;\nconst apiKey = $vars.n8nApiKey;\n\nconst headers = {\n  'X-N8N-API-KEY': apiKey,\n  'Content-Type': 'application/json'\n};\n\n// Lista credenciais existentes\nconst listResp = await fetch(`${baseUrl}/api/v1/credentials`, { headers });\nconst listData = await listResp.json();\nconst credenciais = listData.data || [];\n\nasync function criarOuAtualizar(nome, tipo, dados) {\n  const existente = credenciais.find(c => c.name === nome);\n  if (existente) {\n    const r = await fetch(`${baseUrl}/api/v1/credentials/${existente.id}`, {\n      method: 'PATCH',\n      headers,\n      body: JSON.stringify({ name: nome, data: dados })\n    });\n    return { acao: 'atualizado', nome, id: existente.id, status: r.status };\n  } else {\n    const r = await fetch(`${baseUrl}/api/v1/credentials`, {\n      method: 'POST',\n      headers,\n      body: JSON.stringify({ name: nome, type: tipo, data: dados })\n    });\n    const nova = await r.json();\n    return { acao: 'criado', nome, id: nova.id, status: r.status };\n  }\n}\n\nconst resultados = [];\n\nif (chaveOpenai) {\n  resultados.push(await criarOuAtualizar('OpenAI Dinâmico', 'openAiApi', { apiKey: chaveOpenai }));\n} else {\n  resultados.push({ acao: 'ignorado', nome: 'OpenAI Dinâmico', motivo: 'chave não configurada' });\n}\n\nif (chaveElevenLabs) {\n  resultados.push(await criarOuAtualizar('ElevenLabs Dinâmico', 'elevenLabsApi', { apiKey: chaveElevenLabs }));\n} else {\n  resultados.push({ acao: 'ignorado', nome: 'ElevenLabs Dinâmico', motivo: 'chave não configurada' });\n}\n\nreturn [{ json: { credenciais_atualizadas: resultados } }];"
+      }
+    },
+    {
+      "id": "5a49ea2f-9bfa-4947-b71e-826578276b77",
+      "name": "Resposta do Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "8477bd5e-db4d-45ea-ae59-44395e51d356",
+      "name": "Quando chamado por outro fluxo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9d962551-6575-4564-a4cd-3668e129dd2c",
+      "name": "Buscar Chaves para Retorno",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "GW9MBPeXxgW9VKzF",
+          "name": "Supabase Flow Clinic"
+        }
+      },
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "configuracoes_globais",
+        "returnAll": false,
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "00000000-0000-0000-0000-000000000001"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Criar Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Buscar Chaves Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Chaves Supabase": {
+      "main": [
+        [
+          {
+            "node": "Criar ou Atualizar Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar ou Atualizar Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Resposta do Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quando chamado por outro fluxo": {
+      "main": [
+        [
+          {
+            "node": "Buscar Chaves para Retorno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "15d8da32-6627-4e28-a68c-aa83525e8154",
+  "meta": {
+    "instanceId": ""
+  },
+  "id": "CriarCredenciaisDinamicas",
+  "tags": [
+    {
+      "name": "🔥imersao-n8n-enteprise"
+    }
+  ]
+}

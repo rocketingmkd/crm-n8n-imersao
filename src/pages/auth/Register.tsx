@@ -90,7 +90,7 @@ export default function Register() {
       <Card className="w-full max-w-md border-border/50 shadow-lg">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <AppLogo variant="platform" height={38} />
+            <AppLogo variant="platform" height={96} />
           </div>
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">

@@ -45,7 +45,7 @@ export default function ForgotPassword() {
       <Card className="relative w-full max-w-[400px] border-border bg-card shadow-xl">
         <CardHeader className="space-y-4 text-center pb-2">
           <div className="flex justify-center">
-            <AppLogo variant="platform" height={48} />
+            <AppLogo variant="platform" height={96} />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">

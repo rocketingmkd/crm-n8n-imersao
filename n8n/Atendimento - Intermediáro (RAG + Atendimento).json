@@ -155,7 +155,9 @@
     },
     {
       "parameters": {
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "id": "72f46f7e-2b41-4f23-8244-ac1accb98ff0",
       "name": "OpenAI3",
@@ -935,7 +937,9 @@
           "cachedResultName": "gpt-4o"
         },
         "builtInTools": {},
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -960,7 +964,9 @@
           "value": "gpt-4.1-mini"
         },
         "builtInTools": {},
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -980,7 +986,9 @@
     {
       "parameters": {
         "model": "text-embedding-3-small",
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "id": "7a8da177-b671-4911-8ea2-2302fa2021d8",
       "name": "Small Embeddings",
@@ -1622,33 +1630,60 @@
     },
     {
       "parameters": {
-        "resource": "speech",
-        "voice": {
-          "__rl": true,
-          "value": "oJebhZNaPllxk6W0LSBA",
-          "mode": "id"
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/oJebhZNaPllxk6W0LSBA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $('Buscar Chaves API').first().json.chave_elevenlabs }}"
+            },
+            {
+              "name": "Accept",
+              "value": "audio/mpeg"
+            }
+          ]
         },
-        "text": "={{ $json.texto }}",
-        "additionalOptions": {
-          "languageCode": "pt",
-          "voiceSettings": "{\n  \"stability\":0.5,\n  \"similarity_boost\":0.8,\n  \"style\":0.0,\n  \"use_speaker_boost\":true\n}"
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.texto }}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_multilingual_v2"
+            },
+            {
+              "name": "language_code",
+              "value": "pt"
+            },
+            {
+              "name": "voice_settings",
+              "value": "={{ ({stability: 0.5, similarity_boost: 0.8, style: 0.0, use_speaker_boost: true}) }}"
+            }
+          ]
         },
-        "requestOptions": {}
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
       },
-      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         -4672,
         2000
       ],
       "id": "2d8c3725-dc67-4f6a-be2f-7aea78b564fb",
-      "name": "Converte texto para fala",
-      "credentials": {
-        "elevenLabsApi": {
-          "id": "Vk8RXs2jYRT1KYt6",
-          "name": "ElevenLabs"
-        }
-      }
+      "name": "Converte texto para fala"
     },
     {
       "parameters": {
@@ -1755,7 +1790,9 @@
     },
     {
       "parameters": {
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
@@ -2965,6 +3002,24 @@
       ],
       "id": "ce71a0a9-246c-4331-adbe-43897eef849c",
       "name": "Gestao De Tokens2"
+    },
+    {
+      "id": "0f2dbff9-5b61-4a86-8d9e-72f363613617",
+      "name": "Buscar Chaves API",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -9248,
+        740
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Criar Credenciais Dinâmicas",
+          "mode": "name"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -3102,6 +3157,11 @@
         [
           {
             "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Chaves API",
             "type": "main",
             "index": 0
           }
@@ -3804,6 +3864,17 @@
           {
             "node": "Agente de IA",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Chaves API": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
             "index": 0
           }
         ]

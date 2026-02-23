@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts } from "@/hooks/useContacts";
+import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { toast } from "sonner";
 import { toSaoPauloISO } from "@/lib/dateUtils";
@@ -90,7 +91,8 @@ export default function Agenda() {
 
   // Buscar compromissos e contatos
   const { data: allAppointments = [], isLoading, refetch } = useAppointments();
-  const { data: contacts = [] } = useContacts();
+  const { data: contacts = [], isLoading: contactsLoading } = useContacts();
+  const { data: tiposAtendimento = [] } = useTiposAtendimento();
   const { singular, s } = useEntityLabel();
   const createAppointment = useCreateAppointment();
   const queryClient = useQueryClient();
@@ -581,7 +583,7 @@ export default function Agenda() {
       setFormData(prev => ({
         ...prev,
         id_contato: contactId,
-        nome_contato: contact.name
+        nome_contato: contact.nome || contact.telefone || ""
       }));
     }
   };
@@ -678,7 +680,7 @@ export default function Agenda() {
 
       // 2. Enviar para webhook N8N
       try {
-        const contact = contacts.find(c => c.id === formData.id_contato);
+        const contact = contacts.find((c) => c.id === formData.id_contato);
 
         const webhookData = {
           id: newAppointment?.id,
@@ -1140,14 +1142,14 @@ export default function Agenda() {
             {/* Contato */}
             <div className="space-y-2">
               <Label htmlFor="contact">{singular} *</Label>
-              <Select value={formData.id_contato} onValueChange={handleSelectContact}>
+              <Select value={formData.id_contato} onValueChange={handleSelectContact} disabled={contactsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder={`Selecione um ${s}`} />
+                  <SelectValue placeholder={contactsLoading ? "Carregando clientes..." : `Selecione um ${s}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {contacts.map((contact) => (
                     <SelectItem key={contact.id} value={contact.id}>
-                      {contact.name}
+                      {contact.nome || contact.telefone || "Sem nome"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1159,14 +1161,12 @@ export default function Agenda() {
               <Label htmlFor="type">Tipo de Atendimento *</Label>
               <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
+                  <SelectValue placeholder={tiposAtendimento.filter(t => t.ativo).length ? "Selecione o tipo" : "Cadastre em Tipos de Atendimento"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Consulta">Consulta</SelectItem>
-                  <SelectItem value="Retorno">Retorno</SelectItem>
-                  <SelectItem value="Tratamento">Tratamento</SelectItem>
-                  <SelectItem value="Avaliação">Avaliação</SelectItem>
-                  <SelectItem value="Exame">Exame</SelectItem>
+                  {tiposAtendimento.filter(t => t.ativo).map((t) => (
+                    <SelectItem key={t.id} value={t.nome}>{t.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

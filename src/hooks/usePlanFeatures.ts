@@ -8,6 +8,7 @@ export interface PlanLimits {
   max_mensagens_whatsapp_mes: number | null;
   max_usuarios: number | null;
   max_contatos: number | null;
+  max_arquivos_conhecimento: number | null;
 }
 
 export interface PlanFeatures {
@@ -64,7 +65,8 @@ export function usePlanFeatures() {
     max_mensagens_whatsapp_mes: planConfig?.max_mensagens_whatsapp_mes ?? null,
     max_usuarios: planConfig?.max_usuarios ?? null,
     max_contatos: planConfig?.max_contatos ?? null,
-  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_contatos]);
+    max_arquivos_conhecimento: planConfig?.max_arquivos_conhecimento ?? null,
+  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_contatos, planConfig?.max_arquivos_conhecimento]);
 
   // Função para verificar se tem acesso a uma feature
   const hasFeature = (feature: keyof PlanFeatures): boolean => {
@@ -115,8 +117,18 @@ export function usePlanFeatures() {
           break;
         }
         case 'max_mensagens_whatsapp_mes': {
-          // TODO: Implementar quando houver tabela de mensagens
+          // TODO: Implementar quando houver tabela de mensagens por org/mês
           current = 0;
+          break;
+        }
+        case 'max_arquivos_conhecimento': {
+          const identificador = organization?.identificador;
+          if (!identificador) break;
+          const { count } = await supabase
+            .from('documentos')
+            .select('*', { count: 'exact', head: true })
+            .eq('metadados->>organizacao', identificador);
+          current = count || 0;
           break;
         }
       }

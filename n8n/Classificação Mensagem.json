@@ -1308,6 +1308,24 @@
           "name": "Google Gemini"
         }
       }
+    },
+    {
+      "id": "488bd2d3-3eb8-477f-8caa-dc00e919f19c",
+      "name": "Buscar Chaves API",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -2944,
+        52
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Criar Credenciais Dinâmicas",
+          "mode": "name"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -1396,6 +1414,11 @@
         [
           {
             "node": "Busca Instancia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Chaves API",
             "type": "main",
             "index": 0
           }
@@ -1684,6 +1707,17 @@
         [
           {
             "node": "Setar Mensagem ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Chaves API": {
+      "main": [
+        [
+          {
+            "node": "Busca Instancia",
             "type": "main",
             "index": 0
           }

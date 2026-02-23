@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, Server, UserCircle } from "lucide-react";
+import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, FileBarChart, Server, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const menuItems = [
   { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
   { path: "/super-admin/organizations", label: "Empresas", icon: Building2 },
+  { path: "/super-admin/relatorios", label: "Relatórios", icon: FileBarChart },
   { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
   { path: "/super-admin/token-usage", label: "Consumo de Tokens", icon: Eye },
   { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },

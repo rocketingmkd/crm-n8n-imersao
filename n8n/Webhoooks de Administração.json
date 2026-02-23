@@ -1214,7 +1214,9 @@
     {
       "parameters": {
         "model": "text-embedding-3-small",
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "id": "07bca974-710e-4d33-838d-819fecb0a77d",
       "name": "Embedding-3-small",
@@ -1538,6 +1540,24 @@
       "id": "572a122a-3af6-4cac-9e27-d1d597c45963",
       "name": "WEbhook - Configurar",
       "webhookId": "40cf2d46-b7f6-4da5-b061-13bd34914403"
+    },
+    {
+      "id": "03267915-51bf-4437-940d-9e2885e7801e",
+      "name": "Buscar Chaves API",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -92
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Criar Credenciais Dinâmicas",
+          "mode": "name"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -1667,6 +1687,11 @@
         [
           {
             "node": "Pega o número do telefone",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Chaves API",
             "type": "main",
             "index": 0
           }
@@ -2091,6 +2116,17 @@
         [
           {
             "node": "Normaliza Dados - Webhook e Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Chaves API": {
+      "main": [
+        [
+          {
+            "node": "Pega o número do telefone",
             "type": "main",
             "index": 0
           }

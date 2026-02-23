@@ -19,7 +19,8 @@ import {
   Sun,
   Moon,
   X,
-  UserCircle
+  UserCircle,
+  ListTodo
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,6 +48,7 @@ import { AppLogo } from "@/components/AppLogo";
 const allNavigationItems = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
   { name: "Agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
+  { name: "Tipos de Atendimento", href: "/app/tipos-atendimento", icon: ListTodo, requiredFeature: 'agendamento_automatico' as const },
   { name: "Clientes", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
   { name: "Kanban", href: "/app/clientes/kanban", icon: KanbanIcon, requiredFeature: null },
   { name: "Agente de IA", href: "/app/agent-ia", icon: Bot, requiredFeature: null },
@@ -417,10 +419,11 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                       <div className="mt-3 pt-3 border-t border-border">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Limites:</p>
                         <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
-                          <div><span className="font-medium">Agendamentos:</span> {plan.max_agendamentos_mes || '∞'}</div>
-                          <div><span className="font-medium">Mensagens:</span> {plan.max_mensagens_whatsapp_mes || '∞'}</div>
-                          <div><span className="font-medium">Usuários:</span> {plan.max_usuarios || '∞'}</div>
-                          <div><span className="font-medium">Clientes:</span> {plan.max_contatos || '∞'}</div>
+                          <div><span className="font-medium">Agendamentos:</span> {plan.max_agendamentos_mes ?? '∞'}</div>
+                          <div><span className="font-medium">Mensagens:</span> {plan.max_mensagens_whatsapp_mes ?? '∞'}</div>
+                          <div><span className="font-medium">Usuários:</span> {plan.max_usuarios ?? '∞'}</div>
+                          <div><span className="font-medium">Clientes:</span> {plan.max_contatos ?? '∞'}</div>
+                          <div><span className="font-medium">Arquivos (BC):</span> {plan.max_arquivos_conhecimento ?? '∞'}</div>
                         </div>
                       </div>
                     </div>

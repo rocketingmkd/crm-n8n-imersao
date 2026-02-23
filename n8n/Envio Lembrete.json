@@ -451,7 +451,9 @@
           "value": "gpt-4.1-mini"
         },
         "builtInTools": {},
-        "options": {}
+        "options": {
+          "apiKey": "={{ $('Buscar Chaves API').first().json.chave_openai }}"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -483,6 +485,24 @@
       "typeVersion": 1,
       "id": "65654bcc-8869-49ac-b032-d74a9c7b6676",
       "name": "Sticky Note29"
+    },
+    {
+      "id": "f560cb18-8eb0-4015-b2d6-95cf95b925d3",
+      "name": "Buscar Chaves API",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -204
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Criar Credenciais Dinâmicas",
+          "mode": "name"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -496,6 +516,11 @@
           },
           {
             "node": "Busca Configs IA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Chaves API",
             "type": "main",
             "index": 0
           }
@@ -612,6 +637,17 @@
           {
             "node": "Gera Mensagem para o cliente",
             "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Chaves API": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamentos Pendentes",
+            "type": "main",
             "index": 0
           }
         ]

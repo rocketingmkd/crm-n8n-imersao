@@ -903,7 +903,11 @@ export default function OrganizationForm() {
                         </div>
                         <div>
                           <span className="font-medium">Clientes:</span>{' '}
-                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_contatos || 'Ilimitado'}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_contatos ?? 'Ilimitado'}
+                        </div>
+                        <div>
+                          <span className="font-medium">Arquivos (BC):</span>{' '}
+                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_arquivos_conhecimento ?? 'Ilimitado'}
                         </div>
                       </div>
                     </div>

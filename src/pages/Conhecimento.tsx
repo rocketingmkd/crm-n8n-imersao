@@ -25,17 +25,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { LimitAlert } from "@/components/LimitAlert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Conhecimento() {
   const { profile, organization } = useAuth();
+  const { checkLimit } = usePlanFeatures();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [customFileName, setCustomFileName] = useState("");
   const [showFileNameDialog, setShowFileNameDialog] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ current: number; max: number | null } | null>(null);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [isDeletingDocument, setIsDeletingDocument] = useState(false);
   const [documentToView, setDocumentToView] = useState<any>(null);
@@ -91,6 +95,10 @@ export default function Conhecimento() {
       console.log("=======================");
       
       setDocuments(uniqueDocuments);
+
+      // Atualizar estado do limite de arquivos (para desabilitar upload quando no limite)
+      const res = await checkLimit("max_arquivos_conhecimento");
+      setLimitInfo({ current: res.current, max: res.max });
       
     } catch (error: any) {
       console.error("❌ Erro ao carregar documentos:", error);
@@ -342,6 +350,12 @@ export default function Conhecimento() {
       return;
     }
 
+    const limitCheck = await checkLimit("max_arquivos_conhecimento");
+    if (limitCheck.max != null && limitCheck.current >= limitCheck.max) {
+      toast.error(`Limite de arquivos na base de conhecimento atingido (${limitCheck.current}/${limitCheck.max}). Faça upgrade do plano.`);
+      return;
+    }
+
     try {
       setIsUploading(true);
 
@@ -410,7 +424,7 @@ export default function Conhecimento() {
       const fileInput = document.getElementById("pdf-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
 
-      // Recarregar lista de documentos
+      // Recarregar lista de documentos (já atualiza limitInfo dentro de loadDocuments)
       await loadDocuments();
 
     } catch (error: any) {
@@ -420,6 +434,8 @@ export default function Conhecimento() {
       setIsUploading(false);
     }
   };
+
+  const atLimit = limitInfo != null && limitInfo.max != null && limitInfo.current >= limitInfo.max;
 
   return (
     <PlanGuard feature="base_conhecimento">
@@ -459,8 +475,15 @@ export default function Conhecimento() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {limitInfo != null && limitInfo.max != null && (
+            <LimitAlert
+              current={limitInfo.current}
+              max={limitInfo.max}
+              limitName="arquivos na base de conhecimento"
+            />
+          )}
           {/* Área de Upload */}
-          <div className="space-y-4">
+          <div className={atLimit ? "opacity-60 pointer-events-none space-y-4" : "space-y-4"}>
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-accent/50 transition-colors">
               <input
                 id="pdf-upload"
@@ -468,18 +491,21 @@ export default function Conhecimento() {
                 accept="application/pdf"
                 onChange={handleFileSelect}
                 className="hidden"
+                disabled={atLimit}
               />
-              <label htmlFor="pdf-upload" className="cursor-pointer">
+              <label htmlFor={atLimit ? undefined : "pdf-upload"} className={atLimit ? "cursor-not-allowed" : "cursor-pointer"}>
                 <div className="flex flex-col items-center gap-3">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
                     <FileText className="h-8 w-8 text-accent" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Clique para selecionar um arquivo PDF
+                      {atLimit ? "Limite de arquivos atingido" : "Clique para selecionar um arquivo PDF"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Máximo 10MB por arquivo
+                      {atLimit
+                        ? `Você está usando ${limitInfo?.current ?? 0} de ${limitInfo?.max ?? 0} arquivos. Faça upgrade para enviar mais.`
+                        : "Máximo 10MB por arquivo"}
                     </p>
                   </div>
                 </div>
@@ -515,7 +541,7 @@ export default function Conhecimento() {
             {/* Botão de Upload */}
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
+              disabled={atLimit || !selectedFile || isUploading}
               className="w-full gap-2"
               size="lg"
             >

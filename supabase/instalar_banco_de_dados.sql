@@ -223,6 +223,37 @@ CREATE POLICY "usuarios_crud_agendamentos_da_org" ON agendamentos
 GRANT ALL ON agendamentos TO authenticated;
 
 -- ============================================================
+-- TABELA: tipos_atendimento (cadastro por organização)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS tipos_atendimento (
+  id               uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_organizacao   uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  nome             text NOT NULL,
+  ativo            boolean DEFAULT true,
+  ordem            integer DEFAULT 0,
+  criado_em        timestamptz DEFAULT now(),
+  atualizado_em    timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS tipos_atendimento_id_organizacao_idx ON tipos_atendimento(id_organizacao);
+
+CREATE TRIGGER trigger_tipos_atendimento_atualizado_em
+  BEFORE UPDATE ON tipos_atendimento
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE tipos_atendimento ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_tipos_atendimento" ON tipos_atendimento
+  USING (usuario_e_super_admin());
+
+CREATE POLICY "usuarios_crud_tipos_atendimento_da_org" ON tipos_atendimento
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
+
+GRANT ALL ON tipos_atendimento TO authenticated;
+
+-- ============================================================
 -- TABELA: configuracoes
 -- ============================================================
 
@@ -425,12 +456,13 @@ CREATE TABLE IF NOT EXISTS planos_assinatura (
   personalizacao_agente     boolean DEFAULT false,
   analytics                 boolean DEFAULT false,
   -- Limites numéricos (null = ilimitado)
-  max_agendamentos_mes      integer,
+  max_agendamentos_mes       integer,
   max_mensagens_whatsapp_mes integer,
-  max_usuarios              integer,
-  max_contatos              integer,
+  max_usuarios               integer,
+  max_contatos               integer,
+  max_arquivos_conhecimento   integer,
   -- Preços
-  preco_mensal              numeric(10,2),
+  preco_mensal               numeric(10,2),
   preco_anual               numeric(10,2),
   criado_em                 timestamptz DEFAULT now(),
   atualizado_em             timestamptz DEFAULT now()
@@ -444,7 +476,7 @@ CREATE POLICY "todos_podem_ver_planos" ON planos_assinatura
 CREATE POLICY "super_admin_gerencia_planos" ON planos_assinatura
   USING (usuario_e_super_admin());
 
-GRANT SELECT ON planos_assinatura TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON planos_assinatura TO authenticated;
 GRANT ALL    ON planos_assinatura TO service_role;
 
 -- Dados iniciais dos planos
@@ -453,48 +485,60 @@ INSERT INTO planos_assinatura (
   atendimento_inteligente, agendamento_automatico, lembretes_automaticos,
   confirmacao_email, base_conhecimento, relatorios_avancados,
   integracao_whatsapp, multi_usuarios, personalizacao_agente, analytics,
-  max_agendamentos_mes, max_mensagens_whatsapp_mes, max_usuarios, max_contatos,
+  max_agendamentos_mes, max_mensagens_whatsapp_mes, max_usuarios, max_contatos, max_arquivos_conhecimento,
   preco_mensal, preco_anual
 ) VALUES
   -- Plano A — Atendimento básico
   ('plano_a', 'Plano Starter', 'Atendimento inteligente via WhatsApp',
    true, false, false, false, false, false, true, false, false, false,
-   50, 500, 1, 100,
+   50, 500, 1, 100, NULL,
    97.00, 970.00),
   -- Plano B — + Agendamento
   ('plano_b', 'Plano Profissional', 'Atendimento + Agendamento automático',
    true, true, true, false, true, false, true, false, true, false,
-   200, 2000, 3, 500,
+   200, 2000, 3, 500, 50,
    197.00, 1970.00),
   -- Plano C — Completo
   ('plano_c', 'Plano Business', 'Solução completa para empresas',
    true, true, true, true, true, true, true, true, true, true,
-   1000, 10000, 10, 2000,
+   1000, 10000, 10, 2000, 200,
    397.00, 3970.00),
   -- Plano D — Enterprise
   ('plano_d', 'Plano Enterprise', 'Sem limites para grandes operações',
    true, true, true, true, true, true, true, true, true, true,
-   NULL, NULL, NULL, NULL,
+   NULL, NULL, NULL, NULL, NULL,
    797.00, 7970.00)
 ON CONFLICT (id_plano) DO UPDATE SET
-  nome_plano                = EXCLUDED.nome_plano,
-  descricao_plano           = EXCLUDED.descricao_plano,
-  atendimento_inteligente   = EXCLUDED.atendimento_inteligente,
-  agendamento_automatico    = EXCLUDED.agendamento_automatico,
-  lembretes_automaticos     = EXCLUDED.lembretes_automaticos,
-  confirmacao_email         = EXCLUDED.confirmacao_email,
-  base_conhecimento         = EXCLUDED.base_conhecimento,
-  relatorios_avancados      = EXCLUDED.relatorios_avancados,
-  integracao_whatsapp       = EXCLUDED.integracao_whatsapp,
-  multi_usuarios            = EXCLUDED.multi_usuarios,
-  personalizacao_agente     = EXCLUDED.personalizacao_agente,
-  analytics                 = EXCLUDED.analytics,
-  max_agendamentos_mes      = EXCLUDED.max_agendamentos_mes,
+  nome_plano                 = EXCLUDED.nome_plano,
+  descricao_plano            = EXCLUDED.descricao_plano,
+  atendimento_inteligente    = EXCLUDED.atendimento_inteligente,
+  agendamento_automatico     = EXCLUDED.agendamento_automatico,
+  lembretes_automaticos      = EXCLUDED.lembretes_automaticos,
+  confirmacao_email          = EXCLUDED.confirmacao_email,
+  base_conhecimento          = EXCLUDED.base_conhecimento,
+  relatorios_avancados       = EXCLUDED.relatorios_avancados,
+  integracao_whatsapp        = EXCLUDED.integracao_whatsapp,
+  multi_usuarios             = EXCLUDED.multi_usuarios,
+  personalizacao_agente      = EXCLUDED.personalizacao_agente,
+  analytics                  = EXCLUDED.analytics,
+  max_agendamentos_mes       = EXCLUDED.max_agendamentos_mes,
   max_mensagens_whatsapp_mes = EXCLUDED.max_mensagens_whatsapp_mes,
-  max_usuarios              = EXCLUDED.max_usuarios,
-  max_contatos              = EXCLUDED.max_contatos,
-  preco_mensal              = EXCLUDED.preco_mensal,
-  preco_anual               = EXCLUDED.preco_anual;
+  max_usuarios               = EXCLUDED.max_usuarios,
+  max_contatos               = EXCLUDED.max_contatos,
+  max_arquivos_conhecimento  = EXCLUDED.max_arquivos_conhecimento,
+  preco_mensal               = EXCLUDED.preco_mensal,
+  preco_anual                = EXCLUDED.preco_anual;
+
+-- Garantir coluna em instalações antigas (compatível com PostgreSQL < 11)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'planos_assinatura' AND column_name = 'max_arquivos_conhecimento'
+  ) THEN
+    ALTER TABLE planos_assinatura ADD COLUMN max_arquivos_conhecimento integer;
+  END IF;
+END $$;
 
 -- ============================================================
 -- TABELA: uso_tokens
@@ -563,6 +607,15 @@ GRANT ALL    ON configuracoes_globais TO service_role;
 INSERT INTO configuracoes_globais (id, nome_plataforma)
 VALUES ('00000000-0000-0000-0000-000000000001', 'FlowAtend')
 ON CONFLICT (id) DO NOTHING;
+
+-- View pública para branding (logo, nome, cor) — legível por anon para a tela de login
+CREATE OR REPLACE VIEW configuracoes_globais_branding AS
+SELECT id, nome_plataforma, url_logo_plataforma, url_logo_plataforma_escuro, cor_primaria
+FROM configuracoes_globais
+LIMIT 1;
+
+GRANT SELECT ON configuracoes_globais_branding TO anon;
+GRANT SELECT ON configuracoes_globais_branding TO authenticated;
 
 -- ============================================================
 -- TABELA: documentos (RAG — base de conhecimento geral)
