@@ -438,3 +438,10 @@
     @apply text-muted-foreground font-medium uppercase tracking-wider;
   }
 }
+
+@keyframes scan {
+  0%, 100% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: calc(100% - 4px); opacity: 0; }
+}
