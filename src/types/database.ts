@@ -68,6 +68,7 @@ export interface Database {
           url_logo_plataforma_escuro: string | null
           cor_primaria: string | null
           chave_elevenlabs: string | null
+          id_voz_elevenlabs: string | null
         }
         Insert: {
           id?: string
@@ -80,6 +81,7 @@ export interface Database {
           url_logo_plataforma_escuro?: string | null
           cor_primaria?: string | null
           chave_elevenlabs?: string | null
+          id_voz_elevenlabs?: string | null
         }
         Update: {
           id?: string
@@ -92,6 +94,7 @@ export interface Database {
           url_logo_plataforma_escuro?: string | null
           cor_primaria?: string | null
           chave_elevenlabs?: string | null
+          id_voz_elevenlabs?: string | null
         }
       }
       perfis: {

@@ -1561,7 +1561,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.elevenlabs.io/v1/text-to-speech/oJebhZNaPllxk6W0LSBA",
+        "url": "={{ 'https://api.elevenlabs.io/v1/text-to-speech/' + $('Buscar Chaves API').first().json.id_voz_elevenlabs }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

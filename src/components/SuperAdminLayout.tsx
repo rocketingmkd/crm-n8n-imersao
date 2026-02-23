@@ -14,7 +14,7 @@ const menuItems = [
   { path: "/super-admin/organizations", label: "Empresas", icon: Building2 },
   { path: "/super-admin/relatorios", label: "Relatórios", icon: FileBarChart },
   { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
-  { path: "/super-admin/token-usage", label: "Consumo de Tokens", icon: Eye },
+  { path: "/super-admin/token-usage", label: "Consumos dos Planos", icon: Eye },
   { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },
   { path: "/super-admin/insights", label: "Insights n8n", icon: BarChart3 },
   { path: "/super-admin/gestao-vps", label: "Gestão de VPS", icon: Server },

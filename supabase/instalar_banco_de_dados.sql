@@ -580,7 +580,8 @@ CREATE TABLE IF NOT EXISTS configuracoes_globais (
   url_logo_plataforma      text,
   url_logo_plataforma_escuro text,
   cor_primaria             text DEFAULT '#D9156C',
-  chave_elevenlabs         text
+  chave_elevenlabs         text,
+  id_voz_elevenlabs        text
 );
 
 CREATE TRIGGER trigger_configuracoes_globais_atualizado_em
@@ -616,6 +617,28 @@ LIMIT 1;
 
 GRANT SELECT ON configuracoes_globais_branding TO anon;
 GRANT SELECT ON configuracoes_globais_branding TO authenticated;
+
+-- ============================================================
+-- TABELA: mensagens (contagem de mensagens WhatsApp por organização)
+-- Para consumo dos planos e relatórios. n8n pode inserir ao enviar mensagem.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS mensagens (
+  id              bigserial PRIMARY KEY,
+  id_organizacao  uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em       timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS mensagens_id_organizacao_idx ON mensagens(id_organizacao);
+CREATE INDEX IF NOT EXISTS mensagens_criado_em_idx ON mensagens(criado_em);
+
+ALTER TABLE mensagens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_mensagens" ON mensagens
+  USING (usuario_e_super_admin());
+
+GRANT ALL ON mensagens TO service_role;
+GRANT SELECT, INSERT ON mensagens TO authenticated;
 
 -- ============================================================
 -- TABELA: documentos (RAG — base de conhecimento geral)

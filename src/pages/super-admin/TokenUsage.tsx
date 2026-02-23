@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Zap, TrendingUp, Building2, DollarSign, Activity, CalendarDays, Filter } from "lucide-react";
+import { Zap, TrendingUp, Building2, DollarSign, Activity, CalendarDays, Filter, MessageSquare, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -30,6 +30,7 @@ interface TokenRecord {
 interface Organization {
   id: string;
   nome: string;
+  identificador?: string | null;
   url_logo: string | null;
 }
 
@@ -78,6 +79,8 @@ export default function TokenUsage() {
   const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState<TokenRecord[]>([]);
   const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [docCountByIdentificador, setDocCountByIdentificador] = useState<Record<string, number>>({});
+  const [msgCountByOrgId, setMsgCountByOrgId] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<PeriodFilter>("30d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
 
@@ -88,17 +91,42 @@ export default function TokenUsage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [tokenRes, orgsRes] = await Promise.all([
+      const [tokenRes, orgsRes, docsRes, msgRes] = await Promise.all([
         supabase.from("uso_tokens").select("id, id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
-        supabase.from("organizacoes").select("id, nome, url_logo"),
+        supabase.from("organizacoes").select("id, nome, identificador, url_logo"),
+        supabase.from("documentos").select("id, metadados, titulo"),
+        supabase.from("mensagens").select("id_organizacao").then((r) => r),
       ]);
       if (tokenRes.error) throw tokenRes.error;
-      if (orgsRes.error) throw orgsRes.error;
       setRecords(tokenRes.data || []);
-      setOrgs(orgsRes.data || []);
+      setOrgs(orgsRes.error ? [] : (orgsRes.data || []));
+
+      // Arquivos RAG: contar por arquivo único (organização + nome do arquivo/título), não por linha
+      const filesByIdentificador: Record<string, Set<string>> = {};
+      if (!docsRes.error && docsRes.data) {
+        (docsRes.data as { metadados?: { organizacao?: string }; titulo?: string | null; id?: number }[]).forEach((d) => {
+          const org = d.metadados?.organizacao;
+          if (!org) return;
+          if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
+          const fileKey = (d.titulo && d.titulo.trim()) || String(d.id ?? "");
+          filesByIdentificador[org].add(fileKey);
+        });
+      }
+      const byIdentificador: Record<string, number> = {};
+      Object.entries(filesByIdentificador).forEach(([org, set]) => { byIdentificador[org] = set.size; });
+      setDocCountByIdentificador(byIdentificador);
+
+      // Mensagens: contar por id_organizacao
+      const byOrgId: Record<string, number> = {};
+      if (!msgRes.error && msgRes.data) {
+        (msgRes.data as { id_organizacao: string }[]).forEach((r) => {
+          if (r.id_organizacao) byOrgId[r.id_organizacao] = (byOrgId[r.id_organizacao] || 0) + 1;
+        });
+      }
+      setMsgCountByOrgId(byOrgId);
     } catch (error) {
       console.error("Erro:", error);
-      toast.error("Erro ao carregar dados de tokens");
+      toast.error("Erro ao carregar dados");
     } finally {
       setIsLoading(false);
     }
@@ -123,11 +151,19 @@ export default function TokenUsage() {
   const totalCost = filtered.reduce((s, r) => s + (r.custo_reais || 0), 0);
 
   const orgGroups = useMemo(() => {
-    const map: Record<string, { tokens: number; cost: number; name: string }> = {};
+    const map: Record<string, { tokens: number; cost: number; name: string; identificador: string | null; arquivosRag: number; mensagens: number }> = {};
     filtered.forEach((r) => {
       if (!map[r.id_organizacao]) {
         const org = orgMap.get(r.id_organizacao);
-        map[r.id_organizacao] = { tokens: 0, cost: 0, name: org?.nome || "Desconhecida" };
+        const ident = org?.identificador ?? null;
+        map[r.id_organizacao] = {
+          tokens: 0,
+          cost: 0,
+          name: org?.nome || "Desconhecida",
+          identificador: ident,
+          arquivosRag: ident ? (docCountByIdentificador[ident] || 0) : 0,
+          mensagens: msgCountByOrgId[r.id_organizacao] || 0,
+        };
       }
       map[r.id_organizacao].tokens += r.total_tokens || 0;
       map[r.id_organizacao].cost += r.custo_reais || 0;
@@ -135,7 +171,7 @@ export default function TokenUsage() {
     return Object.entries(map)
       .map(([id, d]) => ({ id, ...d }))
       .sort((a, b) => b.cost - a.cost);
-  }, [filtered, orgMap]);
+  }, [filtered, orgMap, docCountByIdentificador, msgCountByOrgId]);
 
   // Daily chart data
   const dailyData = useMemo(() => {
@@ -220,6 +256,40 @@ export default function TokenUsage() {
     return orgs.filter((o) => ids.has(o.id));
   }, [records, orgs]);
 
+  const totalArquivosRag = useMemo(
+    () => Object.values(docCountByIdentificador).reduce((s, n) => s + n, 0),
+    [docCountByIdentificador]
+  );
+  const totalMensagens = useMemo(
+    () => Object.values(msgCountByOrgId).reduce((s, n) => s + n, 0),
+    [msgCountByOrgId]
+  );
+  const avgCost = orgGroups.length > 0 ? totalCost / orgGroups.length : 0;
+  const kpis = [
+    { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap },
+    { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign },
+    { title: "Consumo de mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabela mensagens", icon: MessageSquare },
+    { title: "Arquivos no RAG", value: totalArquivosRag.toLocaleString("pt-BR"), sub: "Arquivos únicos por empresa", icon: FileText },
+    { title: "Média por Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp },
+    { title: "Empresas Ativas", value: orgGroups.length, icon: Activity },
+  ];
+  const dailyChartConfig = {
+    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
+    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
+  };
+  const weeklyChartConfig = {
+    tokens: { label: "Tokens", color: "hsl(262, 83%, 58%)" },
+    cost: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" },
+  };
+  const monthlyChartConfig = {
+    tokens: { label: "Tokens", color: "hsl(200, 80%, 50%)" },
+    cost: { label: "Custo (R$)", color: "hsl(40, 90%, 55%)" },
+  };
+  const orgChartConfig = {
+    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
+    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -228,42 +298,13 @@ export default function TokenUsage() {
     );
   }
 
-  const avgCost = orgGroups.length > 0 ? totalCost / orgGroups.length : 0;
-
-  const kpis = [
-    { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap },
-    { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign },
-    { title: "Média por Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp },
-    { title: "Empresas Ativas", value: orgGroups.length, icon: Activity },
-  ];
-
-  const dailyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
-    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
-  };
-
-  const weeklyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(262, 83%, 58%)" },
-    cost: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" },
-  };
-
-  const monthlyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(200, 80%, 50%)" },
-    cost: { label: "Custo (R$)", color: "hsl(40, 90%, 55%)" },
-  };
-
-  const orgChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
-    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
-  };
-
   return (
     <div className="space-y-6">
       {/* Header + Filtros */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Consumo de Tokens</h1>
-          <p className="text-sm text-muted-foreground mt-1">Acompanhe o uso de tokens e custos por empresa</p>
+          <h1 className="text-2xl font-bold text-foreground">Consumos dos Planos</h1>
+          <p className="text-sm text-muted-foreground mt-1">Tokens, mensagens e arquivos na base de conhecimento (RAG) por empresa</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -299,9 +340,10 @@ export default function TokenUsage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
+          const sub = "sub" in kpi ? (kpi as { sub?: string }).sub : undefined;
           return (
             <Card key={kpi.title} className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -310,6 +352,7 @@ export default function TokenUsage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
+                {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
               </CardContent>
             </Card>
           );
@@ -525,6 +568,14 @@ export default function TokenUsage() {
                         <div className="rounded-lg p-2.5 border border-border bg-muted/30">
                           <p className="text-[10px] text-muted-foreground mb-0.5">Custo</p>
                           <p className="text-base font-bold text-primary">{org.cost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                        </div>
+                        <div className="rounded-lg p-2.5 border border-border bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Mensagens</p>
+                          <p className="text-base font-bold text-foreground">{org.mensagens.toLocaleString("pt-BR")}</p>
+                        </div>
+                        <div className="rounded-lg p-2.5 border border-border bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Arquivos RAG</p>
+                          <p className="text-base font-bold text-foreground">{org.arquivosRag}</p>
                         </div>
                       </div>
                     </CardContent>

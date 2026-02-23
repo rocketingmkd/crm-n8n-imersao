@@ -16,6 +16,7 @@ interface ConfiguracoesGlobaisForm {
   whatsapp_suporte: string;
   chave_openai: string;
   chave_elevenlabs: string;
+  id_voz_elevenlabs: string;
   nome_plataforma: string;
   url_logo_plataforma: string;
   url_logo_plataforma_escuro: string;
@@ -50,6 +51,7 @@ export default function SuperAdminSettings() {
           url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || "",
           cor_primaria: data.cor_primaria || "#D9156C",
           chave_elevenlabs: data.chave_elevenlabs || "",
+          id_voz_elevenlabs: data.id_voz_elevenlabs || "",
         });
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
@@ -72,6 +74,7 @@ export default function SuperAdminSettings() {
         url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || null,
         cor_primaria: data.cor_primaria || '#D9156C',
         chave_elevenlabs: data.chave_elevenlabs || null,
+        id_voz_elevenlabs: data.id_voz_elevenlabs || null,
       }).eq('id', '00000000-0000-0000-0000-000000000001');
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["cores-plataforma"] });
@@ -283,8 +286,8 @@ export default function SuperAdminSettings() {
               <Mic className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-foreground text-base">API Key ElevenLabs</CardTitle>
-              <CardDescription>Chave de API ElevenLabs para síntese de voz</CardDescription>
+              <CardTitle className="text-foreground text-base">ElevenLabs — Síntese de Voz</CardTitle>
+              <CardDescription>Credenciais e voz usadas nos fluxos de atendimento por áudio</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -295,9 +298,22 @@ export default function SuperAdminSettings() {
                 <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">Chave de API ElevenLabs</Label>
                 <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono" />
                 <p className="text-[10px] text-muted-foreground">
-                  Usada para geração de áudio com vozes realistas nos fluxos de atendimento.
+                  Usada para autenticar as chamadas à API ElevenLabs nos fluxos n8n.
                 </p>
                 {errors.chave_elevenlabs && <p className="text-xs text-destructive">{errors.chave_elevenlabs.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="id_voz_elevenlabs" className="text-foreground text-xs font-medium">ID da Voz</Label>
+                <Input
+                  id="id_voz_elevenlabs"
+                  {...register("id_voz_elevenlabs")}
+                  placeholder="ex: oJebhZNaPllxk6W0LSBA"
+                  className="font-mono"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  ID da voz no ElevenLabs (encontrado em My Voices → Voice ID). Usado dinamicamente nos fluxos de atendimento.
+                </p>
+                {errors.id_voz_elevenlabs && <p className="text-xs text-destructive">{errors.id_voz_elevenlabs.message}</p>}
               </div>
               {saveButton}
             </form>

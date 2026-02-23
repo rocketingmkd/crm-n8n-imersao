@@ -367,6 +367,7 @@ export type Database = {
           url_logo_plataforma_escuro: string | null
           cor_primaria: string | null
           chave_elevenlabs: string | null
+          id_voz_elevenlabs: string | null
         }
         Insert: {
           criado_em?: string
@@ -379,6 +380,7 @@ export type Database = {
           url_logo_plataforma_escuro?: string | null
           cor_primaria?: string | null
           chave_elevenlabs?: string | null
+          id_voz_elevenlabs?: string | null
         }
         Update: {
           criado_em?: string
@@ -391,6 +393,7 @@ export type Database = {
           url_logo_plataforma_escuro?: string | null
           cor_primaria?: string | null
           chave_elevenlabs?: string | null
+          id_voz_elevenlabs?: string | null
         }
         Relationships: []
       }
