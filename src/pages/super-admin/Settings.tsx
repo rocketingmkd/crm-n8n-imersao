@@ -21,6 +21,7 @@ interface ConfiguracoesGlobaisForm {
   chave_elevenlabs: string;
   id_voz_elevenlabs: string;
   nome_plataforma: string;
+  frase_login: string;
   url_logo_plataforma: string;
   url_logo_plataforma_escuro: string;
   cor_primaria: string;
@@ -56,6 +57,7 @@ export default function SuperAdminSettings() {
           whatsapp_suporte: data.whatsapp_suporte || "",
           chave_openai: data.chave_openai || "",
           nome_plataforma: data.nome_plataforma || "FlowAtend",
+          frase_login: (data as any).frase_login || "Seu universo de automações espera",
           url_logo_plataforma: data.url_logo_plataforma || "",
           url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || "",
           cor_primaria: data.cor_primaria || "#D9156C",
@@ -80,6 +82,7 @@ export default function SuperAdminSettings() {
         whatsapp_suporte: data.whatsapp_suporte || null,
         chave_openai: data.chave_openai || null,
         nome_plataforma: data.nome_plataforma || 'FlowAtend',
+        frase_login: data.frase_login || 'Seu universo de automações espera',
         url_logo_plataforma: data.url_logo_plataforma || null,
         url_logo_plataforma_escuro: data.url_logo_plataforma_escuro || null,
         cor_primaria: data.cor_primaria || '#D9156C',
@@ -166,6 +169,11 @@ export default function SuperAdminSettings() {
                     <Label htmlFor="nome_plataforma" className="text-foreground text-xs font-medium">Nome da Plataforma</Label>
                     <Input id="nome_plataforma" {...register("nome_plataforma")} placeholder="FlowAtend" className="liquid-glass-input rounded-xl" />
                     <p className="text-[10px] text-muted-foreground">Nome exibido no título do browser e como fallback quando não há logo.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="frase_login" className="text-foreground text-xs font-medium">Frase da Tela de Login</Label>
+                    <Input id="frase_login" {...register("frase_login")} placeholder="Seu universo de automações espera" className="liquid-glass-input rounded-xl" />
+                    <p className="text-[10px] text-muted-foreground">Subtítulo exibido abaixo do logo na tela de login.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
