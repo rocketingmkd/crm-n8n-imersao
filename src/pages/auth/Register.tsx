@@ -206,7 +206,13 @@ export default function Register() {
               )}
             </Button>
 
-            <p className={`text-xs text-center pt-2 ${isDark ? "text-white/50" : "text-foreground/50"}`}>
+            <Link to="/login" className="block">
+              <Button type="button" variant="ghost" className={`w-full gap-2 text-xs ${isDark ? "text-white/50 hover:text-white/70" : "text-foreground/50 hover:text-foreground/70"}`}>
+                Cancelar
+              </Button>
+            </Link>
+
+            <p className={`text-xs text-center ${isDark ? "text-white/50" : "text-foreground/50"}`}>
               Já tem uma conta?{' '}
               <Link to="/login" className="text-primary font-semibold hover:text-primary/80 hover:underline transition-colors">Faça login</Link>
             </p>
