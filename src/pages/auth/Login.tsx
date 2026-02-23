@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Sun, Moon, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { AppLogo } from "@/components/AppLogo";
 import loginBg from "@/assets/login-bg.jpg";
+import loginBgVideo from "@/assets/login-bg-video.mp4";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -55,12 +56,17 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Fullscreen background image */}
-      <img
-        src={loginBg}
-        alt=""
+      {/* Fullscreen background video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        poster={loginBg}
         className="absolute inset-0 w-full h-full object-cover"
-      />
+      >
+        <source src={loginBgVideo} type="video/mp4" />
+      </video>
       {/* Overlay — adapts to theme */}
       <div className={isDark ? "absolute inset-0 bg-black/50" : "absolute inset-0 bg-white/60 backdrop-blur-sm"} />
 
