@@ -107,7 +107,7 @@ export default function SuperAdminDashboard() {
         const orgList = orgsRes.data || [];
         setOrgs(orgList);
         setTokenRecords(tokensRes.data || []);
-        setDocRecords(docsRes.error ? [] : (docsRes.data || []));
+        setDocRecords(docsRes.error ? [] : ((docsRes.data || []) as any[]));
         setCounts({
           totalOrgs: countOrgs.count ?? 0,
           activeOrgs: countActive.count ?? 0,

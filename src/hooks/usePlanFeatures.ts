@@ -66,8 +66,8 @@ export function usePlanFeatures() {
     max_mensagens_whatsapp_mes: planConfig?.max_mensagens_whatsapp_mes ?? null,
     max_usuarios: planConfig?.max_usuarios ?? null,
     max_contatos: planConfig?.max_contatos ?? null,
-    max_arquivos_conhecimento: planConfig?.max_arquivos_conhecimento ?? null,
-  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_contatos, planConfig?.max_arquivos_conhecimento]);
+    max_arquivos_conhecimento: (planConfig as any)?.max_arquivos_conhecimento ?? null,
+  }), [planConfig?.max_agendamentos_mes, planConfig?.max_mensagens_whatsapp_mes, planConfig?.max_usuarios, planConfig?.max_contatos, (planConfig as any)?.max_arquivos_conhecimento]);
 
   // Função para verificar se tem acesso a uma feature
   const hasFeature = (feature: keyof PlanFeatures): boolean => {

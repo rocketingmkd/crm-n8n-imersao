@@ -38,12 +38,12 @@ export default function Organizations() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: organizations, isLoading } = useQuery<Organization[]>({
+  const { data: organizations, isLoading } = useQuery({
     queryKey: ["super-admin-organizations"],
     queryFn: async () => {
       const { data, error } = await supabase.from("organizacoes").select("*").order("criado_em", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 

@@ -211,15 +211,15 @@ export default function Integrations() {
 
       if (data) {
         console.log("Instância encontrada:", data);
-        setDbInstance(data);
+        setDbInstance(data as any);
         
         // Converter dados do banco para o formato da interface
         const instance: WhatsAppInstance = {
           id: data.id_instancia,
           token: data.token,
           name: data.nome_instancia,
-          adminField01: data.admin_field_01,
-          phone: data.phone,
+          adminField01: data.campo_admin_01,
+          phone: data.telefone,
           created: data.webhook_criado || data.criado_em,
         };
         
@@ -264,8 +264,8 @@ export default function Integrations() {
           id_instancia: instance.id,
           token: instance.token,
           nome_instancia: instance.name,
-          admin_field_01: instance.adminField01,
-          phone: instance.phone,
+          campo_admin_01: instance.adminField01,
+          telefone: instance.phone,
           webhook_criado: instance.created,
           situacao: "pendente",
         });

@@ -72,7 +72,7 @@ export default function CRM() {
   // Verificar limite ao abrir dialog
   useEffect(() => {
     if (isDialogOpen) {
-      checkLimit('max_contacts').then(result => {
+      checkLimit('max_contatos').then(result => {
         setLimitInfo({ current: result.current, max: result.max });
       });
     }
@@ -101,7 +101,7 @@ export default function CRM() {
     }
 
     // Verificar limite antes de criar
-    const limitCheck = await checkLimit('max_contacts');
+    const limitCheck = await checkLimit('max_contatos');
     if (!limitCheck.allowed) {
       toast.error(`Limite de ${limitCheck.max} ${p} atingido! Faça upgrade do seu plano.`);
       return;

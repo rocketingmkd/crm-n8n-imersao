@@ -275,17 +275,17 @@ export default function AgentIA() {
       // Buscar todos os registros da organização
       const { data, error } = await supabase
         .from("uso_tokens")
-        .select("total_tokens, cost_reais")
+        .select("total_tokens, custo_reais")
         .eq("id_organizacao", profile.id_organizacao);
 
       if (error) throw error;
 
       // Somar todos os tokens
-      const totalTks = data?.reduce((sum, record) => sum + (record.total_tokens || 0), 0) || 0;
+      const totalTks = data?.reduce((sum, record: any) => sum + (record.total_tokens || 0), 0) || 0;
       setTotalTokens(totalTks);
 
       // Somar todos os custos em reais
-      const totalCst = data?.reduce((sum, record) => sum + (record.cost_reais || 0), 0) || 0;
+      const totalCst = data?.reduce((sum, record: any) => sum + (record.custo_reais || 0), 0) || 0;
       setTotalCost(totalCst);
     } catch (error) {
       console.error("Erro ao carregar tokens:", error);
