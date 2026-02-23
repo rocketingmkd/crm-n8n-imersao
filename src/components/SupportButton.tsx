@@ -37,12 +37,12 @@ export default function SupportButton() {
     <button
       onClick={handleWhatsAppClick}
       className={cn(
-        "fixed bottom-6 right-6 z-50",
+        "fixed bottom-6 right-6 z-[9999]",
         "h-14 w-14 rounded-full",
-        "liquid-glass !rounded-full",
-        "bg-green-500/20 hover:bg-green-500/30",
+        "bg-green-500/15 hover:bg-green-500/25",
         "border border-green-500/40",
         "shadow-lg shadow-green-500/20",
+        "backdrop-blur-2xl saturate-150",
         "transition-all duration-300 hover:scale-110",
         "flex items-center justify-center",
         "group cursor-pointer"
