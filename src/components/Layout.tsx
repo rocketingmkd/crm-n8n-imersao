@@ -51,7 +51,6 @@ const allNavigationItems = [
   { name: "Tipos de Atendimento", href: "/app/tipos-atendimento", icon: ListTodo, requiredFeature: 'agendamento_automatico' as const },
   { name: "CRM / Clientes", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
   { name: "Agente de IA", href: "/app/agent-ia", icon: Bot, requiredFeature: null },
-  { name: "Conhecimento", href: "/app/conhecimento", icon: BookOpen, requiredFeature: 'base_conhecimento' as const },
   { name: "WhatsApp", href: "/app/integrations", icon: Plug, requiredFeature: null },
   { name: "Minha conta", href: "/app/minha-conta", icon: UserCircle, requiredFeature: null },
 ];

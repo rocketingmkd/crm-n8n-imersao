@@ -26,7 +26,7 @@ import Dashboard from "./pages/Dashboard";
 import Agenda from "./pages/Agenda";
 import CRM from "./pages/CRM";
 import AgentIA from "./pages/AgentIA";
-import Conhecimento from "./pages/Conhecimento";
+// Conhecimento agora é uma aba dentro de AgentIA
 import Integrations from "./pages/Integrations";
 import Observability from "./pages/Observability";
 import TiposAtendimento from "./pages/TiposAtendimento";
@@ -93,7 +93,7 @@ const App = () => (
                 <Route path="/app/clientes/crm" element={<CRM />} />
                 <Route path="/app/clientes/kanban" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/agent-ia" element={<AgentIA />} />
-                <Route path="/app/conhecimento" element={<Conhecimento />} />
+                <Route path="/app/conhecimento" element={<Navigate to="/app/agent-ia" replace />} />
                 <Route path="/app/crm" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/crm/kanban" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/integrations" element={<Integrations />} />
