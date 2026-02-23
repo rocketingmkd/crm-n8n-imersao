@@ -104,9 +104,14 @@ export default function SuperAdminSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Configurações</h1>
-        <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Gerencie as configurações globais do sistema</p>
+      <div className="page-header">
+        <h1>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-500/10">
+            <SettingsIcon className="h-4 w-4 text-slate-500" />
+          </div>
+          Configurações
+        </h1>
+        <p>Gerencie as configurações globais do sistema</p>
       </div>
 
       <Tabs defaultValue="visual" className="w-full">

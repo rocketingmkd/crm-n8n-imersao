@@ -128,4 +128,45 @@
   .dark .sidebar-shadow {
     box-shadow: 1px 0 0 0 hsl(var(--sidebar-border)), 4px 0 24px -4px hsl(0 0% 0% / 0.4);
   }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.6);
+  }
+
+  .dark .glass-card {
+    background: hsl(var(--card) / 0.6);
+    border: 1px solid hsl(var(--border) / 0.4);
+  }
+
+  .page-header {
+    @apply flex flex-col gap-1;
+  }
+
+  .page-header h1 {
+    @apply text-xl md:text-2xl font-bold text-foreground tracking-tight flex items-center gap-2;
+  }
+
+  .page-header p {
+    @apply text-xs md:text-sm text-muted-foreground;
+  }
+
+  .kpi-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-glow::after {
+    content: '';
+    position: absolute;
+    right: -12px;
+    bottom: -12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 9999px;
+    opacity: 0.2;
+    filter: blur(20px);
+    pointer-events: none;
+  }
 }

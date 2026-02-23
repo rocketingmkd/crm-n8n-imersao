@@ -263,12 +263,12 @@ export default function TokenUsage() {
   );
   const avgCost = orgGroups.length > 0 ? totalCost / orgGroups.length : 0;
   const kpis = [
-    { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap },
-    { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign },
-    { title: "Consumo de mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabelas {empresa}_conversas (n8n)", icon: MessageSquare },
-    { title: "Arquivos no RAG", value: totalArquivosRag.toLocaleString("pt-BR"), sub: "Arquivos únicos por empresa", icon: FileText },
-    { title: "Média por Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp },
-    { title: "Empresas Ativas", value: orgGroups.length, icon: Activity },
+    { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap, color: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" } },
+    { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
+    { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabelas {empresa}_conversas", icon: MessageSquare, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
+    { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), sub: "Arquivos únicos", icon: FileText, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
+    { title: "Média/Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp, color: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" } },
+    { title: "Empresas Ativas", value: orgGroups.length, icon: Activity, color: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/20" } },
   ];
   const dailyChartConfig = {
     tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
@@ -299,9 +299,14 @@ export default function TokenUsage() {
     <div className="space-y-6">
       {/* Header + Filtros */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Consumos dos Planos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Tokens, mensagens e arquivos na base de conhecimento (RAG) por empresa</p>
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+              <Zap className="h-4 w-4 text-amber-500" />
+            </div>
+            Consumos dos Planos
+          </h1>
+          <p>Tokens, mensagens e arquivos RAG por empresa</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -336,22 +341,26 @@ export default function TokenUsage() {
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {/* KPIs Multicores */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           const sub = "sub" in kpi ? (kpi as { sub?: string }).sub : undefined;
           return (
-            <Card key={kpi.title} className="border-border">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                <div className="rounded-lg bg-primary/10 p-2"><Icon className="h-4 w-4 text-primary" /></div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
-                {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
-              </CardContent>
-            </Card>
+            <div
+              key={kpi.title}
+              className={`relative overflow-hidden rounded-xl border ${kpi.color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
+                <div className={`rounded-lg ${kpi.color.bg} p-1.5 md:p-2`}>
+                  <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.color.text}`} />
+                </div>
+              </div>
+              <div className="text-lg md:text-2xl font-bold text-foreground truncate">{kpi.value}</div>
+              {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+              <div className={`absolute -right-3 -bottom-3 h-16 w-16 rounded-full ${kpi.color.bg} opacity-30 blur-xl`} />
+            </div>
           );
         })}
       </div>

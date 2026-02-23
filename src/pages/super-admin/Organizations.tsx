@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Plus, Pencil, Power, PowerOff, Search, Trash2, Building2 } from "lucide-react";
+import { Plus, Pencil, Power, PowerOff, Search, Trash2, Building2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Organization {
   id: string; nome: string; identificador: string; ativo: boolean; criado_em: string; settings: any;
@@ -58,9 +61,7 @@ export default function Organizations() {
 
   const planNameById = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const p of plans) {
-      map[p.id_plano] = p.nome_plano;
-    }
+    for (const p of plans) map[p.id_plano] = p.nome_plano;
     return map;
   }, [plans]);
 
@@ -87,7 +88,7 @@ export default function Organizations() {
     if (!searchQuery.trim()) return organizations;
     const q = searchQuery.toLowerCase();
     return organizations.filter((org) =>
-      org.nome.toLowerCase().includes(q) || org.id.toLowerCase().includes(q)
+      org.nome.toLowerCase().includes(q) || org.identificador?.toLowerCase().includes(q) || org.id.toLowerCase().includes(q)
     );
   }, [organizations, searchQuery]);
 
@@ -95,7 +96,6 @@ export default function Organizations() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedOrgs = filteredOrganizations.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  // Reset page on search
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
@@ -109,15 +109,20 @@ export default function Organizations() {
     );
   }
 
+  const activeCount = organizations?.filter((o) => o.ativo).length ?? 0;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Empresas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {organizations?.length ?? 0} empresa{(organizations?.length ?? 0) !== 1 ? "s" : ""} cadastrada{(organizations?.length ?? 0) !== 1 ? "s" : ""}
-          </p>
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
+              <Building2 className="h-4 w-4 text-blue-500" />
+            </div>
+            Empresas
+          </h1>
+          <p>{organizations?.length ?? 0} empresas · {activeCount} ativas</p>
         </div>
         <Button onClick={() => navigate("/super-admin/organizations/new")} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-pink" size="default">
           <Plus className="mr-2 h-4 w-4" />
@@ -126,17 +131,17 @@ export default function Organizations() {
       </div>
 
       {/* Search & Page Size */}
-      <Card className="border-border">
-        <CardContent className="pt-5 pb-4">
+      <Card className="glass-card">
+        <CardContent className="pt-4 pb-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou código da empresa..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="pl-10" />
+              <Input placeholder="Buscar por nome ou identificador..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="pl-10 h-9" />
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
               <span>Exibir</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
-                <SelectTrigger className="w-[70px] h-9">
+                <SelectTrigger className="w-[65px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,24 +150,23 @@ export default function Organizations() {
                   ))}
                 </SelectContent>
               </Select>
-              <span>por página</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Table */}
-      <Card className="border-border overflow-hidden">
+      <Card className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="font-semibold">Empresa</TableHead>
-                <TableHead className="font-semibold">Código</TableHead>
-                <TableHead className="font-semibold">Plano</TableHead>
-                <TableHead className="font-semibold">Criada em</TableHead>
-                <TableHead className="font-semibold text-center">Status</TableHead>
-                <TableHead className="font-semibold text-right">Ações</TableHead>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-semibold text-xs">Empresa</TableHead>
+                <TableHead className="font-semibold text-xs hidden sm:table-cell">Identificador</TableHead>
+                <TableHead className="font-semibold text-xs">Plano</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell">Criada em</TableHead>
+                <TableHead className="font-semibold text-xs text-center">Status</TableHead>
+                <TableHead className="font-semibold text-xs text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -170,39 +174,77 @@ export default function Organizations() {
                 <TableRow>
                   <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Building2 className="h-8 w-8" />
-                      <p className="text-sm">{searchQuery ? "Nenhuma empresa encontrada" : "Nenhuma empresa cadastrada ainda"}</p>
+                      <Building2 className="h-8 w-8 opacity-30" />
+                      <p className="text-sm">{searchQuery ? "Nenhuma empresa encontrada" : "Nenhuma empresa cadastrada"}</p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedOrgs.map((org) => (
-                  <TableRow key={org.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-medium text-foreground">{org.nome}</TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">{org.id.slice(0, 8)}</TableCell>
+                  <TableRow key={org.id} className="hover:bg-muted/20 transition-colors">
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                          <Building2 className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="font-medium text-foreground text-sm">{org.nome}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <span className="text-muted-foreground font-mono text-xs">{org.identificador || org.id.slice(0, 8)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] font-medium">
                         {org.plano_assinatura ? (planNameById[org.plano_assinatura] || org.plano_assinatura) : "—"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
                       {new Date(org.criado_em).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={org.ativo ? "default" : "secondary"} className={org.ativo ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20" : ""}>
+                      <Badge
+                        variant={org.ativo ? "default" : "secondary"}
+                        className={org.ativo
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 text-[10px]"
+                          : "text-[10px]"
+                        }
+                      >
                         {org.ativo ? "Ativa" : "Inativa"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)} title="Editar">
-                          <Pencil className="h-4 w-4" />
+                      {/* Mobile: dropdown */}
+                      <div className="sm:hidden">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)}>
+                              <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setToggleOrgId(org.id)}>
+                              {org.ativo ? <PowerOff className="h-3.5 w-3.5 mr-2" /> : <Power className="h-3.5 w-3.5 mr-2" />}
+                              {org.ativo ? "Desativar" : "Ativar"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteOrgId(org.id)} className="text-destructive focus:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      {/* Desktop: inline buttons */}
+                      <div className="hidden sm:flex justify-end gap-0.5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)} title="Editar">
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setToggleOrgId(org.id)} title={org.ativo ? "Desativar" : "Ativar"}>
-                          {org.ativo ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setToggleOrgId(org.id)} title={org.ativo ? "Desativar" : "Ativar"}>
+                          {org.ativo ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteOrgId(org.id)} title="Excluir" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteOrgId(org.id)} title="Excluir">
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -213,14 +255,14 @@ export default function Organizations() {
           </Table>
         </div>
 
-        {/* Pagination Footer */}
+        {/* Pagination */}
         {filteredOrganizations.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border text-xs text-muted-foreground">
             <span>
-              Mostrando {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, filteredOrganizations.length)} de {filteredOrganizations.length}
+              {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, filteredOrganizations.length)} de {filteredOrganizations.length}
             </span>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}>
                 Anterior
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -232,20 +274,14 @@ export default function Organizations() {
                 }, [])
                 .map((item, idx) =>
                   item === "ellipsis" ? (
-                    <span key={`e-${idx}`} className="px-2">…</span>
+                    <span key={`e-${idx}`} className="px-1.5">…</span>
                   ) : (
-                    <Button
-                      key={item}
-                      variant={item === safePage ? "default" : "outline"}
-                      size="sm"
-                      className="min-w-[36px]"
-                      onClick={() => setCurrentPage(item)}
-                    >
+                    <Button key={item} variant={item === safePage ? "default" : "outline"} size="sm" className="min-w-[28px] h-7 text-xs" onClick={() => setCurrentPage(item)}>
                       {item}
                     </Button>
                   )
                 )}
-              <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}>
                 Próximo
               </Button>
             </div>
@@ -266,7 +302,7 @@ export default function Organizations() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { const org = organizations?.find((o) => o.id === toggleOrgId); if (org) toggleStatus.mutate({ orgId: org.id, newStatus: !org.ativo }); }} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <AlertDialogAction onClick={() => { const org = organizations?.find((o) => o.id === toggleOrgId); if (org) toggleStatus.mutate({ orgId: org.id, newStatus: !org.ativo }); }}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -281,7 +317,7 @@ export default function Organizations() {
               <Trash2 className="h-5 w-5 text-destructive" /> Excluir Empresa
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p className="font-semibold text-destructive">⚠️ ATENÇÃO: Esta ação é irreversível!</p>
+              <p className="font-semibold text-destructive">⚠️ Esta ação é irreversível!</p>
               <p>Ao excluir "<strong className="text-foreground">{organizations?.find((o) => o.id === deleteOrgId)?.nome}</strong>", todos os dados serão apagados.</p>
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>Todos os usuários/perfis</li>

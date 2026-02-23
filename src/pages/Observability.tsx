@@ -289,11 +289,14 @@ export default function Observability() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Observabilidade</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Uso do servidor, memória, CPU e workers do n8n
-          </p>
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
+              <Laptop className="h-4 w-4 text-orange-500" />
+            </div>
+            Observabilidade
+          </h1>
+          <p>Uso do servidor, memória, CPU e workers do n8n</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -317,70 +320,48 @@ export default function Observability() {
         </div>
       </div>
 
-      {/* Cards: CPU, RAM, Disco */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Laptop className="h-4 w-4 text-muted-foreground" />
-              Processador (CPU)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{metrics.cpu.percent}%</div>
-            <Progress
-              value={metrics.cpu.percent}
-              className={cn("mt-2 h-2 [&>div]:transition-all", progressBarClass(metrics.cpu.percent))}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Abaixo de 70% está tudo bem. Acima pode indicar automações pesadas.
-            </p>
-          </CardContent>
-        </Card>
+      {/* Cards: CPU, RAM, Disco - com cores individuais */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="relative overflow-hidden rounded-xl border border-orange-500/20 bg-card p-4 transition-all hover:shadow-lg hover:scale-[1.01]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CPU</span>
+            <div className="rounded-lg bg-orange-500/10 p-2">
+              <Cpu className="h-4 w-4 text-orange-500" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-foreground">{metrics.cpu.percent}%</div>
+          <Progress value={metrics.cpu.percent} className={cn("mt-3 h-2 [&>div]:transition-all", progressBarClass(metrics.cpu.percent))} />
+          <p className="text-[10px] text-muted-foreground mt-2">Abaixo de 70% = OK</p>
+          <div className="absolute -right-3 -bottom-3 h-16 w-16 rounded-full bg-orange-500/10 opacity-30 blur-xl" />
+        </div>
 
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Brain className="h-4 w-4 text-muted-foreground" />
-              Memória RAM
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{metrics.memory.percent}%</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics.memory.usedMb.toLocaleString("pt-BR")} / {metrics.memory.totalMb.toLocaleString("pt-BR")} MB
-            </p>
-            <Progress
-              value={metrics.memory.percent}
-              className={cn("mt-2 h-2 [&>div]:transition-all", progressBarClass(metrics.memory.percent))}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Se passar de 80%, considere fazer upgrade da VPS.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="relative overflow-hidden rounded-xl border border-violet-500/20 bg-card p-4 transition-all hover:shadow-lg hover:scale-[1.01]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Memória</span>
+            <div className="rounded-lg bg-violet-500/10 p-2">
+              <Brain className="h-4 w-4 text-violet-500" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-foreground">{metrics.memory.percent}%</div>
+          <p className="text-[10px] text-muted-foreground">{metrics.memory.usedMb.toLocaleString("pt-BR")} / {metrics.memory.totalMb.toLocaleString("pt-BR")} MB</p>
+          <Progress value={metrics.memory.percent} className={cn("mt-2 h-2 [&>div]:transition-all", progressBarClass(metrics.memory.percent))} />
+          <p className="text-[10px] text-muted-foreground mt-2">Acima de 80% = considere upgrade</p>
+          <div className="absolute -right-3 -bottom-3 h-16 w-16 rounded-full bg-violet-500/10 opacity-30 blur-xl" />
+        </div>
 
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-muted-foreground" />
-              Armazenamento (Disco)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{metrics.disk.percent}%</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics.disk.usedGb.toFixed(2)} / {metrics.disk.totalGb.toFixed(2)} GB
-            </p>
-            <Progress
-              value={metrics.disk.percent}
-              className={cn("mt-2 h-2 [&>div]:transition-all", progressBarClass(metrics.disk.percent))}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Disco em uso moderado. Fique de olho.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-card p-4 transition-all hover:shadow-lg hover:scale-[1.01]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Disco</span>
+            <div className="rounded-lg bg-blue-500/10 p-2">
+              <HardDrive className="h-4 w-4 text-blue-500" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-foreground">{metrics.disk.percent}%</div>
+          <p className="text-[10px] text-muted-foreground">{metrics.disk.usedGb.toFixed(2)} / {metrics.disk.totalGb.toFixed(2)} GB</p>
+          <Progress value={metrics.disk.percent} className={cn("mt-2 h-2 [&>div]:transition-all", progressBarClass(metrics.disk.percent))} />
+          <p className="text-[10px] text-muted-foreground mt-2">Monitoramento contínuo</p>
+          <div className="absolute -right-3 -bottom-3 h-16 w-16 rounded-full bg-blue-500/10 opacity-30 blur-xl" />
+        </div>
       </div>
 
       {/* Gráfico CPU & RAM última hora + O que é isso? */}
