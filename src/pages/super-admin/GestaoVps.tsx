@@ -284,7 +284,7 @@ function ActionCard({ title, description, icon, loading, result, error, onRun, c
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function GestaoVps() {
+export default function GestaoVps({ hideHeader = false }: { hideHeader?: boolean }) {
   // ── Workflows list ──────────────────────────────────────────────────────────
   const [workflowsLoading, setWorkflowsLoading] = useState(false);
   const [workflowsResult, setWorkflowsResult] = useState<string | null>(null);
@@ -642,15 +642,17 @@ export default function GestaoVps() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Server className="h-7 w-7 text-primary" />
-          Gestão de VPS
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Controle workflows n8n, backup e limpeza via webhook. Todas as ações são enviadas para o fluxo n8n configurado.
-        </p>
-      </div>
+      {!hideHeader && (
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Server className="h-7 w-7 text-primary" />
+            Gestão de VPS
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Controle workflows n8n, backup e limpeza via webhook. Todas as ações são enviadas para o fluxo n8n configurado.
+          </p>
+        </div>
+      )}
 
       {/* Health Check */}
       <Card className="border-border">

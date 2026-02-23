@@ -212,7 +212,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
   );
 }
 
-export default function Observability() {
+export default function Observability({ hideHeader = false }: { hideHeader?: boolean }) {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(5_000);
   const [allWorkersExpanded, setAllWorkersExpanded] = useState(false);
   const [workerToggleKey, setWorkerToggleKey] = useState(0);
@@ -288,35 +288,37 @@ export default function Observability() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="page-header">
-          <h1>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
-              <Laptop className="h-4 w-4 text-orange-500" />
-            </div>
-            Observabilidade
-          </h1>
-          <p>Uso do servidor, memória, CPU e workers do n8n</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetching && "animate-spin text-primary")} />
-          <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
-            {REFRESH_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setRefreshInterval(opt.value)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                  refreshInterval === opt.value
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
+      {!hideHeader && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="page-header">
+            <h1>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
+                <Laptop className="h-4 w-4 text-orange-500" />
+              </div>
+              Observabilidade
+            </h1>
+            <p>Uso do servidor, memória, CPU e workers do n8n</p>
           </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetching && "animate-spin text-primary")} />
+        <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
+          {REFRESH_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setRefreshInterval(opt.value)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                refreshInterval === opt.value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
