@@ -25,7 +25,6 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Agenda from "./pages/Agenda";
 import CRM from "./pages/CRM";
-import Kanban from "./pages/Kanban";
 import AgentIA from "./pages/AgentIA";
 import Conhecimento from "./pages/Conhecimento";
 import Integrations from "./pages/Integrations";
@@ -92,12 +91,11 @@ const App = () => (
                 <Route path="/app/agenda" element={<Agenda />} />
                 <Route path="/app/tipos-atendimento" element={<TiposAtendimento />} />
                 <Route path="/app/clientes/crm" element={<CRM />} />
-                <Route path="/app/clientes/kanban" element={<Kanban />} />
+                <Route path="/app/clientes/kanban" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/agent-ia" element={<AgentIA />} />
                 <Route path="/app/conhecimento" element={<Conhecimento />} />
-                {/* Redirect antigos */}
                 <Route path="/app/crm" element={<Navigate to="/app/clientes/crm" replace />} />
-                <Route path="/app/crm/kanban" element={<Navigate to="/app/clientes/kanban" replace />} />
+                <Route path="/app/crm/kanban" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/integrations" element={<Integrations />} />
                 <Route path="/app/minha-conta" element={<MinhaConta />} />
               </Route>
