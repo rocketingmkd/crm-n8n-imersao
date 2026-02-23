@@ -899,6 +899,51 @@ END;
 $$;
 
 -- ============================================================
+-- ANOTAÇÕES / TAREFAS (Dashboard)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.anotacoes_tarefas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_organizacao UUID NOT NULL REFERENCES public.organizacoes(id) ON DELETE CASCADE,
+  id_usuario UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL,
+  descricao TEXT,
+  status TEXT NOT NULL DEFAULT 'a_fazer' CHECK (status IN ('a_fazer', 'fazendo', 'feito')),
+  data_finalizacao TIMESTAMPTZ,
+  notificar BOOLEAN NOT NULL DEFAULT false,
+  antecedencia_minutos INTEGER DEFAULT 30 CHECK (antecedencia_minutos IN (30, 60, 120)),
+  criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+  atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_anotacoes_tarefas_org ON public.anotacoes_tarefas(id_organizacao);
+CREATE INDEX idx_anotacoes_tarefas_usuario ON public.anotacoes_tarefas(id_usuario);
+CREATE INDEX idx_anotacoes_tarefas_status ON public.anotacoes_tarefas(status);
+
+CREATE TRIGGER set_atualizado_em_anotacoes_tarefas
+  BEFORE UPDATE ON public.anotacoes_tarefas
+  FOR EACH ROW
+  EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE public.anotacoes_tarefas ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuarios podem ver tarefas da sua org"
+  ON public.anotacoes_tarefas FOR SELECT
+  USING (id_organizacao = obter_id_organizacao_usuario());
+
+CREATE POLICY "Usuarios podem criar tarefas na sua org"
+  ON public.anotacoes_tarefas FOR INSERT
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
+
+CREATE POLICY "Usuarios podem atualizar tarefas da sua org"
+  ON public.anotacoes_tarefas FOR UPDATE
+  USING (id_organizacao = obter_id_organizacao_usuario());
+
+CREATE POLICY "Usuarios podem deletar tarefas da sua org"
+  ON public.anotacoes_tarefas FOR DELETE
+  USING (id_organizacao = obter_id_organizacao_usuario());
+
+-- ============================================================
 -- FIM DA INSTALAÇÃO
 -- ============================================================
 -- Próximos passos:
