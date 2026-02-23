@@ -54,7 +54,7 @@ export default function SuperAdminLayout() {
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed left-0 top-0 z-50 h-full transform border-r border-border bg-card sidebar-shadow transition-all duration-300 lg:relative lg:translate-x-0",
+            "fixed left-0 top-0 z-50 h-full transform liquid-glass-sidebar transition-all duration-300 lg:relative lg:translate-x-0",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full",
             isSidebarCollapsed ? "lg:w-[60px]" : "lg:w-60"
           )}
@@ -205,7 +205,7 @@ export default function SuperAdminLayout() {
         {/* Main Content */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Top Bar */}
-          <header className="flex h-14 items-center border-b border-border bg-card/95 backdrop-blur-md px-4 lg:px-6">
+          <header className="flex h-14 items-center liquid-glass-subtle px-4 lg:px-6">
             <Button
               variant="ghost"
               size="icon"
@@ -225,7 +225,7 @@ export default function SuperAdminLayout() {
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-background">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 liquid-bg">
             <Outlet />
           </main>
         </div>

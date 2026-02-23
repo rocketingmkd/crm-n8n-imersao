@@ -581,7 +581,9 @@ CREATE TABLE IF NOT EXISTS configuracoes_globais (
   url_logo_plataforma_escuro text,
   cor_primaria             text DEFAULT '#D9156C',
   chave_elevenlabs         text,
-  id_voz_elevenlabs        text
+  id_voz_elevenlabs        text,
+  fonte_sistema            text DEFAULT 'inter'
+                           CHECK (fonte_sistema IN ('open-sans', 'inter', 'dm-sans', 'plus-jakarta'))
 );
 
 CREATE TRIGGER trigger_configuracoes_globais_atualizado_em

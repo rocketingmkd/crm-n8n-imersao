@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings as SettingsIcon, MessageCircle, Save, Palette, Mic, Bot, Key } from "lucide-react";
+import { Settings as SettingsIcon, MessageCircle, Save, Palette, Mic, Bot, Key, Type } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { aplicarCorPrimaria } from "@/hooks/useCoresPataforma";
+import { FonteSistema, FONT_OPTIONS, aplicarFonte } from "@/hooks/useFonteSistema";
+import { cn } from "@/lib/utils";
 
 interface ConfiguracoesGlobaisForm {
   whatsapp_suporte: string;
@@ -22,6 +24,7 @@ interface ConfiguracoesGlobaisForm {
   url_logo_plataforma: string;
   url_logo_plataforma_escuro: string;
   cor_primaria: string;
+  fonte_sistema: FonteSistema;
 }
 
 export default function SuperAdminSettings() {
@@ -30,13 +33,18 @@ export default function SuperAdminSettings() {
   const { theme } = useTheme();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ConfiguracoesGlobaisForm>();
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<ConfiguracoesGlobaisForm>();
 
   const corPrimaria = watch('cor_primaria');
+  const fonteSistema = watch('fonte_sistema');
 
   useEffect(() => {
     if (corPrimaria) aplicarCorPrimaria(corPrimaria, theme === 'dark');
   }, [corPrimaria, theme]);
+
+  useEffect(() => {
+    if (fonteSistema) aplicarFonte(fonteSistema);
+  }, [fonteSistema]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -53,6 +61,7 @@ export default function SuperAdminSettings() {
           cor_primaria: data.cor_primaria || "#D9156C",
           chave_elevenlabs: data.chave_elevenlabs || "",
           id_voz_elevenlabs: data.id_voz_elevenlabs || "",
+          fonte_sistema: ((data as any).fonte_sistema as FonteSistema) || 'inter',
         });
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
@@ -76,9 +85,11 @@ export default function SuperAdminSettings() {
         cor_primaria: data.cor_primaria || '#D9156C',
         chave_elevenlabs: data.chave_elevenlabs || null,
         id_voz_elevenlabs: data.id_voz_elevenlabs || null,
-      }).eq('id', '00000000-0000-0000-0000-000000000001');
+        fonte_sistema: data.fonte_sistema || 'inter',
+      } as any).eq('id', '00000000-0000-0000-0000-000000000001');
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["cores-plataforma"] });
+      queryClient.invalidateQueries({ queryKey: ["fonte-sistema"] });
       queryClient.invalidateQueries({ queryKey: CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY });
       toast.success("Configurações salvas!");
     } catch (error: any) {
@@ -95,7 +106,7 @@ export default function SuperAdminSettings() {
   );
 
   const saveButton = (
-    <Button type="submit" disabled={isSaving} className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
+    <Button type="submit" disabled={isSaving} className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
       {isSaving
         ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />Salvando...</>
         : <><Save className="mr-2 h-4 w-4" />Salvar</>}
@@ -115,18 +126,18 @@ export default function SuperAdminSettings() {
       </div>
 
       <Tabs defaultValue="visual" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 h-auto p-1">
-          <TabsTrigger value="visual" className="flex items-center gap-1.5 text-xs md:text-sm py-2">
+        <TabsList className="w-full grid grid-cols-3 h-auto p-1 liquid-glass rounded-xl">
+          <TabsTrigger value="visual" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Palette className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Visual</span>
             <span className="sm:hidden">Visual</span>
           </TabsTrigger>
-          <TabsTrigger value="ia" className="flex items-center gap-1.5 text-xs md:text-sm py-2">
+          <TabsTrigger value="ia" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Bot className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">IA & Voz</span>
             <span className="sm:hidden">IA</span>
           </TabsTrigger>
-          <TabsTrigger value="apis" className="flex items-center gap-1.5 text-xs md:text-sm py-2">
+          <TabsTrigger value="apis" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Key className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">APIs & Suporte</span>
             <span className="sm:hidden">APIs</span>
@@ -136,7 +147,7 @@ export default function SuperAdminSettings() {
         {/* ===== ABA VISUAL ===== */}
         <TabsContent value="visual" className="mt-4 space-y-4">
           {/* Branding */}
-          <Card className="border-border">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10">
@@ -153,19 +164,17 @@ export default function SuperAdminSettings() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="nome_plataforma" className="text-foreground text-xs font-medium">Nome da Plataforma</Label>
-                    <Input id="nome_plataforma" {...register("nome_plataforma")} placeholder="FlowAtend" />
+                    <Input id="nome_plataforma" {...register("nome_plataforma")} placeholder="FlowAtend" className="liquid-glass-input rounded-xl" />
                     <p className="text-[10px] text-muted-foreground">Nome exibido no título do browser e como fallback quando não há logo.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="url_logo_plataforma" className="text-foreground text-xs font-medium">Logo (fundo escuro)</Label>
-                      <Input id="url_logo_plataforma" {...register("url_logo_plataforma")} placeholder="https://..." />
-                      <p className="text-[10px] text-muted-foreground">Versão clara do logo para temas escuros.</p>
+                      <Input id="url_logo_plataforma" {...register("url_logo_plataforma")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="url_logo_plataforma_escuro" className="text-foreground text-xs font-medium">Logo (fundo claro)</Label>
-                      <Input id="url_logo_plataforma_escuro" {...register("url_logo_plataforma_escuro")} placeholder="https://..." />
-                      <p className="text-[10px] text-muted-foreground">Versão escura do logo para temas claros.</p>
+                      <Input id="url_logo_plataforma_escuro" {...register("url_logo_plataforma_escuro")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
                     </div>
                   </div>
                   {saveButton}
@@ -175,7 +184,7 @@ export default function SuperAdminSettings() {
           </Card>
 
           {/* Cores */}
-          <Card className="border-border">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10">
@@ -193,12 +202,7 @@ export default function SuperAdminSettings() {
                   <div className="space-y-2">
                     <Label htmlFor="cor_primaria" className="text-foreground text-xs font-medium">Cor Primária</Label>
                     <div className="flex items-center gap-3">
-                      <input
-                        id="cor_primaria"
-                        type="color"
-                        {...register("cor_primaria")}
-                        className="h-10 w-16 cursor-pointer rounded-md border border-border bg-background p-1"
-                      />
+                      <input id="cor_primaria" type="color" {...register("cor_primaria")} className="h-10 w-16 cursor-pointer rounded-xl border border-border bg-background p-1" />
                       <div className="flex items-center gap-2">
                         <div className="h-6 w-6 rounded-full border border-border" style={{ backgroundColor: corPrimaria || '#D9156C' }} />
                         <span className="font-mono text-sm text-muted-foreground">{corPrimaria || '#D9156C'}</span>
@@ -211,11 +215,54 @@ export default function SuperAdminSettings() {
               )}
             </CardContent>
           </Card>
+
+          {/* Fonte do Sistema */}
+          <Card className="liquid-glass rounded-2xl border-0">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-500/10">
+                  <Type className="h-4 w-4 text-cyan-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-foreground text-sm md:text-base">Fonte do Sistema</CardTitle>
+                  <CardDescription className="text-xs">Tipografia usada em todo o sistema</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? loadingSpinner : (
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {FONT_OPTIONS.map((font) => (
+                      <button
+                        key={font.value}
+                        type="button"
+                        onClick={() => setValue('fonte_sistema', font.value)}
+                        className={cn(
+                          "p-4 rounded-xl text-left transition-all liquid-glass",
+                          fonteSistema === font.value
+                            ? "ring-2 ring-primary border-primary/40"
+                            : "hover:ring-1 hover:ring-primary/30"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-foreground" style={{ fontFamily: font.label }}>{font.label}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{font.description}</p>
+                        <p className="text-xs text-muted-foreground mt-2" style={{ fontFamily: font.label }}>
+                          Aa Bb Cc 0123
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                  {saveButton}
+                </form>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ===== ABA IA & VOZ ===== */}
         <TabsContent value="ia" className="mt-4 space-y-4">
-          <Card className="border-border">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
@@ -232,9 +279,8 @@ export default function SuperAdminSettings() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="chave_openai" className="text-foreground text-xs font-medium">Chave de API OpenAI</Label>
-                    <Input id="chave_openai" type="password" {...register("chave_openai")} placeholder="sk-..." className="font-mono" />
+                    <Input id="chave_openai" type="password" {...register("chave_openai")} placeholder="sk-..." className="font-mono liquid-glass-input rounded-xl" />
                     <p className="text-[10px] text-muted-foreground">Esta chave é global e afeta todas as empresas do sistema.</p>
-                    {errors.chave_openai && <p className="text-xs text-destructive">{errors.chave_openai.message}</p>}
                   </div>
                   {saveButton}
                 </form>
@@ -242,7 +288,7 @@ export default function SuperAdminSettings() {
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/10">
@@ -259,15 +305,11 @@ export default function SuperAdminSettings() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">Chave de API ElevenLabs</Label>
-                    <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono" />
-                    <p className="text-[10px] text-muted-foreground">Autentica chamadas à API ElevenLabs nos fluxos n8n.</p>
-                    {errors.chave_elevenlabs && <p className="text-xs text-destructive">{errors.chave_elevenlabs.message}</p>}
+                    <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono liquid-glass-input rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="id_voz_elevenlabs" className="text-foreground text-xs font-medium">ID da Voz</Label>
-                    <Input id="id_voz_elevenlabs" {...register("id_voz_elevenlabs")} placeholder="ex: oJebhZNaPllxk6W0LSBA" className="font-mono" />
-                    <p className="text-[10px] text-muted-foreground">ID da voz no ElevenLabs (My Voices → Voice ID).</p>
-                    {errors.id_voz_elevenlabs && <p className="text-xs text-destructive">{errors.id_voz_elevenlabs.message}</p>}
+                    <Input id="id_voz_elevenlabs" {...register("id_voz_elevenlabs")} placeholder="ex: oJebhZNaPllxk6W0LSBA" className="font-mono liquid-glass-input rounded-xl" />
                   </div>
                   {saveButton}
                 </form>
@@ -278,7 +320,7 @@ export default function SuperAdminSettings() {
 
         {/* ===== ABA APIs & SUPORTE ===== */}
         <TabsContent value="apis" className="mt-4 space-y-4">
-          <Card className="border-border">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10">
@@ -295,9 +337,8 @@ export default function SuperAdminSettings() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="whatsapp_suporte" className="text-foreground text-xs font-medium">Número (formato internacional)</Label>
-                    <Input id="whatsapp_suporte" type="tel" {...register("whatsapp_suporte")} placeholder="5511999999999" />
+                    <Input id="whatsapp_suporte" type="tel" {...register("whatsapp_suporte")} placeholder="5511999999999" className="liquid-glass-input rounded-xl" />
                     <p className="text-[10px] text-muted-foreground">Formato internacional sem espaços (ex: 5511999999999).</p>
-                    {errors.whatsapp_suporte && <p className="text-xs text-destructive">{errors.whatsapp_suporte.message}</p>}
                   </div>
                   {saveButton}
                 </form>

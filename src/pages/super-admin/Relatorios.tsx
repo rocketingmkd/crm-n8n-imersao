@@ -76,7 +76,7 @@ function AlertBadges({ row }: { row: OrgRow }) {
   if (row.max_mensagens != null && row.uso_mensagens >= row.max_mensagens * LIMIT_THRESHOLD && row.uso_mensagens < row.max_mensagens) near.push("Mensagens");
 
   if (alerts.length === 0 && near.length === 0) {
-    return <CheckCircle2 className="h-4 w-4 text-green-600" title="Dentro dos limites" />;
+    return <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="Dentro dos limites" />;
   }
   return (
     <div className="flex flex-wrap gap-1">
@@ -143,7 +143,7 @@ export default function Relatorios() {
 
       // Arquivos BC: contar por arquivo único (organização + título), não por linha/chunk
       const filesByIdentificador: Record<string, Set<string>> = {};
-      (documentos || []).forEach((d: { metadados?: { organizacao?: string }; titulo?: string | null; id?: number }) => {
+      (documentos || []).forEach((d: any) => {
         const org = d.metadados?.organizacao;
         if (!org) return;
         if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
