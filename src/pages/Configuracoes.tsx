@@ -1,9 +1,14 @@
-import { Bot, Plug, Settings } from "lucide-react";
+import { Bot, Plug, Settings, ListTodo } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AgentIA from "@/pages/AgentIA";
 import Integrations from "@/pages/Integrations";
+import TiposAtendimento from "@/pages/TiposAtendimento";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 export default function Configuracoes() {
+  const { features } = usePlanFeatures();
+  const hasAgendamento = features.agendamento_automatico;
+
   return (
     <div className="space-y-6 p-4 md:p-6 lg:p-8">
       {/* Header */}
@@ -17,7 +22,7 @@ export default function Configuracoes() {
           </h1>
         </div>
         <p className="text-base md:text-lg text-muted-foreground">
-          Gerencie seu agente de IA e integrações com WhatsApp
+          Gerencie seu agente de IA, integrações e tipos de atendimento
         </p>
       </div>
 
@@ -32,6 +37,12 @@ export default function Configuracoes() {
             <Plug className="h-4 w-4" />
             WhatsApp
           </TabsTrigger>
+          {hasAgendamento && (
+            <TabsTrigger value="tipos-atendimento" className="gap-2 text-sm px-4">
+              <ListTodo className="h-4 w-4" />
+              Tipos de Atendimento
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="agente-ia" className="mt-4">
@@ -41,6 +52,12 @@ export default function Configuracoes() {
         <TabsContent value="whatsapp" className="mt-4">
           <Integrations embedded />
         </TabsContent>
+
+        {hasAgendamento && (
+          <TabsContent value="tipos-atendimento" className="mt-4">
+            <TiposAtendimento embedded />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

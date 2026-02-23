@@ -90,7 +90,7 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="/app/dashboard" element={<Dashboard />} />
                 <Route path="/app/agenda" element={<Agenda />} />
-                <Route path="/app/tipos-atendimento" element={<TiposAtendimento />} />
+                <Route path="/app/tipos-atendimento" element={<Navigate to="/app/configuracoes" replace />} />
                 <Route path="/app/clientes/crm" element={<CRM />} />
                 <Route path="/app/clientes/kanban" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/agent-ia" element={<Navigate to="/app/configuracoes" replace />} />
