@@ -193,14 +193,14 @@ export default function Relatorios() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="h-7 w-7 text-primary" />
+      <div className="page-header">
+        <h1>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10">
+            <BarChart3 className="h-4 w-4 text-teal-500" />
+          </div>
           Relatórios por empresa
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Uso atual vs. limites do plano para cada empresa. Indicação quando está próximo ou no limite.
-        </p>
+        <p>Uso atual vs. limites do plano. Alertas quando próximo ou no limite.</p>
       </div>
 
       <Card>

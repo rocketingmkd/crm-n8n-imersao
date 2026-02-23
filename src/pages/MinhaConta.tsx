@@ -119,14 +119,14 @@ export default function MinhaConta() {
 
   return (
     <div className="container max-w-xl py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <UserCircle className="h-7 w-7 text-primary" />
+      <div className="page-header">
+        <h1>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/10">
+            <UserCircle className="h-4 w-4 text-pink-500" />
+          </div>
           Minha conta
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Atualize seu nome e sua foto de perfil.
-        </p>
+        <p>Atualize seu nome e sua foto de perfil.</p>
       </div>
 
       <Card>

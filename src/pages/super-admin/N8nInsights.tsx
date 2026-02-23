@@ -272,14 +272,14 @@ export default function N8nInsights() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            Insights
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
+              <BarChart3 className="h-4 w-4 text-indigo-500" />
+            </div>
+            Insights n8n
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Monitoramento de execuções dos workflows n8n
-          </p>
+          <p>Monitoramento de execuções dos workflows</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -325,57 +325,29 @@ export default function N8nInsights() {
         </div>
       )}
 
-      {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Prod. executions</CardTitle>
-            <div className="rounded-lg bg-primary/10 p-2"><Zap className="h-4 w-4 text-primary" /></div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{totalExecPeriod.toLocaleString("pt-BR")}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {PERIOD_OPTIONS.find((p) => p.value === period)?.label}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Sucesso</CardTitle>
-            <div className="rounded-lg bg-green-500/10 p-2"><CheckCircle2 className="h-4 w-4 text-green-500" /></div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">{successExecPeriod.toLocaleString("pt-BR")}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalExecPeriod > 0 ? `${((successExecPeriod / totalExecPeriod) * 100).toFixed(1)}%` : "0%"} do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Falhas</CardTitle>
-            <div className="rounded-lg bg-red-500/10 p-2"><XCircle className="h-4 w-4 text-red-500" /></div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">{failedExecPeriod.toLocaleString("pt-BR")}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalExecPeriod > 0 ? `${((failedExecPeriod / totalExecPeriod) * 100).toFixed(1)}%` : "0%"} do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Run time (avg.)</CardTitle>
-            <div className="rounded-lg bg-blue-500/10 p-2"><Clock className="h-4 w-4 text-blue-500" /></div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{formatRuntime(avgRuntimeSec)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Tempo médio de execução</p>
-          </CardContent>
-        </Card>
+      {/* KPIs Multicores */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {[
+          { title: "Execuções", value: totalExecPeriod.toLocaleString("pt-BR"), sub: PERIOD_OPTIONS.find((p) => p.value === period)?.label, icon: Zap, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
+          { title: "Sucesso", value: successExecPeriod.toLocaleString("pt-BR"), sub: `${totalExecPeriod > 0 ? ((successExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% do total`, icon: CheckCircle2, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
+          { title: "Falhas", value: failedExecPeriod.toLocaleString("pt-BR"), sub: `${totalExecPeriod > 0 ? ((failedExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% do total`, icon: XCircle, color: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" } },
+          { title: "Tempo médio", value: formatRuntime(avgRuntimeSec), sub: "Run time avg.", icon: Clock, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
+        ].map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={kpi.title} className={`relative overflow-hidden rounded-xl border ${kpi.color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
+                <div className={`rounded-lg ${kpi.color.bg} p-1.5 md:p-2`}>
+                  <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.color.text}`} />
+                </div>
+              </div>
+              <div className="text-lg md:text-2xl font-bold text-foreground truncate">{kpi.value}</div>
+              {kpi.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.sub}</p>}
+              <div className={`absolute -right-3 -bottom-3 h-16 w-16 rounded-full ${kpi.color.bg} opacity-30 blur-xl`} />
+            </div>
+          );
+        })}
       </div>
 
       {/* Chart */}

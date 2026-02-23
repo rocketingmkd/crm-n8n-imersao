@@ -200,11 +200,14 @@ export default function Plans() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Planos de Assinatura</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Edite os planos e recursos a qualquer momento. As alterações valem para novas assinaturas e para a exibição nas empresas.
-        </p>
+      <div className="page-header">
+        <h1>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+            <Crown className="h-4 w-4 text-amber-500" />
+          </div>
+          Planos de Assinatura
+        </h1>
+        <p>Edite planos e recursos. Alterações valem para novas assinaturas.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
