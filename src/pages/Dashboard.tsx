@@ -1,6 +1,7 @@
 import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import DashboardTarefas from "@/components/DashboardTarefas";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
@@ -656,13 +657,23 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Data Início *</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  {...appointmentForm.register("start_date", { required: "Data é obrigatória" })}
+                <Controller
+                  name="start_date"
+                  control={appointmentForm.control}
+                  rules={{ required: "Data é obrigatória" }}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="start_date"
+                      value={field.value}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        appointmentForm.setValue("end_date", v);
+                      }}
+                    />
+                  )}
                 />
                 {appointmentForm.formState.errors.start_date && (
-                  <p className="text-xs text-red-500">{appointmentForm.formState.errors.start_date.message}</p>
+                  <p className="text-xs text-destructive">{appointmentForm.formState.errors.start_date.message}</p>
                 )}
               </div>
 
@@ -682,13 +693,20 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="end_date">Data Fim *</Label>
-                <Input
-                  id="end_date"
-                  type="date"
-                  {...appointmentForm.register("end_date", { required: "Data é obrigatória" })}
+                <Controller
+                  name="end_date"
+                  control={appointmentForm.control}
+                  rules={{ required: "Data é obrigatória" }}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="end_date"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 {appointmentForm.formState.errors.end_date && (
-                  <p className="text-xs text-red-500">{appointmentForm.formState.errors.end_date.message}</p>
+                  <p className="text-xs text-destructive">{appointmentForm.formState.errors.end_date.message}</p>
                 )}
               </div>
 
