@@ -1,6 +1,7 @@
 import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
+import DashboardTarefas from "@/components/DashboardTarefas";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
@@ -177,13 +178,91 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Agenda de Hoje - Movida para o início */}
+      {/* Quick Actions - MOVIDAS PARA O TOPO */}
+      <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 animate-fade-in-up">
+        {hasAgendamento ? (
+          <>
+            <button 
+              onClick={() => setIsTodayModalOpen(true)}
+              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+            >
+              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+                <Clock className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Hoje</h3>
+              <p className="text-sm text-muted-foreground">Ver compromissos de hoje</p>
+            </button>
+
+            <button 
+              onClick={() => setIsAppointmentModalOpen(true)}
+              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+            >
+              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Novo Compromisso</h3>
+              <p className="text-sm text-muted-foreground">Agende um novo atendimento</p>
+            </button>
+          </>
+        ) : (
+          <>
+            <button 
+              onClick={() => setIsReportsModalOpen(true)}
+              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+            >
+              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+                <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Atendimentos</h3>
+              <p className="text-sm text-muted-foreground">Ver métricas detalhadas</p>
+            </button>
+
+            <button 
+              onClick={() => window.location.href = '/app/agent-ia'}
+              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+            >
+              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+                <Activity className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Configurar Assistente Virtual</h3>
+              <p className="text-sm text-muted-foreground">Ajuste seu atendimento IA</p>
+            </button>
+          </>
+        )}
+
+        <button 
+          onClick={() => setIsPatientModalOpen(true)}
+          className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+        >
+          <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+            <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+          </div>
+          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Adicionar Contato</h3>
+          <p className="text-sm text-muted-foreground">Cadastre um novo contato</p>
+        </button>
+
+        <button 
+          onClick={() => setIsReportsModalOpen(true)}
+          className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
+        >
+          <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
+            <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+          </div>
+          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Ver Relatórios</h3>
+          <p className="text-sm text-muted-foreground">Analise suas métricas</p>
+        </button>
+      </div>
+
+      {/* Gestão de Tarefas */}
+      <DashboardTarefas />
+
+      {/* Agenda de Hoje */}
       {hasAgendamento && (
         <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
               <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
-                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-accent" />
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 Agenda de Hoje
               </h2>
               <p className="text-sm md:text-base text-muted-foreground">
@@ -206,7 +285,7 @@ export default function Dashboard() {
           </div>
 
           {todayAppointments.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-br from-accent/5 to-transparent rounded-lg border border-dashed border-accent/20">
+            <div className="text-center py-12 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-dashed border-primary/20">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
               <p className="text-lg font-medium text-foreground mb-2">Nenhum compromisso hoje</p>
               <p className="text-sm text-muted-foreground mb-4">Aproveite para descansar ou planejar sua semana</p>
@@ -240,9 +319,9 @@ export default function Dashboard() {
                       className="group flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 liquid-glass-subtle p-4 md:p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                       style={{ animationDelay: `${0.1 * index}s` }}
                     >
-                      <div className="flex h-16 w-16 md:h-20 md:w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/20 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300">
-                        <span className="text-xs font-medium text-accent">{hours}</span>
-                        <span className="text-2xl md:text-3xl font-bold text-accent">{minutes}</span>
+                      <div className="flex h-16 w-16 md:h-20 md:w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
+                        <span className="text-xs font-medium text-primary">{hours}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-primary">{minutes}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.nome_contato}</h4>
@@ -254,9 +333,9 @@ export default function Dashboard() {
                       <div
                         className={`self-start sm:self-center rounded-full px-4 md:px-5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 ${
                           appointment.situacao === "confirmado"
-                            ? "bg-green-500/10 text-green-600 border border-green-500/20"
+                            ? "bg-success/10 text-success border border-success/20"
                             : appointment.situacao === "pendente"
-                            ? "bg-accent/10 text-accent border border-accent/20"
+                            ? "bg-primary/10 text-primary border border-primary/20"
                             : "bg-muted text-muted-foreground border border-border"
                         }`}
                       >
@@ -270,9 +349,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* KPI Grid - Adaptado ao plano */}
+      {/* KPI Grid */}
       <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Métricas de Atendimento (sempre visível) */}
         <div 
           onClick={() => setIsReportsModalOpen(true)}
           className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
@@ -313,7 +391,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Métricas de Agenda (só para planos com agendamento) */}
         {hasAgendamento && (
           <>
             <div 
@@ -363,7 +440,6 @@ export default function Dashboard() {
           </>
         )}
 
-        {/* Métricas de Contatos (sempre visível) */}
         <div
           onClick={() => window.location.href = '/app/clientes/crm'}
           className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
@@ -392,9 +468,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Área Principal - Adaptada ao plano */}
+      {/* Resumo de Atendimentos (para planos sem agendamento) */}
       {!hasAgendamento && (
-        /* Resumo de Atendimentos (para planos sem agendamento) */
         <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
           <div className="mb-4 md:mb-6">
             <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2">
@@ -406,11 +481,10 @@ export default function Dashboard() {
           </div>
 
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
-            {/* Hoje */}
             <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                  <MessageSquare className="h-5 w-5 text-green-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                  <MessageSquare className="h-5 w-5 text-success" />
                 </div>
                 <h3 className="font-semibold text-foreground">Hoje</h3>
               </div>
@@ -426,11 +500,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Esta Semana */}
             <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                  <TrendingUp className="h-5 w-5 text-blue-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground">Esta Semana</h3>
               </div>
@@ -446,11 +519,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Este Mês */}
             <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
-                  <Activity className="h-5 w-5 text-purple-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
+                  <Activity className="h-5 w-5 text-accent" />
                 </div>
                 <h3 className="font-semibold text-foreground">Este Mês</h3>
               </div>
@@ -467,7 +539,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Totais */}
           <div className="mt-6 pt-6 border-t border-border/50">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -478,7 +549,7 @@ export default function Dashboard() {
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total de Mensagens</p>
-                <p className="text-2xl font-bold text-accent">
+                <p className="text-2xl font-bold text-primary">
                   {chatMetrics?.totalMessages || 0}
                 </p>
               </div>
@@ -486,81 +557,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Quick Actions - Adaptadas ao plano */}
-      <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-        {hasAgendamento ? (
-          <>
-            <button 
-              onClick={() => setIsTodayModalOpen(true)}
-              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-            >
-              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-                <Clock className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-              </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Hoje</h3>
-              <p className="text-sm text-muted-foreground">Ver compromissos de hoje</p>
-            </button>
-
-            <button 
-              onClick={() => setIsAppointmentModalOpen(true)}
-              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-            >
-              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-              </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Novo Compromisso</h3>
-              <p className="text-sm text-muted-foreground">Agende um novo atendimento</p>
-            </button>
-          </>
-        ) : (
-          <>
-            <button 
-              onClick={() => setIsReportsModalOpen(true)}
-              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-            >
-              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-                <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-              </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Atendimentos</h3>
-              <p className="text-sm text-muted-foreground">Ver métricas detalhadas</p>
-            </button>
-
-            <button 
-              onClick={() => window.location.href = '/app/agent-ia'}
-              className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-            >
-              <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-                <Activity className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-              </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Configurar Assistente Virtual</h3>
-              <p className="text-sm text-muted-foreground">Ajuste seu atendimento IA</p>
-            </button>
-          </>
-        )}
-
-        <button 
-          onClick={() => setIsPatientModalOpen(true)}
-          className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-        >
-          <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-            <Users className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-          </div>
-          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Adicionar Contato</h3>
-          <p className="text-sm text-muted-foreground">Cadastre um novo contato</p>
-        </button>
-
-        <button 
-          onClick={() => setIsReportsModalOpen(true)}
-          className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50 bg-gradient-to-br from-background to-accent/5"
-        >
-          <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300 shadow-md">
-            <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-accent" />
-          </div>
-          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-accent transition-colors">Ver Relatórios</h3>
-          <p className="text-sm text-muted-foreground">Analise suas métricas</p>
-        </button>
-      </div>
 
       {/* Modal: Compromissos de Hoje */}
       <Dialog open={isTodayModalOpen} onOpenChange={setIsTodayModalOpen}>
