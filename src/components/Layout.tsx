@@ -141,10 +141,10 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
           </Button>
         )}
 
-        {/* Logo */}
+        {/* Header: Logo + Company + User */}
         <div className={cn(
           "border-b border-sidebar-border transition-all duration-300",
-          isCollapsed ? "px-2 py-4" : "px-5 py-5"
+          isCollapsed ? "px-2 py-4" : "px-4 py-4"
         )}>
           <div className={cn(
             "flex items-center transition-all duration-300",
@@ -153,17 +153,55 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             <AppLogo variant="org" height={isCollapsed ? 28 : 36} />
           </div>
 
-          {organization && !isCollapsed && (
-            <div className="mt-3 rounded-md bg-muted/60 px-3 py-2">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
-              <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
+          {!isCollapsed && (
+            <div className="mt-3 liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
+              {organization && (
+                <div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-2.5">
+                <Avatar className="h-8 w-8 shrink-0 border border-white/10">
+                  <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                    {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {profile?.nome_completo || 'Usuário'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate capitalize">
+                    {profile?.funcao || 'profissional'}
+                  </p>
+                </div>
+              </div>
             </div>
+          )}
+
+          {isCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="mt-3 flex justify-center">
+                  <Avatar className="h-8 w-8 shrink-0 border border-white/10">
+                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                      {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {profile?.nome_completo || 'Usuário'}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
         {/* Navigation */}
         <nav className={cn(
-          "flex-1 space-y-0.5 overflow-y-auto py-4 transition-all duration-300",
+          "flex-1 space-y-1 overflow-y-auto py-4 transition-all duration-300",
           isCollapsed ? "px-2" : "px-3"
         )}>
           {!isCollapsed && (
@@ -179,11 +217,11 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 to={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  "group flex items-center gap-3 rounded-lg text-[13px] font-medium transition-all duration-200",
+                  "group flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-200",
                   isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-pink"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground liquid-glass-subtle hover:text-foreground"
                 )}
               >
                 <item.icon className={cn(
@@ -206,14 +244,38 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             }
             return linkContent;
           })}
+
+          {/* Plan inside menu */}
+          {currentPlan && !isCollapsed && (
+            <div
+              onClick={() => setIsPlanModalOpen(true)}
+              className="group flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-200 px-3 py-2.5 text-muted-foreground liquid-glass-subtle hover:text-foreground cursor-pointer"
+            >
+              <Crown className="h-[18px] w-[18px] shrink-0 text-primary" />
+              <span className="truncate flex-1">{currentPlan.nome_plano}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          )}
+          {currentPlan && isCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  onClick={() => setIsPlanModalOpen(true)}
+                  className="group flex items-center justify-center rounded-xl p-2.5 text-muted-foreground liquid-glass-subtle hover:text-foreground cursor-pointer"
+                >
+                  <Crown className="h-[18px] w-[18px] text-primary" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>{currentPlan.nome_plano}</TooltipContent>
+            </Tooltip>
+          )}
         </nav>
 
-        {/* Footer */}
+        {/* Footer: Theme + Logout only */}
         <div className={cn(
-          "border-t border-sidebar-border space-y-2 transition-all duration-300",
+          "border-t border-sidebar-border space-y-1 transition-all duration-300",
           isCollapsed ? "p-2" : "p-3"
         )}>
-          {/* Theme Toggle */}
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -221,7 +283,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   variant="ghost"
                   size="icon"
                   onClick={toggleTheme}
-                  className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="w-full h-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
                 >
                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
@@ -235,69 +297,13 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
-              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs"
+              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs rounded-xl"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {theme === "dark" ? "Modo claro" : "Modo escuro"}
             </Button>
           )}
 
-          {/* Plan Badge */}
-          {currentPlan && !isCollapsed && (
-            <div 
-              onClick={() => setIsPlanModalOpen(true)}
-              className="rounded-lg border border-border bg-muted/40 p-2.5 cursor-pointer transition-all hover:border-primary/40 hover:bg-muted/70"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Crown className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-semibold text-foreground">
-                    {currentPlan.nome_plano}
-                  </span>
-                </div>
-                <ChevronRight className="h-3 w-3 text-muted-foreground" />
-              </div>
-            </div>
-          )}
-
-          {currentPlan && isCollapsed && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div 
-                  onClick={() => setIsPlanModalOpen(true)}
-                  className="rounded-lg border border-border bg-muted/40 p-2 cursor-pointer transition-all hover:border-primary/40 flex items-center justify-center"
-                >
-                  <Crown className="h-4 w-4 text-primary" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>{currentPlan.nome_plano}</TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* User */}
-          <div className={cn(
-            "flex items-center rounded-lg bg-muted/50 transition-all duration-300",
-            isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5"
-          )}>
-            <Avatar className="h-8 w-8 shrink-0 border border-border">
-              <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate">
-                  {profile?.nome_completo || 'Usuário'}
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate capitalize">
-                  {profile?.funcao || 'doctor'}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Logout */}
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -305,7 +311,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   variant="ghost"
                   size="icon"
                   onClick={handleSignOut}
-                  className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="w-full h-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -317,7 +323,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs"
+              className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs rounded-xl"
             >
               <LogOut className="h-4 w-4" />
               Sair
