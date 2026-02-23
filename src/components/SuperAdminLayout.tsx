@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Shield, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, BarChart3, FileBarChart, Server, UserCircle } from "lucide-react";
+import { Menu, X, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, ChevronLeft, ChevronRight, Sun, Moon, Activity, FileBarChart, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -16,8 +16,6 @@ const menuItems = [
   { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
   { path: "/super-admin/token-usage", label: "Consumos dos Planos", icon: Eye },
   { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },
-  { path: "/super-admin/insights", label: "Insights n8n", icon: BarChart3 },
-  { path: "/super-admin/gestao-vps", label: "Gestão de VPS", icon: Server },
   { path: "/super-admin/settings", label: "Configs", icon: Sliders },
   { path: "/super-admin/minha-conta", label: "Minha conta", icon: UserCircle },
 ];

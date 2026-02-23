@@ -124,7 +124,7 @@ function buildChartData(
   return Object.values(buckets).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 }
 
-export default function N8nInsights() {
+export default function N8nInsights({ hideHeader = false }: { hideHeader?: boolean }) {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(60000);
   const [period, setPeriod] = useState<PeriodFilter>("6m");
   const [sortField, setSortField] = useState<SortField>("totalExec");
@@ -270,18 +270,21 @@ export default function N8nInsights() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="page-header">
-          <h1>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
-              <BarChart3 className="h-4 w-4 text-indigo-500" />
-            </div>
-            Insights n8n
-          </h1>
-          <p>Monitoramento de execuções dos workflows</p>
+      {!hideHeader && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="page-header">
+            <h1>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
+                <BarChart3 className="h-4 w-4 text-indigo-500" />
+              </div>
+              Monitoramento de Execuções
+            </h1>
+            <p>Monitoramento de execuções dos workflows</p>
+          </div>
         </div>
+      )}
 
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1.5">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
