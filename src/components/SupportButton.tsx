@@ -34,20 +34,23 @@ export default function SupportButton() {
   };
 
   return (
-    <Button
+    <button
       onClick={handleWhatsAppClick}
       className={cn(
         "fixed bottom-6 right-6 z-50",
-        "h-14 w-14 rounded-full shadow-lg",
-        "bg-green-500 hover:bg-green-600",
+        "h-14 w-14 rounded-full",
+        "liquid-glass !rounded-full",
+        "bg-green-500/20 hover:bg-green-500/30",
+        "border border-green-500/40",
+        "shadow-lg shadow-green-500/20",
         "transition-all duration-300 hover:scale-110",
         "flex items-center justify-center",
-        "group"
+        "group cursor-pointer"
       )}
       title="Falar com Suporte"
     >
-      <MessageCircle className="h-6 w-6 text-white group-hover:animate-bounce" />
-    </Button>
+      <MessageCircle className="h-6 w-6 text-green-400 group-hover:animate-bounce" />
+    </button>
   );
 }
 
