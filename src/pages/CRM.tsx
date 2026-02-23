@@ -1,4 +1,4 @@
-import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid, Camera, Building2, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
@@ -38,6 +38,8 @@ interface PatientFormData {
   phone: string;
   status: 'ativo' | 'inativo';
   observations: string;
+  tipo_pessoa: 'fisica' | 'juridica';
+  cpf_cnpj: string;
 }
 
 type KanbanStatus =
@@ -65,6 +67,9 @@ export default function CRM() {
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [resumoContact, setResumoContact] = useState<any | null>(null);
   const [limitInfo, setLimitInfo] = useState<{ current: number; max: number | null } | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [isUploadingFoto, setIsUploadingFoto] = useState(false);
   const { data: contacts = [], isLoading } = useContacts();
   const { profile } = useAuth();
   const createContact = useCreateContact();
@@ -88,10 +93,47 @@ export default function CRM() {
     setValue,
     watch,
   } = useForm<PatientFormData>({
-    defaultValues: { status: 'ativo' },
+    defaultValues: { status: 'ativo', tipo_pessoa: 'fisica' },
   });
 
   const status = watch('status');
+  const tipoPessoa = watch('tipo_pessoa');
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('A foto deve ter no máximo 5MB');
+        return;
+      }
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadFoto = async (orgId: string): Promise<string | null> => {
+    if (!fotoFile) return null;
+    setIsUploadingFoto(true);
+    try {
+      const { supabase: cloudClient } = await import('@/integrations/supabase/client');
+      const ext = fotoFile.name.split('.').pop() || 'jpg';
+      const fileName = `${orgId}/${Date.now()}.${ext}`;
+      const { error } = await cloudClient.storage
+        .from('fotos-contatos')
+        .upload(fileName, fotoFile, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = cloudClient.storage
+        .from('fotos-contatos')
+        .getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err) {
+      console.error('Erro ao fazer upload da foto:', err);
+      toast.error('Erro ao enviar a foto');
+      return null;
+    } finally {
+      setIsUploadingFoto(false);
+    }
+  };
 
   const onSubmit = async (data: PatientFormData) => {
     if (!profile?.id_organizacao) {
@@ -104,6 +146,12 @@ export default function CRM() {
       return;
     }
     try {
+      // Upload foto se houver
+      let urlFoto: string | null = null;
+      if (fotoFile) {
+        urlFoto = await uploadFoto(profile.id_organizacao);
+      }
+
       await createContact.mutateAsync({
         nome: data.name,
         email: data.email,
@@ -112,9 +160,14 @@ export default function CRM() {
         observacoes: data.observations || null,
         id_organizacao: profile.id_organizacao,
         total_interacoes: 0,
-      });
+        tipo_pessoa: data.tipo_pessoa,
+        cpf_cnpj: data.cpf_cnpj || null,
+        url_foto: urlFoto,
+      } as any);
       toast.success(`${singular} cadastrado com sucesso!`);
       setIsDialogOpen(false);
+      setFotoFile(null);
+      setFotoPreview(null);
       reset();
     } catch (error: any) {
       console.error('Erro ao criar contato:', error);
@@ -181,11 +234,82 @@ export default function CRM() {
                 }}
               />
             )}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {/* Foto */}
+              <div className="space-y-2">
+                <Label>Foto do {singular}</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-16 w-16 rounded-full border-2 border-dashed border-border overflow-hidden flex items-center justify-center bg-muted/50">
+                    {fotoPreview ? (
+                      <img src={fotoPreview} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFotoChange}
+                      className="hidden"
+                      id="foto-input"
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('foto-input')?.click()} className="gap-2">
+                      <Camera className="h-4 w-4" />
+                      {fotoPreview ? 'Alterar foto' : 'Escolher foto'}
+                    </Button>
+                    {fotoPreview && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => { setFotoFile(null); setFotoPreview(null); }} className="ml-2 text-xs text-destructive">
+                        Remover
+                      </Button>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-1">JPG, PNG ou WebP. Máx 5MB.</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
                 <Input id="name" placeholder="Ex: João da Silva" {...register('name')} />
               </div>
+
+              {/* Tipo de Pessoa */}
+              <div className="space-y-2">
+                <Label>Tipo de Pessoa</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={tipoPessoa === 'fisica' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setValue('tipo_pessoa', 'fisica')}
+                    className="flex-1 gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Pessoa Física
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={tipoPessoa === 'juridica' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setValue('tipo_pessoa', 'juridica')}
+                    className="flex-1 gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    Pessoa Jurídica
+                  </Button>
+                </div>
+              </div>
+
+              {/* CPF/CNPJ */}
+              <div className="space-y-2">
+                <Label htmlFor="cpf_cnpj">{tipoPessoa === 'fisica' ? 'CPF' : 'CNPJ'}</Label>
+                <Input
+                  id="cpf_cnpj"
+                  placeholder={tipoPessoa === 'fisica' ? '000.000.000-00' : '00.000.000/0000-00'}
+                  {...register('cpf_cnpj')}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -195,9 +319,9 @@ export default function CRM() {
                   {...register('email', {
                     pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Email inválido' },
                   })}
-                  className={errors.email ? 'border-red-500' : ''}
+                  className={errors.email ? 'border-destructive' : ''}
                 />
-                {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
@@ -218,8 +342,10 @@ export default function CRM() {
                 <Textarea id="observations" placeholder={`Anotações sobre o ${s}...`} {...register('observations')} rows={3} className="resize-none" />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); reset(); }}>Cancelar</Button>
-                <Button type="submit" disabled={createContact.isPending}>{createContact.isPending ? 'Criando...' : `Criar ${singular}`}</Button>
+                <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); setFotoFile(null); setFotoPreview(null); reset(); }}>Cancelar</Button>
+                <Button type="submit" disabled={createContact.isPending || isUploadingFoto}>
+                  {createContact.isPending || isUploadingFoto ? 'Criando...' : `Criar ${singular}`}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
