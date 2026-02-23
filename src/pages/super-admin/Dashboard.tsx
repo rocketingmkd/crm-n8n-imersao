@@ -55,6 +55,20 @@ interface Org {
   ativo?: boolean;
 }
 
+// Cores distintas para os KPIs
+const KPI_COLORS = [
+  { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
+  { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" },
+  { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/20" },
+  { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
+  { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" },
+  { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
+  { bg: "bg-indigo-500/10", text: "text-indigo-500", border: "border-indigo-500/20" },
+  { bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20" },
+  { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
+  { bg: "bg-pink-500/10", text: "text-pink-500", border: "border-pink-500/20" },
+];
+
 export default function SuperAdminDashboard() {
   const [period, setPeriod] = useState<PeriodFilter>("30d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
@@ -76,14 +90,8 @@ export default function SuperAdminDashboard() {
       try {
         setIsLoading(true);
         const [
-          orgsRes,
-          tokensRes,
-          docsRes,
-          countOrgs,
-          countActive,
-          countUsers,
-          countPatients,
-          countAppointments,
+          orgsRes, tokensRes, docsRes,
+          countOrgs, countActive, countUsers, countPatients, countAppointments,
         ] = await Promise.all([
           supabase.from("organizacoes").select("id, nome, identificador, criado_em, ativo").order("nome"),
           supabase.from("uso_tokens").select("id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
@@ -125,7 +133,6 @@ export default function SuperAdminDashboard() {
   }, [period]);
 
   const orgMap = useMemo(() => new Map(orgs.map((o) => [o.id, o])), [orgs]);
-
   const since = useMemo(() => (period === "all" ? null : getDaysAgo(parseInt(period))), [period]);
 
   const filteredTokens = useMemo(() => {
@@ -229,22 +236,23 @@ export default function SuperAdminDashboard() {
     { title: "Custo (R$)", value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: "No período", icon: DollarSign },
     { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), description: "No período", icon: MessageSquare },
     { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), description: "Arquivos únicos", icon: FileText },
-    { title: "Média Custo/Empresa", value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: "Visão média", icon: DollarSign },
-    { title: "Média Tokens/Empresa", value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: "Visão média", icon: Zap },
+    { title: "Média Custo/Emp.", value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: "Visão média", icon: DollarSign },
+    { title: "Média Tokens/Emp.", value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: "Visão média", icon: Zap },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header com filtros */}
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Resumo completo: tokens, mensagens, arquivos e visão média</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Visão Geral</h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Resumo completo: tokens, mensagens, arquivos e visão média</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
-              <SelectTrigger className="w-[160px] h-8 text-xs">
+              <SelectTrigger className="h-9 text-xs flex-1 sm:w-[160px] sm:flex-initial">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -254,10 +262,10 @@ export default function SuperAdminDashboard() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-              <SelectTrigger className="w-[180px] h-8 text-xs">
+              <SelectTrigger className="h-9 text-xs flex-1 sm:w-[200px] sm:flex-initial">
                 <SelectValue placeholder="Todas as empresas" />
               </SelectTrigger>
               <SelectContent>
@@ -271,48 +279,54 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10">
-        {kpis.map((kpi) => {
+      {/* KPIs Multicores */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
+          const color = KPI_COLORS[idx % KPI_COLORS.length];
           return (
-            <Card key={kpi.title} className="border-border">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                <div className="rounded-lg bg-primary/10 p-2">
-                  <Icon className="h-4 w-4 text-primary" />
+            <div
+              key={kpi.title}
+              className={`relative overflow-hidden rounded-xl border ${color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
+                <div className={`rounded-lg ${color.bg} p-1.5 md:p-2 transition-colors group-hover:${color.bg}`}>
+                  <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${color.text}`} />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-foreground truncate" title={String(kpi.value)}>{kpi.value}</div>
-                <p className="text-[10px] text-muted-foreground mt-1">{kpi.description}</p>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="text-lg md:text-2xl font-bold text-foreground truncate" title={String(kpi.value)}>
+                {kpi.value}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.description}</p>
+              {/* Decoração sutil */}
+              <div className={`absolute -right-3 -bottom-3 h-16 w-16 rounded-full ${color.bg} opacity-30 blur-xl`} />
+            </div>
           );
         })}
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
         <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2 text-base">
-              <Zap className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <Zap className="h-4 w-4 text-amber-500" />
               Consumo de Tokens
             </CardTitle>
-            <CardDescription>Evolução no período selecionado</CardDescription>
+            <CardDescription className="text-xs">Evolução no período selecionado</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
             ) : (
-              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(var(--primary))" } }} className="h-[280px] w-full">
+              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(45, 93%, 47%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <LineChart data={dailyChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="date" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v))} />
+                  <XAxis dataKey="date" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v))} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="tokens" stroke="hsl(45, 93%, 47%)" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ChartContainer>
             )}
@@ -320,24 +334,24 @@ export default function SuperAdminDashboard() {
         </Card>
 
         <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2 text-base">
-              <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <DollarSign className="h-4 w-4 text-emerald-500" />
               Custo (R$)
             </CardTitle>
-            <CardDescription>Evolução no período selecionado</CardDescription>
+            <CardDescription className="text-xs">Evolução no período selecionado</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
             ) : (
-              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(var(--primary))" } }} className="h-[280px] w-full">
+              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <LineChart data={dailyChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="date" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
+                  <XAxis dataKey="date" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
                   <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, "Custo"]} />
-                  <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="cost" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ChartContainer>
             )}
@@ -345,24 +359,24 @@ export default function SuperAdminDashboard() {
         </Card>
 
         <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2 text-base">
-              <Building2 className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <Building2 className="h-4 w-4 text-violet-500" />
               Tokens por Empresa (Top 10)
             </CardTitle>
-            <CardDescription>No período selecionado</CardDescription>
+            <CardDescription className="text-xs">No período selecionado</CardDescription>
           </CardHeader>
           <CardContent>
             {orgChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
             ) : (
-              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(var(--primary))" } }} className="h-[280px] w-full">
+              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(262, 83%, 58%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={orgChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis type="number" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v))} />
-                  <YAxis type="category" dataKey="name" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={120} />
+                  <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v))} />
+                  <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="tokens" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="tokens" fill="hsl(262, 83%, 58%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ChartContainer>
             )}
@@ -370,24 +384,24 @@ export default function SuperAdminDashboard() {
         </Card>
 
         <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2 text-base">
-              <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <DollarSign className="h-4 w-4 text-rose-500" />
               Custo por Empresa (Top 10)
             </CardTitle>
-            <CardDescription>No período selecionado</CardDescription>
+            <CardDescription className="text-xs">No período selecionado</CardDescription>
           </CardHeader>
           <CardContent>
             {orgChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
             ) : (
-              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(var(--primary))" } }} className="h-[280px] w-full">
+              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(350, 89%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={orgChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis type="number" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
-                  <YAxis type="category" dataKey="name" style={{ fontSize: "11px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={120} />
+                  <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
+                  <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
                   <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, "Custo"]} />
-                  <Bar dataKey="cost" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} opacity={0.9} />
+                  <Bar dataKey="cost" fill="hsl(350, 89%, 60%)" radius={[0, 4, 4, 0]} opacity={0.9} />
                 </BarChart>
               </ChartContainer>
             )}
@@ -395,30 +409,30 @@ export default function SuperAdminDashboard() {
         </Card>
       </div>
 
+      {/* Empresas Recentes */}
       <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-foreground text-base">Empresas Recentes</CardTitle>
-          <CardDescription>Últimas empresas cadastradas</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-foreground text-sm md:text-base">Empresas Recentes</CardTitle>
+          <CardDescription className="text-xs">Últimas empresas cadastradas</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentOrgs.map((org) => (
               <div key={org.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                     <Building2 className="h-4 w-4 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{org.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">{org.identificador ?? org.id}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{org.nome}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{org.identificador ?? org.id}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${org.ativo ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-muted text-muted-foreground ring-1 ring-border"}`}>
+                <div className="text-right shrink-0 ml-2">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${org.ativo ? "bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20" : "bg-muted text-muted-foreground ring-1 ring-border"}`}>
                     {org.ativo ? "Ativa" : "Inativa"}
                   </span>
                   <p className="text-[10px] text-muted-foreground mt-1">{org.criado_em ? new Date(org.criado_em).toLocaleDateString("pt-BR") : "—"}</p>
-                  <p className="text-[10px] text-muted-foreground">Arquivos RAG: {filesByOrg[org.id] ?? 0}</p>
                 </div>
               </div>
             ))}
