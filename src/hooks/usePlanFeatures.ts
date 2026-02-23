@@ -130,11 +130,14 @@ export function usePlanFeatures() {
         case 'max_arquivos_conhecimento': {
           const identificador = organization?.identificador;
           if (!identificador) break;
-          const { count } = await supabase
+          const { data } = await supabase
             .from('documentos')
-            .select('*', { count: 'exact', head: true })
+            .select('id, titulo')
             .eq('metadados->>organizacao', identificador);
-          current = count || 0;
+          const uniqueFiles = new Set(
+            (data || []).map((d) => (d.titulo && d.titulo.trim()) || String(d.id ?? ''))
+          );
+          current = uniqueFiles.size;
           break;
         }
       }

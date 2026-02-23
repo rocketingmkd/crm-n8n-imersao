@@ -13,7 +13,7 @@ export function identificadorParaTabela(identificador: string): string {
       parts.pop();
     }
   }
-  return parts.join("_") + "_conversas";
+  return (parts.join("_") + "_conversas").toLowerCase();
 }
 
 export interface OrgParaContagem {

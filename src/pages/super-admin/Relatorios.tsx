@@ -109,7 +109,7 @@ export default function Relatorios() {
         supabase.from("planos_assinatura").select("id_plano, nome_plano, max_mensagens_whatsapp_mes, max_usuarios, max_contatos, max_arquivos_conhecimento"),
         supabase.from("contatos").select("id_organizacao"),
         supabase.from("perfis").select("id_organizacao").eq("super_admin", false),
-        supabase.from("documentos").select("metadados"),
+        supabase.from("documentos").select("id, metadados, titulo"),
       ]);
 
       if (eOrgs || ePlans) throw new Error(eOrgs?.message || ePlans?.message);
@@ -141,12 +141,21 @@ export default function Relatorios() {
       const contatosPorOrg = countByOrg(contatos);
       const perfisPorOrg = countByOrg(perfis);
 
+      // Arquivos BC: contar por arquivo único (organização + título), não por linha/chunk
+      const filesByIdentificador: Record<string, Set<string>> = {};
+      (documentos || []).forEach((d: { metadados?: { organizacao?: string }; titulo?: string | null; id?: number }) => {
+        const org = d.metadados?.organizacao;
+        if (!org) return;
+        if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
+        const fileKey = (d.titulo && d.titulo.trim()) || String(d.id ?? "");
+        filesByIdentificador[org].add(fileKey);
+      });
       const docsPorIdentificador: Record<string, number> = {};
-      (documentos || []).forEach((d: { metadados?: { organizacao?: string } }) => {
-        const id = d.metadados?.organizacao;
-        if (id) docsPorIdentificador[id] = (docsPorIdentificador[id] || 0) + 1;
+      Object.entries(filesByIdentificador).forEach(([org, set]) => {
+        docsPorIdentificador[org] = set.size;
       });
 
+      // Mensagens: tabelas dinâmicas {identificador}_conversas (n8n), mês atual
       const usoMensagensPorOrg = await fetchContagemMensagensPorOrg(
         supabase,
         (orgs || []).map((o: any) => ({ id: o.id, identificador: o.identificador ?? null })),
