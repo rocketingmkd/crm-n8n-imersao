@@ -69,7 +69,7 @@ export default function Dashboard() {
   const hasBaseConhecimento = features.base_conhecimento;
 
   // Analytics period filter
-  type AnalyticsPeriod = 'today' | '7d' | '30d' | '60d';
+  type AnalyticsPeriod = 'today' | '7d' | '30d' | '90d';
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('7d');
 
   // Modals state
@@ -387,7 +387,7 @@ export default function Dashboard() {
               { value: 'today' as const, label: 'Hoje' },
               { value: '7d' as const, label: 'Últimos 7 dias' },
               { value: '30d' as const, label: 'Último mês' },
-              { value: '60d' as const, label: 'Últimos 2 meses' },
+              { value: '90d' as const, label: 'Últimos 3 meses' },
             ]).map((opt) => (
               <Button
                 key={opt.value}
@@ -425,7 +425,7 @@ export default function Dashboard() {
                   analyticsPeriod === 'today' ? 'Atendimentos do dia' :
                   analyticsPeriod === '7d' ? 'Últimos 7 dias' :
                   analyticsPeriod === '30d' ? 'Último mês' :
-                  'Últimos 2 meses'
+                  'Últimos 3 meses'
                 }
               />
             </div>
@@ -450,7 +450,13 @@ export default function Dashboard() {
                   analyticsPeriod === '30d' ? (chatMetrics?.messagesThisMonth || 0) :
                   (chatMetrics?.totalMessages || 0)
                 }
-                change={`${chatMetrics?.messagesThisWeek || 0} esta semana`}
+                change={
+                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday || 0} hoje` :
+                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek || 0} esta semana` :
+                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth || 0} este mês` :
+                  `${chatMetrics?.totalMessages || 0} total`
+                }
+                
                 changeType="positive"
                 icon={Activity}
                 description="Volume de mensagens"
