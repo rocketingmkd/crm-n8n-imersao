@@ -1,8 +1,9 @@
-import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck } from "lucide-react";
+import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3 } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import DashboardTarefas from "@/components/DashboardTarefas";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
@@ -66,6 +67,10 @@ export default function Dashboard() {
   // Verificar recursos do plano
   const hasAgendamento = features.agendamento_automatico;
   const hasBaseConhecimento = features.base_conhecimento;
+
+  // Analytics period filter
+  type AnalyticsPeriod = 'today' | '7d' | '30d' | '60d';
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('7d');
 
   // Modals state
   const [isTodayModalOpen, setIsTodayModalOpen] = useState(false);
@@ -254,310 +259,362 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Gestão de Tarefas */}
-      <DashboardTarefas />
-
-      {/* Agenda de Hoje */}
-      {hasAgendamento && (
-        <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <div>
-              <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
-                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                Agenda de Hoje
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                {new Date().toLocaleDateString("pt-BR", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.href = '/app/agenda'}
-              className="hidden sm:flex gap-2"
-            >
-              Ver Agenda Completa
-            </Button>
-          </div>
-
-          {todayAppointments.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-dashed border-primary/20">
-              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-              <p className="text-lg font-medium text-foreground mb-2">Nenhum compromisso hoje</p>
-              <p className="text-sm text-muted-foreground mb-4">Aproveite para descansar ou planejar sua semana</p>
-              <Button
-                variant="outline"
-                onClick={() => setIsAppointmentModalOpen(true)}
-                className="gap-2"
-              >
-                <Calendar className="h-4 w-4" />
-                Agendar Compromisso
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3 md:space-y-4">
-              {todayAppointments
-                .sort((a, b) => {
-                  const timeA = a.inicio ? new Date(a.inicio).getTime() : (a as any).hora;
-                  const timeB = b.inicio ? new Date(b.inicio).getTime() : (b as any).hora;
-                  return timeA > timeB ? 1 : -1;
-                })
-                .map((appointment, index) => {
-                  const displayTime = appointment.inicio 
-                    ? formatTime(appointment.inicio)
-                    : (appointment as any).hora;
-                  const [hours, minutes] = displayTime.split(":");
-                  
-                  return (
-                    <div
-                      key={appointment.id}
-                      onClick={() => window.location.href = '/app/agenda'}
-                      className="group flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 liquid-glass-subtle p-4 md:p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
-                      style={{ animationDelay: `${0.1 * index}s` }}
-                    >
-                      <div className="flex h-16 w-16 md:h-20 md:w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
-                        <span className="text-xs font-medium text-primary">{hours}</span>
-                        <span className="text-2xl md:text-3xl font-bold text-primary">{minutes}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.nome_contato}</h4>
-                        <p className="text-sm text-muted-foreground">{appointment.tipo}</p>
-                        {appointment.observacoes && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{appointment.observacoes}</p>
-                        )}
-                      </div>
-                      <div
-                        className={`self-start sm:self-center rounded-full px-4 md:px-5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 ${
-                          appointment.situacao === "confirmado"
-                            ? "bg-success/10 text-success border border-success/20"
-                            : appointment.situacao === "pendente"
-                            ? "bg-primary/10 text-primary border border-primary/20"
-                            : "bg-muted text-muted-foreground border border-border"
-                        }`}
-                      >
-                        {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
+      {/* ═══ Tabbed Content ═══ */}
+      <Tabs defaultValue="tarefas" className="animate-fade-in-up">
+        <TabsList className="w-full sm:w-auto h-10 liquid-glass-subtle p-1">
+          <TabsTrigger value="tarefas" className="gap-2 text-sm px-4">
+            <ListTodo className="h-4 w-4" />
+            Minhas Tarefas
+          </TabsTrigger>
+          {hasAgendamento && (
+            <TabsTrigger value="agenda" className="gap-2 text-sm px-4">
+              <Calendar className="h-4 w-4" />
+              Agenda do Dia
+            </TabsTrigger>
           )}
-        </div>
-      )}
+          <TabsTrigger value="analytics" className="gap-2 text-sm px-4">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
 
-      {/* KPI Grid */}
-      <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <div 
-          onClick={() => setIsReportsModalOpen(true)}
-          className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        >
-          <KPICard
-            title="Conversas Hoje"
-            value={chatMetrics?.conversationsToday || 0}
-            change={`${chatMetrics?.messagesToday || 0} mensagens`}
-            changeType="positive"
-            icon={MessageSquare}
-            description="Atendimentos do dia"
-          />
-        </div>
-        <div 
-          onClick={() => setIsReportsModalOpen(true)}
-          className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        >
-          <KPICard
-            title="Total de Conversas"
-            value={chatMetrics?.totalConversations || 0}
-            change={`${chatMetrics?.conversationsThisMonth || 0} este mês`}
-            changeType="positive"
-            icon={MessagesSquare}
-            description="Conversas únicas"
-          />
-        </div>
-        <div 
-          onClick={() => setIsReportsModalOpen(true)}
-          className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        >
-          <KPICard
-            title="Mensagens do Mês"
-            value={chatMetrics?.messagesThisMonth || 0}
-            change={`${chatMetrics?.messagesThisWeek || 0} esta semana`}
-            changeType="positive"
-            icon={Activity}
-            description="Volume de mensagens"
-          />
-        </div>
+        {/* ═══ Tab: Minhas Tarefas ═══ */}
+        <TabsContent value="tarefas" className="mt-4">
+          <DashboardTarefas />
 
+        </TabsContent>
+
+        {/* ═══ Tab: Agenda do Dia ═══ */}
         {hasAgendamento && (
-          <>
-            <div 
-              onClick={() => setIsTodayModalOpen(true)}
-              className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <KPICard
-                title="Compromissos Hoje"
-                value={todayAppointments.length}
-                change={`${confirmedToday} confirmados`}
-                changeType="positive"
-                icon={Calendar}
-                description="Agenda do dia"
-              />
+          <TabsContent value="agenda" className="mt-4">
+            <div className="liquid-glass p-4 md:p-6 lg:p-8">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div>
+                  <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    Agenda de Hoje
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    {new Date().toLocaleDateString("pt-BR", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = '/app/agenda'}
+                  className="hidden sm:flex gap-2"
+                >
+                  Ver Agenda Completa
+                </Button>
+              </div>
+
+              {todayAppointments.length === 0 ? (
+                <div className="text-center py-12 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-dashed border-primary/20">
+                  <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-lg font-medium text-foreground mb-2">Nenhum compromisso hoje</p>
+                  <p className="text-sm text-muted-foreground mb-4">Aproveite para descansar ou planejar sua semana</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAppointmentModalOpen(true)}
+                    className="gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Agendar Compromisso
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3 md:space-y-4">
+                  {todayAppointments
+                    .sort((a, b) => {
+                      const timeA = a.inicio ? new Date(a.inicio).getTime() : (a as any).hora;
+                      const timeB = b.inicio ? new Date(b.inicio).getTime() : (b as any).hora;
+                      return timeA > timeB ? 1 : -1;
+                    })
+                    .map((appointment, index) => {
+                      const displayTime = appointment.inicio 
+                        ? formatTime(appointment.inicio)
+                        : (appointment as any).hora;
+                      const [hours, minutes] = displayTime.split(":");
+                      
+                      return (
+                        <div
+                          key={appointment.id}
+                          onClick={() => window.location.href = '/app/agenda'}
+                          className="group flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 liquid-glass-subtle p-4 md:p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                          style={{ animationDelay: `${0.1 * index}s` }}
+                        >
+                          <div className="flex h-16 w-16 md:h-20 md:w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
+                            <span className="text-xs font-medium text-primary">{hours}</span>
+                            <span className="text-2xl md:text-3xl font-bold text-primary">{minutes}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.nome_contato}</h4>
+                            <p className="text-sm text-muted-foreground">{appointment.tipo}</p>
+                            {appointment.observacoes && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{appointment.observacoes}</p>
+                            )}
+                          </div>
+                          <div
+                            className={`self-start sm:self-center rounded-full px-4 md:px-5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 ${
+                              appointment.situacao === "confirmado"
+                                ? "bg-success/10 text-success border border-success/20"
+                                : appointment.situacao === "pendente"
+                                ? "bg-primary/10 text-primary border border-primary/20"
+                                : "bg-muted text-muted-foreground border border-border"
+                            }`}
+                          >
+                            {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
-            <div 
-              onClick={() => setIsReportsModalOpen(true)}
-              className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <KPICard
-                title="Taxa de Confirmação"
-                value={todayAppointments.length > 0 ? `${Math.round((confirmedToday / todayAppointments.length) * 100)}%` : "0%"}
-                change="Hoje"
-                changeType="positive"
-                icon={CheckCircle2}
-                description="Compromissos confirmados"
-              />
-            </div>
-            <div 
-              onClick={() => window.location.href = '/app/agenda'}
-              className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <KPICard
-                title="Próximos 7 Dias"
-                value={allAppointments.filter(apt => {
-                  const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.data);
-                  const nextWeek = new Date(today);
-                  nextWeek.setDate(today.getDate() + 7);
-                  return aptDate >= today && aptDate <= nextWeek;
-                }).length}
-                change="Agendados"
-                changeType="neutral"
-                icon={TrendingUp}
-                description="Próxima semana"
-              />
-            </div>
-          </>
+          </TabsContent>
         )}
 
-        <div
-          onClick={() => window.location.href = '/app/clientes/crm'}
-          className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        >
-          <KPICard
-            title={`${plural} Totais`}
-            value={contacts.length}
-            change={`${activeContacts} ativos`}
-            changeType="positive"
-            icon={Users}
-            description="Base de contatos"
-          />
-        </div>
-        <div 
-          onClick={() => setIsReportsModalOpen(true)}
-          className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        >
-          <KPICard
-            title="Conversas na Semana"
-            value={chatMetrics?.conversationsThisWeek || 0}
-            change={`${chatMetrics?.messagesThisWeek || 0} mensagens`}
-            changeType="neutral"
-            icon={UserCheck}
-            description="Últimos 7 dias"
-          />
-        </div>
-      </div>
-
-      {/* Resumo de Atendimentos (para planos sem agendamento) */}
-      {!hasAgendamento && (
-        <div className="liquid-glass p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          <div className="mb-4 md:mb-6">
-            <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2">
-              Resumo de Atendimentos
-            </h2>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Visão geral das conversas do seu atendimento automatizado
-            </p>
+        {/* ═══ Tab: Analytics ═══ */}
+        <TabsContent value="analytics" className="mt-4 space-y-6">
+          {/* Period Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {([
+              { value: 'today' as const, label: 'Hoje' },
+              { value: '7d' as const, label: 'Últimos 7 dias' },
+              { value: '30d' as const, label: 'Último mês' },
+              { value: '60d' as const, label: 'Últimos 2 meses' },
+            ]).map((opt) => (
+              <Button
+                key={opt.value}
+                variant={analyticsPeriod === opt.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAnalyticsPeriod(opt.value)}
+                className="text-xs"
+              >
+                {opt.label}
+              </Button>
+            ))}
           </div>
 
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
-            <div className="liquid-glass-subtle p-4 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-                  <MessageSquare className="h-5 w-5 text-success" />
-                </div>
-                <h3 className="font-semibold text-foreground">Hoje</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Conversas</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.conversationsToday || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Mensagens</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.messagesToday || 0}</span>
-                </div>
-              </div>
+          {/* KPI Grid */}
+          <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => setIsReportsModalOpen(true)}>
+              <KPICard
+                title="Conversas"
+                value={
+                  analyticsPeriod === 'today' ? (chatMetrics?.conversationsToday || 0) :
+                  analyticsPeriod === '7d' ? (chatMetrics?.conversationsThisWeek || 0) :
+                  analyticsPeriod === '30d' ? (chatMetrics?.conversationsThisMonth || 0) :
+                  (chatMetrics?.totalConversations || 0)
+                }
+                change={
+                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday || 0} mensagens` :
+                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek || 0} mensagens` :
+                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth || 0} mensagens` :
+                  `${chatMetrics?.totalMessages || 0} mensagens`
+                }
+                changeType="positive"
+                icon={MessageSquare}
+                description={
+                  analyticsPeriod === 'today' ? 'Atendimentos do dia' :
+                  analyticsPeriod === '7d' ? 'Últimos 7 dias' :
+                  analyticsPeriod === '30d' ? 'Último mês' :
+                  'Últimos 2 meses'
+                }
+              />
+            </div>
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => setIsReportsModalOpen(true)}>
+              <KPICard
+                title="Total de Conversas"
+                value={chatMetrics?.totalConversations || 0}
+                change={`${chatMetrics?.conversationsThisMonth || 0} este mês`}
+                changeType="positive"
+                icon={MessagesSquare}
+                description="Conversas únicas"
+              />
+            </div>
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => setIsReportsModalOpen(true)}>
+              <KPICard
+                title="Mensagens"
+                value={
+                  analyticsPeriod === 'today' ? (chatMetrics?.messagesToday || 0) :
+                  analyticsPeriod === '7d' ? (chatMetrics?.messagesThisWeek || 0) :
+                  analyticsPeriod === '30d' ? (chatMetrics?.messagesThisMonth || 0) :
+                  (chatMetrics?.totalMessages || 0)
+                }
+                change={`${chatMetrics?.messagesThisWeek || 0} esta semana`}
+                changeType="positive"
+                icon={Activity}
+                description="Volume de mensagens"
+              />
             </div>
 
-            <div className="liquid-glass-subtle p-4 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+            {hasAgendamento && (
+              <>
+                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  onClick={() => setIsTodayModalOpen(true)}>
+                  <KPICard
+                    title="Compromissos Hoje"
+                    value={todayAppointments.length}
+                    change={`${confirmedToday} confirmados`}
+                    changeType="positive"
+                    icon={Calendar}
+                    description="Agenda do dia"
+                  />
                 </div>
-                <h3 className="font-semibold text-foreground">Esta Semana</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Conversas</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisWeek || 0}</span>
+                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  onClick={() => setIsReportsModalOpen(true)}>
+                  <KPICard
+                    title="Taxa de Confirmação"
+                    value={todayAppointments.length > 0 ? `${Math.round((confirmedToday / todayAppointments.length) * 100)}%` : "0%"}
+                    change="Hoje"
+                    changeType="positive"
+                    icon={CheckCircle2}
+                    description="Compromissos confirmados"
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Mensagens</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.messagesThisWeek || 0}</span>
+                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  onClick={() => window.location.href = '/app/agenda'}>
+                  <KPICard
+                    title="Próximos 7 Dias"
+                    value={allAppointments.filter(apt => {
+                      const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.data);
+                      const nextWeek = new Date(today);
+                      nextWeek.setDate(today.getDate() + 7);
+                      return aptDate >= today && aptDate <= nextWeek;
+                    }).length}
+                    change="Agendados"
+                    changeType="neutral"
+                    icon={TrendingUp}
+                    description="Próxima semana"
+                  />
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            <div className="liquid-glass-subtle p-4 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                  <Activity className="h-5 w-5 text-accent" />
-                </div>
-                <h3 className="font-semibold text-foreground">Este Mês</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Conversas</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisMonth || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Mensagens</span>
-                  <span className="font-semibold text-foreground">{chatMetrics?.messagesThisMonth || 0}</span>
-                </div>
-              </div>
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => window.location.href = '/app/clientes/crm'}>
+              <KPICard
+                title={`${plural} Totais`}
+                value={contacts.length}
+                change={`${activeContacts} ativos`}
+                changeType="positive"
+                icon={Users}
+                description="Base de contatos"
+              />
+            </div>
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => setIsReportsModalOpen(true)}>
+              <KPICard
+                title="Conversas na Semana"
+                value={chatMetrics?.conversationsThisWeek || 0}
+                change={`${chatMetrics?.messagesThisWeek || 0} mensagens`}
+                changeType="neutral"
+                icon={UserCheck}
+                description="Últimos 7 dias"
+              />
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-border/50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Geral</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {chatMetrics?.totalConversations || 0} conversas
+          {/* Resumo de Atendimentos (para planos sem agendamento) */}
+          {!hasAgendamento && (
+            <div className="liquid-glass p-4 md:p-6 lg:p-8">
+              <div className="mb-4 md:mb-6">
+                <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2">
+                  Resumo de Atendimentos
+                </h2>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Visão geral das conversas do seu atendimento automatizado
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total de Mensagens</p>
-                <p className="text-2xl font-bold text-primary">
-                  {chatMetrics?.totalMessages || 0}
-                </p>
+
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
+                <div className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                      <MessageSquare className="h-5 w-5 text-success" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Hoje</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Conversas</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsToday || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Mensagens</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.messagesToday || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Esta Semana</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Conversas</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisWeek || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Mensagens</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.messagesThisWeek || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
+                      <Activity className="h-5 w-5 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Este Mês</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Conversas</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisMonth || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Mensagens</span>
+                      <span className="font-semibold text-foreground">{chatMetrics?.messagesThisMonth || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Geral</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {chatMetrics?.totalConversations || 0} conversas
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total de Mensagens</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {chatMetrics?.totalMessages || 0}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Modal: Compromissos de Hoje */}
       <Dialog open={isTodayModalOpen} onOpenChange={setIsTodayModalOpen}>
