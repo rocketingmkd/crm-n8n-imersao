@@ -76,7 +76,7 @@ export default function Dashboard() {
 
   const patientForm = useForm<PatientFormData>({
     defaultValues: {
-      status: 'active',
+      situacao: 'ativo',
     },
   });
 
@@ -86,7 +86,7 @@ export default function Dashboard() {
     if (apt.inicio) {
       return isToday(apt.inicio);
     }
-    return apt.date === today.toISOString().split('T')[0];
+    return apt.data === today.toISOString().split('T')[0];
   });
 
   // Estatísticas
@@ -103,8 +103,8 @@ export default function Dashboard() {
 
     try {
       await createAppointment.mutateAsync({
-        date: data.start_date,
-        time: data.start_time,
+        data: data.start_date,
+        hora: data.start_time,
         inicio: `${data.start_date}T${data.start_time}:00-03:00`,
         fim: `${data.end_date}T${data.end_time}:00-03:00`,
         id_contato: data.id_contato,
@@ -132,11 +132,11 @@ export default function Dashboard() {
 
     try {
       await createContact.mutateAsync({
-        nome: data.name,
+        nome: data.nome,
         email: data.email,
-        telefone: data.phone,
-        situacao: data.status,
-        observacoes: data.observations || null,
+        telefone: data.telefone,
+        situacao: data.situacao,
+        observacoes: data.observacoes || null,
         id_organizacao: profile.id_organizacao,
         total_interacoes: 0,
       });
@@ -223,14 +223,14 @@ export default function Dashboard() {
             <div className="space-y-3 md:space-y-4">
               {todayAppointments
                 .sort((a, b) => {
-                  const timeA = a.inicio ? new Date(a.inicio).getTime() : a.time;
-                  const timeB = b.inicio ? new Date(b.inicio).getTime() : b.time;
+                  const timeA = a.inicio ? new Date(a.inicio).getTime() : (a as any).hora;
+                  const timeB = b.inicio ? new Date(b.inicio).getTime() : (b as any).hora;
                   return timeA > timeB ? 1 : -1;
                 })
                 .map((appointment, index) => {
                   const displayTime = appointment.inicio 
                     ? formatTime(appointment.inicio)
-                    : appointment.time;
+                    : (appointment as any).hora;
                   const [hours, minutes] = displayTime.split(":");
                   
                   return (
@@ -246,21 +246,21 @@ export default function Dashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-foreground truncate text-base md:text-lg mb-1">{appointment.nome_contato}</h4>
-                        <p className="text-sm text-muted-foreground">{appointment.type}</p>
-                        {appointment.observations && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{appointment.observations}</p>
+                        <p className="text-sm text-muted-foreground">{appointment.tipo}</p>
+                        {appointment.observacoes && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{appointment.observacoes}</p>
                         )}
                       </div>
                       <div
                         className={`self-start sm:self-center rounded-full px-4 md:px-5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 ${
-                          appointment.status === "confirmed"
+                          appointment.situacao === "confirmado"
                             ? "bg-green-500/10 text-green-600 border border-green-500/20"
-                            : appointment.status === "pending"
+                            : appointment.situacao === "pendente"
                             ? "bg-accent/10 text-accent border border-accent/20"
                             : "bg-muted text-muted-foreground border border-border"
                         }`}
                       >
-                        {appointment.status === "confirmed" ? "Confirmado" : appointment.status === "pending" ? "Pendente" : "Concluído"}
+                        {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
                       </div>
                     </div>
                   );
@@ -349,7 +349,7 @@ export default function Dashboard() {
               <KPICard
                 title="Próximos 7 Dias"
                 value={allAppointments.filter(apt => {
-                  const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.date);
+                  const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.data);
                   const nextWeek = new Date(today);
                   nextWeek.setDate(today.getDate() + 7);
                   return aptDate >= today && aptDate <= nextWeek;
@@ -585,14 +585,14 @@ export default function Dashboard() {
             ) : (
               todayAppointments
                 .sort((a, b) => {
-                  const timeA = a.inicio ? new Date(a.inicio).getTime() : a.time;
-                  const timeB = b.inicio ? new Date(b.inicio).getTime() : b.time;
+                  const timeA = a.inicio ? new Date(a.inicio).getTime() : (a as any).hora;
+                  const timeB = b.inicio ? new Date(b.inicio).getTime() : (b as any).hora;
                   return timeA > timeB ? 1 : -1;
                 })
                 .map((appointment) => {
                   const displayTime = appointment.inicio 
                     ? formatTime(appointment.inicio)
-                    : appointment.time;
+                    : (appointment as any).hora;
                   
                   return (
                     <div
@@ -604,18 +604,18 @@ export default function Dashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-foreground truncate">{appointment.nome_contato}</h4>
-                        <p className="text-sm text-muted-foreground">{appointment.type}</p>
+                        <p className="text-sm text-muted-foreground">{appointment.tipo}</p>
                       </div>
                       <div
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          appointment.status === "confirmed"
+                          appointment.situacao === "confirmado"
                             ? "bg-success/10 text-success"
-                            : appointment.status === "pending"
+                            : appointment.situacao === "pendente"
                             ? "bg-accent/10 text-accent"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
-                        {appointment.status === "confirmed" ? "Confirmado" : appointment.status === "pending" ? "Pendente" : "Concluído"}
+                        {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
                       </div>
                     </div>
                   );
@@ -768,16 +768,16 @@ export default function Dashboard() {
               Adicione um novo contato ao seu sistema.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={patientForm.handleSubmit(onSubmitPatient)} className="space-y-4">
+          <form onSubmit={patientForm.handleSubmit(onSubmitPatient as any)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo *</Label>
+              <Label htmlFor="nome">Nome Completo *</Label>
               <Input
-                id="name"
+                id="nome"
                 placeholder="Ex: João da Silva"
-                {...patientForm.register("name", { required: "Nome é obrigatório" })}
+                {...patientForm.register("nome", { required: "Nome é obrigatório" })}
               />
-              {patientForm.formState.errors.name && (
-                <p className="text-xs text-red-500">{patientForm.formState.errors.name.message}</p>
+              {patientForm.formState.errors.nome && (
+                <p className="text-xs text-red-500">{patientForm.formState.errors.nome.message}</p>
               )}
             </div>
 
@@ -792,37 +792,37 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
+              <Label htmlFor="telefone">Telefone</Label>
               <Input
-                id="phone"
+                id="telefone"
                 type="tel"
                 placeholder="(00) 00000-0000"
-                {...patientForm.register("phone")}
+                {...patientForm.register("telefone")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+              <Label htmlFor="situacao">Status *</Label>
               <Select
-                value={patientForm.watch('status')}
-                onValueChange={(value: 'active' | 'inactive') => patientForm.setValue('status', value)}
+                value={patientForm.watch('situacao')}
+                onValueChange={(value: 'ativo' | 'inativo') => patientForm.setValue('situacao', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="observations">Observações</Label>
+              <Label htmlFor="observacoes">Observações</Label>
               <Textarea
-                id="observations"
+                id="observacoes"
                 placeholder="Anotações sobre o contato..."
-                {...patientForm.register("observations")}
+                {...patientForm.register("observacoes")}
                 rows={3}
                 className="resize-none"
               />

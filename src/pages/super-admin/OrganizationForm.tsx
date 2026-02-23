@@ -188,8 +188,8 @@ export default function OrganizationForm() {
         instanceId: whatsappInstance.id_instancia,
         token: whatsappInstance.token,
         instanceName: whatsappInstance.nome_instancia,
-        adminField01: whatsappInstance.admin_field_01,
-        phone: whatsappInstance.phone,
+        adminField01: (whatsappInstance as any).campo_admin_01,
+        phone: (whatsappInstance as any).telefone,
         organizationId: id,
         organizationName: organization?.nome,
       };
@@ -220,7 +220,7 @@ export default function OrganizationForm() {
         const { error: updateError } = await supabase
           .from("instancias_whatsapp")
           .update({
-            webhook_url: webhookData.url,
+            url_webhook: webhookData.url,
           })
           .eq("id", whatsappInstance.id);
 
@@ -907,7 +907,7 @@ export default function OrganizationForm() {
                         </div>
                         <div>
                           <span className="font-medium">Arquivos (BC):</span>{' '}
-                          {plans.find(p => p.id_plano === subscriptionPlan)?.max_arquivos_conhecimento ?? 'Ilimitado'}
+                          {(plans.find(p => p.id_plano === subscriptionPlan) as any)?.max_arquivos_conhecimento ?? 'Ilimitado'}
                         </div>
                       </div>
                     </div>
@@ -1158,11 +1158,11 @@ export default function OrganizationForm() {
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Empresa:</span>
-                      <span className="text-sm text-foreground">{whatsappInstance.admin_field_01}</span>
+                      <span className="text-sm text-foreground">{(whatsappInstance as any).campo_admin_01}</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Telefone:</span>
-                      <span className="text-sm font-mono text-foreground">{whatsappInstance.phone}</span>
+                      <span className="text-sm font-mono text-foreground">{(whatsappInstance as any).telefone}</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Instance ID:</span>
@@ -1188,7 +1188,7 @@ export default function OrganizationForm() {
                     </div>
                   </div>
 
-                  {whatsappInstance.webhook_url && (
+                  {(whatsappInstance as any).url_webhook && (
                     <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
                       <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Workflow className="h-4 w-4" />
@@ -1198,7 +1198,7 @@ export default function OrganizationForm() {
                         <span className="text-xs text-muted-foreground block">URL do Webhook:</span>
                         <div className="bg-muted rounded p-2 border border-border">
                           <p className="text-xs font-mono text-foreground break-all">
-                            {whatsappInstance.webhook_url}
+                            {(whatsappInstance as any).url_webhook}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-primary">
@@ -1224,7 +1224,7 @@ export default function OrganizationForm() {
                       ) : (
                         <>
                           <Workflow className="mr-2 h-4 w-4" />
-                          {whatsappInstance.webhook_url ? 'Reconfigurar Webhook' : 'Configurar Webhook'}
+                          {(whatsappInstance as any).url_webhook ? 'Reconfigurar Webhook' : 'Configurar Webhook'}
                         </>
                       )}
                     </Button>

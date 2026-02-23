@@ -15,8 +15,6 @@ interface AppLogoProps {
   className?: string;
 }
 
-// Tenta 3 formatos de URL em sequência para Google Drive,
-// ou usa a URL diretamente para outros hosts.
 function buildUrlAttempts(rawUrl: string | null | undefined): string[] {
   const raw = typeof rawUrl === "string" ? rawUrl.trim() : "";
   if (!raw) return [];
@@ -24,9 +22,9 @@ function buildUrlAttempts(rawUrl: string | null | undefined): string[] {
   const id = extrairIdGoogleDrive(raw);
   if (id) {
     return [
-      `https://lh3.googleusercontent.com/d/${id}`,                   // CDN Google
-      `https://drive.google.com/thumbnail?id=${id}&sz=w800`,         // thumbnail público
-      raw,                                                             // URL original como último recurso
+      `https://lh3.googleusercontent.com/d/${id}`,
+      `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+      raw,
     ];
   }
 
@@ -42,17 +40,15 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
   const [orgAttempt, setOrgAttempt] = useState(0);
   const [imgError, setImgError] = useState(false);
 
-  // Usa view pública (legível por anon) para o logo carregar na tela de login.
-  // Também buscado quando variant é "org" para usar na sidebar do cliente quando a org não tem logo.
   const { data: logoConfig, error: logoQueryError } = useQuery({
     queryKey: [...CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY, theme],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("configuracoes_globais_branding")
+        .from("configuracoes_globais")
         .select("url_logo_plataforma, url_logo_plataforma_escuro")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as { url_logo_plataforma: string | null; url_logo_plataforma_escuro: string | null } | null;
     },
     enabled: variant === "platform" || variant === "org",
     staleTime: 30_000,
@@ -82,14 +78,11 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
   }, [organization?.url_logo]);
 
   const defaultSrc = theme === "dark" ? defaultLogoWhite : defaultLogoDark;
-
-  // Mesmo estilo do FlowgrammersLogo: só altura fixa e largura automática (proporção da imagem)
   const imgStyle = { height: `${height}px`, width: "auto" };
 
   if (variant === "org") {
     const orgUrls = buildUrlAttempts(organization?.url_logo);
     const platformUrlsOrg = buildUrlAttempts(platformLogoUrl);
-    // Se a organização não tem logo, usa o logo da plataforma (Settings); senão usa o default
     const src = imgError ? defaultSrc : (orgUrls[orgAttempt] ?? platformUrlsOrg[platformAttempt] ?? defaultSrc);
     return (
       <img
@@ -114,7 +107,6 @@ export function AppLogo({ variant, height = 32, className = "" }: AppLogoProps) 
   const platformUrls = buildUrlAttempts(platformLogoUrl);
   const src = platformUrls[platformAttempt] ?? defaultSrc;
 
-  // Fallback: sempre mostrar algo na tela de login (logo padrão ou texto)
   if (!src || imgError) {
     return (
       <span

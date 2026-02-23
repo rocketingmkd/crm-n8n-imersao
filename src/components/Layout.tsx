@@ -423,7 +423,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                           <div><span className="font-medium">Mensagens:</span> {plan.max_mensagens_whatsapp_mes ?? '∞'}</div>
                           <div><span className="font-medium">Usuários:</span> {plan.max_usuarios ?? '∞'}</div>
                           <div><span className="font-medium">Clientes:</span> {plan.max_contatos ?? '∞'}</div>
-                          <div><span className="font-medium">Arquivos (BC):</span> {plan.max_arquivos_conhecimento ?? '∞'}</div>
+                          <div><span className="font-medium">Arquivos (BC):</span> {(plan as any).max_arquivos_conhecimento ?? '∞'}</div>
                         </div>
                       </div>
                     </div>

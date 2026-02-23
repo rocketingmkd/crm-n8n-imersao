@@ -21,7 +21,7 @@ export function useTiposAtendimento() {
     queryKey: [...QUERY_KEY, organizationId ?? ""],
     queryFn: async () => {
       if (!organizationId) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tipos_atendimento")
         .select("*")
         .eq("id_organizacao", organizationId)
@@ -41,7 +41,7 @@ export function useCriarTipoAtendimento() {
   return useMutation({
     mutationFn: async (payload: { nome: string; ativo?: boolean; ordem?: number }) => {
       if (!organizationId) throw new Error("Organização não definida");
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tipos_atendimento")
         .insert({
           id_organizacao: organizationId,
@@ -79,7 +79,7 @@ export function useAtualizarTipoAtendimento() {
       if (nome !== undefined) update.nome = nome.trim();
       if (ativo !== undefined) update.ativo = ativo;
       if (ordem !== undefined) update.ordem = ordem;
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tipos_atendimento")
         .update(update)
         .eq("id", id)
@@ -99,7 +99,7 @@ export function useExcluirTipoAtendimento() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tipos_atendimento").delete().eq("id", id);
+      const { error } = await (supabase as any).from("tipos_atendimento").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
