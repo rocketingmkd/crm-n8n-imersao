@@ -263,7 +263,7 @@
     box-shadow: 4px 0 24px -4px hsla(var(--glass-shadow));
   }
 
-  .liquid-glass-sidebar > * {
+  .liquid-glass-sidebar > *:not([class*="absolute"]) {
     position: relative;
     z-index: 1;
   }
