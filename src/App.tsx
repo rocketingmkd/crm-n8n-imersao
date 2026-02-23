@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCoresPataforma } from "@/hooks/useCoresPataforma";
 import { useFonteSistema } from "@/hooks/useFonteSistema";
+import { GlassDistortionFilter } from "@/components/GlassDistortionFilter";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -56,6 +57,7 @@ function AplicadorCores() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
+      <GlassDistortionFilter />
       <AplicadorCores />
       <AuthProvider>
         <TooltipProvider>
