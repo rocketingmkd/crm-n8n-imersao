@@ -29,12 +29,13 @@ import { supabase } from "@/lib/supabase";
 import { fetchContagemMensagensPorOrg } from "@/lib/conversas";
 import { toast } from "sonner";
 
-type PeriodFilter = "7d" | "14d" | "30d" | "90d" | "all";
+type PeriodFilter = "7d" | "14d" | "30d" | "60d" | "90d" | "all";
 
 const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
   { value: "7d", label: "Últimos 7 dias" },
   { value: "14d", label: "Últimas 2 semanas" },
   { value: "30d", label: "Último mês" },
+  { value: "60d", label: "Últimos 2 meses" },
   { value: "90d", label: "Últimos 3 meses" },
   { value: "all", label: "Todo o período" },
 ];
@@ -70,7 +71,7 @@ const KPI_COLORS = [
 ];
 
 export default function SuperAdminDashboard() {
-  const [period, setPeriod] = useState<PeriodFilter>("30d");
+  const [period, setPeriod] = useState<PeriodFilter>("60d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [orgs, setOrgs] = useState<Org[]>([]);
