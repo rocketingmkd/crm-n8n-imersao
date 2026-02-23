@@ -583,7 +583,7 @@ CREATE TABLE IF NOT EXISTS configuracoes_globais (
   chave_elevenlabs         text,
   id_voz_elevenlabs        text,
   fonte_sistema            text DEFAULT 'inter'
-                           CHECK (fonte_sistema IN ('open-sans', 'inter', 'dm-sans', 'plus-jakarta')),
+                           CHECK (fonte_sistema IN ('open-sans', 'inter', 'dm-sans', 'plus-jakarta', 'poppins', 'raleway', 'space-grotesk', 'outfit', 'manrope', 'nunito')),
   frase_login              text DEFAULT 'Seu universo de automações espera'
 );
 
