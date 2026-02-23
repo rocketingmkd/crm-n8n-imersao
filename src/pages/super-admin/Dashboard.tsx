@@ -248,11 +248,11 @@ export default function SuperAdminDashboard() {
           <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Visão Geral</h1>
           <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Resumo completo: tokens, mensagens, arquivos e visão média</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
             <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
-              <SelectTrigger className="h-9 text-xs flex-1 sm:w-[160px] sm:flex-initial">
+              <SelectTrigger className="h-9 text-xs w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -262,10 +262,10 @@ export default function SuperAdminDashboard() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-              <SelectTrigger className="h-9 text-xs flex-1 sm:w-[200px] sm:flex-initial">
+              <SelectTrigger className="h-9 text-xs w-[200px]">
                 <SelectValue placeholder="Todas as empresas" />
               </SelectTrigger>
               <SelectContent>
