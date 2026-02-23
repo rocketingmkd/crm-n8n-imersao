@@ -237,7 +237,7 @@ export default function Dashboard() {
                     <div
                       key={appointment.id}
                       onClick={() => window.location.href = '/app/agenda'}
-                      className="group flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 rounded-lg border border-border/50 bg-gradient-to-r from-background to-accent/5 p-4 md:p-5 transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                      className="group flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 liquid-glass-subtle p-4 md:p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                       style={{ animationDelay: `${0.1 * index}s` }}
                     >
                       <div className="flex h-16 w-16 md:h-20 md:w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/20 group-hover:from-accent/30 group-hover:to-accent/20 transition-all duration-300">
@@ -407,7 +407,7 @@ export default function Dashboard() {
 
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
             {/* Hoje */}
-            <div className="rounded-lg border border-border/50 bg-background p-4 md:p-6">
+            <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
                   <MessageSquare className="h-5 w-5 text-green-500" />
@@ -427,7 +427,7 @@ export default function Dashboard() {
             </div>
 
             {/* Esta Semana */}
-            <div className="rounded-lg border border-border/50 bg-background p-4 md:p-6">
+            <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
                   <TrendingUp className="h-5 w-5 text-blue-500" />
@@ -447,7 +447,7 @@ export default function Dashboard() {
             </div>
 
             {/* Este Mês */}
-            <div className="rounded-lg border border-border/50 bg-background p-4 md:p-6">
+            <div className="liquid-glass-subtle p-4 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
                   <Activity className="h-5 w-5 text-purple-500" />

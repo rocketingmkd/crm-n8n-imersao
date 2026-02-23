@@ -165,8 +165,8 @@ function KanbanColumn({
     <div 
       ref={setNodeRef}
       className={cn(
-        "flex flex-col h-full bg-secondary/30 rounded-lg p-4 min-w-[280px] max-w-[320px] transition-all",
-        isOver && "ring-2 ring-accent bg-accent/5"
+        "flex flex-col h-full liquid-glass-subtle p-4 min-w-[280px] max-w-[320px] transition-all",
+        isOver && "ring-2 ring-accent"
       )}
     >
       {/* Header da Coluna */}

@@ -42,7 +42,7 @@ export default function SuperAdminLayout() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-screen overflow-hidden bg-background liquid-bg">
         {/* Mobile Overlay */}
         {isSidebarOpen && (
           <div

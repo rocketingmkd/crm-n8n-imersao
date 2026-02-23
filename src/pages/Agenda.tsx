@@ -790,7 +790,7 @@ export default function Agenda() {
       </div>
 
       {/* View Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 card-luxury p-2.5 md:p-3 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 liquid-glass p-2.5 md:p-3 animate-fade-in-up">
         <div className="flex items-center justify-center gap-2">
           <Button 
             variant="ghost" 
@@ -813,7 +813,7 @@ export default function Agenda() {
           </Button>
         </div>
 
-        <div className="flex gap-1 md:gap-1.5 rounded-lg bg-secondary p-0.5 md:p-1">
+        <div className="flex gap-1 md:gap-1.5 rounded-xl liquid-glass-subtle p-0.5 md:p-1">
           {(["day", "week", "month"] as ViewMode[]).map((mode) => (
             <button
               key={mode}
@@ -833,7 +833,7 @@ export default function Agenda() {
 
       {/* DAY VIEW - Grade de Horários */}
       {viewMode === "day" && (
-        <div className="card-luxury p-3 md:p-4 lg:p-6 animate-fade-in-up overflow-hidden">
+        <div className="liquid-glass p-3 md:p-4 lg:p-6 animate-fade-in-up overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[300px]">
               {hours.map((hour) => {
@@ -877,7 +877,7 @@ export default function Agenda() {
 
       {/* WEEK VIEW - 7 Colunas de Dias */}
       {viewMode === "week" && (
-        <div className="card-luxury p-3 md:p-4 lg:p-6 animate-fade-in-up overflow-hidden">
+        <div className="liquid-glass p-3 md:p-4 lg:p-6 animate-fade-in-up overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[800px]">
               <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-2 mb-2 pb-2 border-b border-border">
@@ -952,7 +952,7 @@ export default function Agenda() {
 
       {/* MONTH VIEW - Calendário */}
       {viewMode === "month" && (
-        <div className="card-luxury p-3 md:p-4 lg:p-6 animate-fade-in-up">
+        <div className="liquid-glass p-3 md:p-4 lg:p-6 animate-fade-in-up">
           <div className="grid grid-cols-7 gap-1.5 md:gap-2 lg:gap-3">
             {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
               <div key={day} className="text-center pb-1 md:pb-2">

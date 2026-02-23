@@ -341,25 +341,25 @@ export default function CRM() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-2 md:grid-cols-4 animate-fade-in-up">
-        <div className="card-luxury p-3 md:p-4">
+        <div className="liquid-glass-subtle p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total de {plural}</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-foreground">
             {contacts.length}
           </p>
         </div>
-        <div className="card-luxury p-3 md:p-4">
+        <div className="liquid-glass-subtle p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Ativos</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-success">
             {contacts.filter(c => c.situacao === 'ativo').length}
           </p>
         </div>
-        <div className="card-luxury p-3 md:p-4">
+        <div className="liquid-glass-subtle p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Inativos</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-muted-foreground">
             {contacts.filter(c => c.situacao === 'inativo').length}
           </p>
         </div>
-        <div className="card-luxury p-3 md:p-4">
+        <div className="liquid-glass-subtle p-3 md:p-4">
           <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total Interações</p>
           <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-accent">
             {contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0)}
@@ -369,7 +369,7 @@ export default function CRM() {
 
       {/* Patient Cards Grid */}
       {filteredContacts.length === 0 ? (
-        <div className="text-center py-12 card-luxury">
+        <div className="text-center py-12 liquid-glass">
           <UserPlus className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
           <p className="text-lg font-medium text-foreground mb-2">
             {searchTerm ? `Nenhum ${s} encontrado` : `Nenhum ${s} cadastrado`}
