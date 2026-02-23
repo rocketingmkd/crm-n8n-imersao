@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, Phone, GripVertical } from "lucide-react";
 import { cn, formatPhoneNumber } from "@/lib/utils";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ interface KanbanCard {
   status_kanban: KanbanStatus;
   criado_em: string;
   id_organizacao: string;
+  url_foto?: string | null;
 }
 
 interface Column {
@@ -70,9 +72,12 @@ function SortableCard({ card }: { card: KanbanCard }) {
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
-            {card.nome ? card.nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
-          </div>
+          <Avatar className="h-8 w-8 shrink-0 rounded-full">
+            <AvatarImage src={card.url_foto || undefined} alt={card.nome || ""} className="object-cover" />
+            <AvatarFallback className="rounded-full bg-accent/10 text-xs font-semibold text-accent">
+              {card.nome ? card.nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-sm truncate">{card.nome || "Sem nome"}</h3>
           </div>
@@ -140,7 +145,7 @@ export default function KanbanBoard() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("contatos")
-        .select("id, nome, email, telefone, status_kanban, criado_em, id_organizacao")
+        .select("id, nome, email, telefone, status_kanban, criado_em, id_organizacao, url_foto")
         .eq("id_organizacao", profile.id_organizacao)
         .order("criado_em", { ascending: false });
       if (error) throw error;

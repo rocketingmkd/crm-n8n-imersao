@@ -1,14 +1,16 @@
-import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid, Camera, Building2, User, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LimitAlert } from "@/components/LimitAlert";
-import { useContacts, useCreateContact } from "@/hooks/useContacts";
+import { useContacts, useCreateContact, useUpdateContact } from "@/hooks/useContacts";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/lib/supabase";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +40,8 @@ interface PatientFormData {
   phone: string;
   status: 'ativo' | 'inativo';
   observations: string;
+  tipo_pessoa: 'pf' | 'pj';
+  cpf_cnpj: string;
 }
 
 type KanbanStatus =
@@ -68,8 +72,17 @@ export default function CRM() {
   const { data: contacts = [], isLoading } = useContacts();
   const { profile } = useAuth();
   const createContact = useCreateContact();
+  const updateContact = useUpdateContact();
   const { checkLimit } = usePlanFeatures();
   const { singular, plural, s, p } = useEntityLabel();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const editForm = useForm<PatientFormData>({
+    defaultValues: { status: 'ativo', tipo_pessoa: 'pf', cpf_cnpj: '' },
+  });
+  const editTipoPessoa = editForm.watch('tipo_pessoa');
 
   useEffect(() => {
     if (isDialogOpen) {
@@ -88,10 +101,11 @@ export default function CRM() {
     setValue,
     watch,
   } = useForm<PatientFormData>({
-    defaultValues: { status: 'ativo' },
+    defaultValues: { status: 'ativo', tipo_pessoa: 'pf', cpf_cnpj: '' },
   });
 
   const status = watch('status');
+  const tipoPessoa = watch('tipo_pessoa');
 
   const onSubmit = async (data: PatientFormData) => {
     if (!profile?.id_organizacao) {
@@ -112,7 +126,9 @@ export default function CRM() {
         observacoes: data.observations || null,
         id_organizacao: profile.id_organizacao,
         total_interacoes: 0,
-      });
+        tipo_pessoa: data.tipo_pessoa,
+        cpf_cnpj: data.cpf_cnpj?.trim() || null,
+      } as any);
       toast.success(`${singular} cadastrado com sucesso!`);
       setIsDialogOpen(false);
       reset();
@@ -202,6 +218,24 @@ export default function CRM() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <Input id="phone" placeholder="(11) 98888-8888" {...register('phone')} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de pessoa</Label>
+                <Select value={tipoPessoa} onValueChange={(v: 'pf' | 'pj') => setValue('tipo_pessoa', v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pf">Pessoa Física</SelectItem>
+                    <SelectItem value="pj">Pessoa Jurídica</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cpf_cnpj">{tipoPessoa === 'pj' ? 'CNPJ' : 'CPF'}</Label>
+                <Input
+                  id="cpf_cnpj"
+                  placeholder={tipoPessoa === 'pj' ? '00.000.000/0001-00' : '000.000.000-00'}
+                  {...register('cpf_cnpj')}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
@@ -356,15 +390,23 @@ export default function CRM() {
                     <div className={cn("absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-10", colors.gradient.replace("from-", "bg-").split("/")[0] + "/20")} />
                     <div className="mb-4 flex items-start justify-between gap-3 relative z-10">
                       <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
-                        <div className={cn("flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl font-display text-lg md:text-xl font-bold shadow-lg", colors.avatar)}>
-                          {contact.nome ? contact.nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
-                        </div>
+                        <Avatar className={cn("h-12 w-12 md:h-14 md:w-14 shrink-0 rounded-xl shadow-lg", colors.avatar)}>
+                          <AvatarImage src={contact.url_foto || undefined} alt={contact.nome || ""} className="object-cover" />
+                          <AvatarFallback className={cn("font-display text-lg md:text-xl font-bold rounded-xl", colors.avatar)}>
+                            {contact.nome ? contact.nome.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-foreground text-base md:text-lg truncate mb-1">{contact.nome || "Sem nome"}</h3>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", contact.situacao === "ativo" ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-gray-500/10 text-gray-600 border border-gray-500/20")}>
                               {contact.situacao === "ativo" ? "Ativo" : "Inativo"}
                             </span>
+                            {(contact.tipo_pessoa === 'pf' || contact.tipo_pessoa === 'pj') && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                {contact.tipo_pessoa === 'pj' ? 'PJ' : 'PF'}
+                              </span>
+                            )}
                             {statusInfo && (
                               <Badge variant="outline" className={cn("text-[10px] h-5 px-2 font-semibold border-2", statusInfo.color)}>{statusInfo.title}</Badge>
                             )}
@@ -388,6 +430,12 @@ export default function CRM() {
                         </div>
                         <span className="text-xs md:text-sm text-foreground font-medium">{formatPhoneNumber(contact.telefone) || "Sem telefone"}</span>
                       </div>
+                      {(contact.cpf_cnpj) && (
+                        <div className="flex items-center gap-2.5 p-2 rounded-lg bg-background/50">
+                          <span className="text-[10px] text-muted-foreground">{contact.tipo_pessoa === 'pj' ? 'CNPJ' : 'CPF'}:</span>
+                          <span className="text-xs text-foreground font-medium">{contact.cpf_cnpj}</span>
+                        </div>
+                      )}
                       {contact.observacoes && (
                         <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-background/50 mt-2 border border-border/20">
                           <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg shrink-0", colors.avatar.replace("text-", "bg-").replace("/20", "/10").replace("/10", "/10"))}>
@@ -430,57 +478,217 @@ export default function CRM() {
       </Tabs>
 
       {/* Modal de Detalhes do Contato */}
-      <Dialog open={selectedContact !== null} onOpenChange={() => setSelectedContact(null)}>
+      <Dialog
+        open={selectedContact !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedContact(null);
+            setIsEditMode(false);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 font-display text-base font-semibold text-accent">
-                {selectedContact?.nome ? selectedContact.nome.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "?"}
+            <DialogTitle className="flex items-center gap-3">
+              <div className="relative group">
+                <Avatar className="h-12 w-12 rounded-xl bg-accent/10">
+                  <AvatarImage src={selectedContact?.url_foto} alt={selectedContact?.nome} className="object-cover rounded-xl" />
+                  <AvatarFallback className="rounded-xl font-display text-base font-semibold text-accent">
+                    {selectedContact?.nome ? selectedContact.nome.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
+                  </AvatarFallback>
+                </Avatar>
+                {selectedContact && profile?.id_organizacao && (
+                  <>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !selectedContact?.id || !profile?.id_organizacao) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const ext = file.name.split('.').pop() || 'jpg';
+                          const path = `${profile.id_organizacao}/${selectedContact.id}/foto.${ext}`;
+                          const { error: upErr } = await supabase.storage.from('client-photos').upload(path, file, { upsert: true });
+                          if (upErr) throw upErr;
+                          const { data: urlData } = supabase.storage.from('client-photos').getPublicUrl(path);
+                          await updateContact.mutateAsync({ id: selectedContact.id, url_foto: urlData.publicUrl });
+                          setSelectedContact({ ...selectedContact, url_foto: urlData.publicUrl });
+                          toast.success('Foto atualizada!');
+                        } catch (err: any) {
+                          toast.error(err.message || 'Erro ao enviar foto');
+                        } finally {
+                          setUploadingPhoto(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="secondary"
+                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full shadow"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
               </div>
-              {selectedContact?.nome || singular}
+              <div>
+                <p className="font-semibold text-foreground">{selectedContact?.nome || singular}</p>
+                <p className="text-xs text-muted-foreground">Clique no ícone da câmera para adicionar/alterar foto</p>
+              </div>
             </DialogTitle>
             <DialogDescription>Informações completas do {s}</DialogDescription>
           </DialogHeader>
           {selectedContact && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Badge variant="outline" className={selectedContact.situacao === 'ativo' ? 'border-green-500/50 text-green-600' : 'border-gray-500/50 text-gray-600'}>
-                  {selectedContact.situacao === 'ativo' ? 'Ativo' : 'Inativo'}
-                </Badge>
-                {selectedContact.status_kanban && (() => {
-                  const si = kanbanStatuses.find(ks => ks.id === selectedContact.status_kanban);
-                  return si ? <Badge variant="outline" className={si.color}>{si.title}</Badge> : null;
-                })()}
-              </div>
-              <div className="space-y-3 rounded-lg border border-border/50 bg-background p-4">
-                <h3 className="text-sm font-semibold text-foreground">Informações de Contato</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">{selectedContact.email || "Sem email"}</span></div>
-                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">{formatPhoneNumber(selectedContact.telefone) || "Sem telefone"}</span></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-border/50 bg-background p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Total de Interações</p>
-                  <p className="text-2xl font-bold text-accent">{selectedContact.total_interacoes}</p>
-                </div>
-                <div className="rounded-lg border border-border/50 bg-background p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Última Interação</p>
-                  <p className="text-sm font-semibold text-foreground">{selectedContact.ultima_interacao ? new Date(selectedContact.ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}</p>
-                </div>
-              </div>
-              {selectedContact.observacoes && (
-                <div className="space-y-2 rounded-lg border border-border/50 bg-background p-4">
-                  <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /><h3 className="text-sm font-semibold text-foreground">Observações</h3></div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedContact.observacoes}</p>
+            <>
+              {isEditMode ? (
+                <form
+                  onSubmit={editForm.handleSubmit(async (data) => {
+                    try {
+                      await updateContact.mutateAsync({
+                        id: selectedContact.id,
+                        nome: data.name,
+                        email: data.email,
+                        telefone: data.phone,
+                        situacao: data.status,
+                        observacoes: data.observations?.trim() || null,
+                        tipo_pessoa: data.tipo_pessoa,
+                        cpf_cnpj: data.cpf_cnpj?.trim() || null,
+                      } as any);
+                      setSelectedContact({ ...selectedContact, nome: data.name, email: data.email, telefone: data.phone, situacao: data.status, observacoes: data.observations || null, tipo_pessoa: data.tipo_pessoa, cpf_cnpj: data.cpf_cnpj || null });
+                      setIsEditMode(false);
+                      toast.success(`${singular} atualizado!`);
+                    } catch (err: any) {
+                      toast.error(err.message || 'Erro ao atualizar');
+                    }
+                  })}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Nome</Label>
+                    <Input id="edit-name" {...editForm.register('name')} placeholder="Nome completo" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email">Email</Label>
+                    <Input id="edit-email" type="email" {...editForm.register('email', { pattern: { value: new RegExp('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$', 'i'), message: 'Email inválido' } })} placeholder="email@exemplo.com" className={editForm.formState.errors.email ? 'border-red-500' : ''} />
+                    {editForm.formState.errors.email && <p className="text-xs text-red-500">{editForm.formState.errors.email.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone">Telefone</Label>
+                    <Input id="edit-phone" {...editForm.register('phone')} placeholder="(11) 98888-8888" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tipo de pessoa</Label>
+                    <Select value={editTipoPessoa} onValueChange={(v: 'pf' | 'pj') => editForm.setValue('tipo_pessoa', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pf">Pessoa Física</SelectItem>
+                        <SelectItem value="pj">Pessoa Jurídica</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-cpf_cnpj">{editTipoPessoa === 'pj' ? 'CNPJ' : 'CPF'}</Label>
+                    <Input id="edit-cpf_cnpj" {...editForm.register('cpf_cnpj')} placeholder={editTipoPessoa === 'pj' ? '00.000.000/0001-00' : '000.000.000-00'} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select value={editForm.watch('status')} onValueChange={(v: 'ativo' | 'inativo') => editForm.setValue('status', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-observations">Observações</Label>
+                    <Textarea id="edit-observations" {...editForm.register('observations')} rows={3} className="resize-none" placeholder="Anotações..." />
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsEditMode(false)}>Cancelar</Button>
+                    <Button type="submit" disabled={updateContact.isPending}>{updateContact.isPending ? 'Salvando...' : 'Salvar'}</Button>
+                  </DialogFooter>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <Badge variant="outline" className={selectedContact.situacao === 'ativo' ? 'border-green-500/50 text-green-600' : 'border-gray-500/50 text-gray-600'}>
+                      {selectedContact.situacao === 'ativo' ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                    {(selectedContact.tipo_pessoa === 'pf' || selectedContact.tipo_pessoa === 'pj') && (
+                      <Badge variant="outline" className="gap-1">
+                        {selectedContact.tipo_pessoa === 'pj' ? <Building2 className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                        {selectedContact.tipo_pessoa === 'pj' ? 'Pessoa Jurídica' : 'Pessoa Física'}
+                      </Badge>
+                    )}
+                    {selectedContact.status_kanban && (() => {
+                      const si = kanbanStatuses.find(ks => ks.id === selectedContact.status_kanban);
+                      return si ? <Badge variant="outline" className={si.color}>{si.title}</Badge> : null;
+                    })()}
+                  </div>
+                  <div className="space-y-3 rounded-lg border border-border/50 bg-background p-4">
+                    <h3 className="text-sm font-semibold text-foreground">Informações de Contato</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{selectedContact.email || "Sem email"}</span></div>
+                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{formatPhoneNumber(selectedContact.telefone) || "Sem telefone"}</span></div>
+                      {(selectedContact.cpf_cnpj) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm shrink-0">{selectedContact.tipo_pessoa === 'pj' ? 'CNPJ' : 'CPF'}:</span>
+                          <span className="text-sm text-foreground">{selectedContact.cpf_cnpj}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border/50 bg-background p-4">
+                      <p className="text-xs text-muted-foreground mb-1">Total de Interações</p>
+                      <p className="text-2xl font-bold text-accent">{selectedContact.total_interacoes}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background p-4">
+                      <p className="text-xs text-muted-foreground mb-1">Última Interação</p>
+                      <p className="text-sm font-semibold text-foreground">{selectedContact.ultima_interacao ? new Date(selectedContact.ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}</p>
+                    </div>
+                  </div>
+                  {selectedContact.observacoes && (
+                    <div className="space-y-2 rounded-lg border border-border/50 bg-background p-4">
+                      <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /><h3 className="text-sm font-semibold text-foreground">Observações</h3></div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedContact.observacoes}</p>
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Cadastrado em: {new Date(selectedContact.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
               )}
-              <div className="text-xs text-muted-foreground">
-                Cadastrado em: {new Date(selectedContact.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </div>
+            </>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setSelectedContact(null)}>Fechar</Button></DialogFooter>
+          {selectedContact && !isEditMode && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedContact(null)}>Fechar</Button>
+              <Button onClick={() => {
+                setIsEditMode(true);
+                editForm.reset({
+                  name: selectedContact.nome || '',
+                  email: selectedContact.email || '',
+                  phone: selectedContact.telefone || '',
+                  status: (selectedContact.situacao as 'ativo' | 'inativo') || 'ativo',
+                  observations: selectedContact.observacoes || '',
+                  tipo_pessoa: (selectedContact.tipo_pessoa as 'pf' | 'pj') || 'pf',
+                  cpf_cnpj: selectedContact.cpf_cnpj || '',
+                });
+              }} className="gap-2">
+                <Pencil className="h-4 w-4" />
+                Editar {singular}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 

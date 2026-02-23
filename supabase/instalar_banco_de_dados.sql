@@ -166,6 +166,18 @@ CREATE TABLE IF NOT EXISTS contatos (
   id_sessao          text
 );
 
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'contatos' AND column_name = 'tipo_pessoa') THEN
+    ALTER TABLE contatos ADD COLUMN tipo_pessoa text DEFAULT 'pf' CHECK (tipo_pessoa IN ('pf', 'pj'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'contatos' AND column_name = 'cpf_cnpj') THEN
+    ALTER TABLE contatos ADD COLUMN cpf_cnpj text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'contatos' AND column_name = 'url_foto') THEN
+    ALTER TABLE contatos ADD COLUMN url_foto text;
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS contatos_id_organizacao_idx ON contatos(id_organizacao);
 CREATE INDEX IF NOT EXISTS contatos_status_kanban_idx   ON contatos(status_kanban);
 CREATE INDEX IF NOT EXISTS contatos_situacao_idx        ON contatos(situacao);
@@ -872,6 +884,62 @@ DO $$ BEGIN
     CREATE POLICY "avatars_publicos" ON storage.objects
       FOR SELECT
       USING (bucket_id = 'avatars');
+  END IF;
+END $$;
+
+-- ============================================================
+-- STORAGE — Bucket para fotos de clientes (contatos)
+-- Caminho: {id_organizacao}/{id_contato}/{filename}
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'client-photos',
+  'client-photos',
+  true,
+  2097152,
+  ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'client_photos_insert_org' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "client_photos_insert_org" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (
+        bucket_id = 'client-photos'
+        AND (storage.foldername(name))[1] = obter_id_organizacao_usuario()::text
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'client_photos_select' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "client_photos_select" ON storage.objects
+      FOR SELECT
+      USING (bucket_id = 'client-photos');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'client_photos_update_org' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "client_photos_update_org" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (
+        bucket_id = 'client-photos'
+        AND (storage.foldername(name))[1] = obter_id_organizacao_usuario()::text
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'client_photos_delete_org' AND tablename = 'objects' AND schemaname = 'storage') THEN
+    CREATE POLICY "client_photos_delete_org" ON storage.objects
+      FOR DELETE TO authenticated
+      USING (
+        bucket_id = 'client-photos'
+        AND (storage.foldername(name))[1] = obter_id_organizacao_usuario()::text
+      );
   END IF;
 END $$;
 
