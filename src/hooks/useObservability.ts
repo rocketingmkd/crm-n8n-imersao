@@ -118,6 +118,7 @@ async function fetchObservability(): Promise<ObservabilityResponse> {
 }
 
 export const REFRESH_OPTIONS = [
+  { label: "3s", value: 3_000 },
   { label: "5s", value: 5_000 },
   { label: "10s", value: 10_000 },
   { label: "15s", value: 15_000 },
@@ -126,13 +127,14 @@ export const REFRESH_OPTIONS = [
 
 export type RefreshInterval = (typeof REFRESH_OPTIONS)[number]["value"];
 
-export function useObservability(intervalMs: RefreshInterval = 5_000) {
+export function useObservability(intervalMs: RefreshInterval = 3_000) {
   return useQuery<ObservabilityResponse>({
     queryKey: ["observability"],
     queryFn: fetchObservability,
     refetchInterval: intervalMs,
+    refetchIntervalInBackground: true,
     retry: 1,
-    retryDelay: 3_000,
+    retryDelay: 2_000,
     staleTime: 0,
     gcTime: 60_000,
   });

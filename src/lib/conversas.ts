@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Converte o identificador da organização no nome da tabela de conversas
- * gerada pelo n8n: {identificador}_conversas (hífens viram underscores,
+ * Converte o identificador da organização no nome da tabela de chat
+ * gerada pelo n8n: {identificador}_chats (hífens viram underscores,
  * e remove sufixo numérico tipo timestamp se existir).
+ * Os workflows n8n usam sufixo _chats (ex.: clinica_flowgrammers_chats).
  */
 export function identificadorParaTabela(identificador: string): string {
   const parts = identificador.split("-");
@@ -13,7 +14,7 @@ export function identificadorParaTabela(identificador: string): string {
       parts.pop();
     }
   }
-  return (parts.join("_") + "_conversas").toLowerCase();
+  return (parts.join("_") + "_chats").toLowerCase();
 }
 
 export interface OrgParaContagem {
@@ -23,9 +24,10 @@ export interface OrgParaContagem {
 
 /**
  * Conta mensagens por organização a partir das tabelas dinâmicas
- * {identificador}_conversas no Supabase (criadas pelo n8n).
+ * {identificador}_chats no Supabase (criadas pelo n8n). Tabela tem coluna "data" (timestamp).
  * Retorna um mapa id_organizacao -> quantidade.
- * Se since for passado, considera apenas registros com data >= since (coluna "data").
+ * Se since for passado, considera apenas registros com data >= since.
+ * Tenta primeiro _chats; se tabela não existir, tenta _conversas (fallback).
  */
 export async function fetchContagemMensagensPorOrg(
   client: SupabaseClient,
@@ -33,7 +35,7 @@ export async function fetchContagemMensagensPorOrg(
   options?: { since?: Date }
 ): Promise<Record<string, number>> {
   const result: Record<string, number> = {};
-  const sinceISO = options?.since?.toISOString();
+  const sinceStr = options?.since ? options.since.toISOString().slice(0, 10) : null;
 
   await Promise.all(
     orgs.map(async (org) => {
@@ -41,27 +43,34 @@ export async function fetchContagemMensagensPorOrg(
         result[org.id] = 0;
         return;
       }
-      const tableName = identificadorParaTabela(org.identificador.trim());
-      try {
-        let query = (client as any).from(tableName).select("id", { count: "exact", head: true });
-        if (sinceISO) {
-          query = query.gte("data", sinceISO);
-        }
-        const { count, error } = await query;
-        if (error) {
-          if (error.code === "42P01" || error.message?.includes("does not exist")) {
-            result[org.id] = 0;
-            return;
+      const baseName = (() => {
+        const parts = org.identificador.trim().split("-");
+        if (parts.length > 1 && /^\d{10,}$/.test(parts[parts.length - 1])) parts.pop();
+        return parts.join("_").toLowerCase();
+      })();
+      const tablesToTry = [baseName + "_chats", baseName + "_conversas"];
+
+      for (const tableName of tablesToTry) {
+        try {
+          let query = (client as any).from(tableName).select("id", { count: "exact" }).limit(1);
+          if (sinceStr) query = query.gte("data", sinceStr);
+          const { count, error } = await query;
+          if (error) {
+            if (error.code === "42P01" || error.message?.includes("does not exist")) continue;
+            if (sinceStr && (error.code === "42703" || (error.message && /column.*data|data.*column/i.test(error.message)))) {
+              const res = await (client as any).from(tableName).select("id", { count: "exact" }).limit(1);
+              result[org.id] = res.error ? 0 : Number(res.count ?? 0);
+              return;
+            }
+            continue;
           }
-          console.warn(`[conversas] Erro ao contar mensagens em ${tableName}:`, error);
-          result[org.id] = 0;
+          result[org.id] = count != null ? Number(count) : 0;
           return;
+        } catch (_e) {
+          continue;
         }
-        result[org.id] = count ?? 0;
-      } catch (e) {
-        console.warn(`[conversas] Exceção ao contar em ${tableName}:`, e);
-        result[org.id] = 0;
       }
+      result[org.id] = 0;
     })
   );
 

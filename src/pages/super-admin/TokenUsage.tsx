@@ -82,7 +82,7 @@ export default function TokenUsage() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [docCountByIdentificador, setDocCountByIdentificador] = useState<Record<string, number>>({});
   const [msgCountByOrgId, setMsgCountByOrgId] = useState<Record<string, number>>({});
-  const [period, setPeriod] = useState<PeriodFilter>("30d");
+  const [period, setPeriod] = useState<PeriodFilter>("90d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
 
   useEffect(() => {

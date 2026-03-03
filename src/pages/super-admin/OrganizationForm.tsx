@@ -808,7 +808,7 @@ export default function OrganizationForm() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="adminFullName">Nome Completo *</Label>
-                <Input id="adminFullName" {...register("adminFullName", { required: "Nome completo é obrigatório" })} placeholder="Ex: Dr. João Silva" className="mt-1.5" />
+                <Input id="adminFullName" {...register("adminFullName", { required: "Nome completo é obrigatório" })} placeholder="ric neves" className="mt-1.5" />
                 {errors.adminFullName && <p className="text-xs text-destructive mt-1">{errors.adminFullName.message}</p>}
               </div>
               <div>
@@ -836,7 +836,7 @@ export default function OrganizationForm() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="user_nome_completo">Nome Completo *</Label>
-              <Input id="user_nome_completo" placeholder="Ex: Dr. João Silva" value={newUserForm.nome_completo} onChange={(e) => setNewUserForm({ ...newUserForm, nome_completo: e.target.value })} />
+              <Input id="user_nome_completo" placeholder="ric neves" value={newUserForm.nome_completo} onChange={(e) => setNewUserForm({ ...newUserForm, nome_completo: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="user_email">Email *</Label>

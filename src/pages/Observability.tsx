@@ -146,7 +146,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} allowDecimals={false} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="jobs" name="Jobs em execução" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="jobs" name="Jobs em execução" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
                 </LineChart>
               </ChartContainer>
 
@@ -159,7 +159,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="cpu" name="CPU (%)" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="cpu" name="CPU (%)" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
                 </LineChart>
               </ChartContainer>
 
@@ -172,7 +172,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="memory" name="Memória (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="memory" name="Memória (%)" stroke="hsl(40, 90%, 55%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
                 </LineChart>
               </ChartContainer>
             </div>
@@ -213,7 +213,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
 }
 
 export default function Observability({ hideHeader = false }: { hideHeader?: boolean }) {
-  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(5_000);
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(3_000);
   const [allWorkersExpanded, setAllWorkersExpanded] = useState(false);
   const [workerToggleKey, setWorkerToggleKey] = useState(0);
   const { data, isLoading, isFetching, error } = useObservability(refreshInterval);
@@ -302,24 +302,35 @@ export default function Observability({ hideHeader = false }: { hideHeader?: boo
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetching && "animate-spin text-primary")} />
-        <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
-          {REFRESH_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setRefreshInterval(opt.value)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                refreshInterval === opt.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <RefreshCw className={cn("h-4 w-4 transition-colors", isFetching ? "animate-spin text-primary" : "text-muted-foreground")} />
+          <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
+            {REFRESH_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setRefreshInterval(opt.value)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  refreshInterval === opt.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
+        {isFetching && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary animate-pulse">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
+            Atualizando...
+          </span>
+        )}
       </div>
 
       {/* Cards: CPU, RAM, Disco - com cores individuais */}
@@ -375,14 +386,14 @@ export default function Observability({ hideHeader = false }: { hideHeader?: boo
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[240px] w-full">
-              <LineChart data={history} margin={{ left: 12, right: 12, bottom: 4 }}>
+              <LineChart data={history} margin={{ left: 12, right: 12, bottom: 4 }} isAnimationActive animationDuration={800} animationEasing="ease-out">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="time" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="cpu" name="CPU" stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="memory" name="RAM" stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="cpu" name="CPU" stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} isAnimationActive animationDuration={800} animationEasing="ease-out" />
+                <Line type="monotone" dataKey="memory" name="RAM" stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={false} isAnimationActive animationDuration={800} animationEasing="ease-out" />
               </LineChart>
             </ChartContainer>
           </CardContent>
@@ -406,10 +417,19 @@ export default function Observability({ hideHeader = false }: { hideHeader?: boo
       {/* Workers n8n - Seção detalhada */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Workflow className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">Workers</h2>
             <Badge variant="outline" className="text-xs">{workers.length} worker(s)</Badge>
+            {refreshInterval <= 5000 && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <span className={cn("relative flex h-1.5 w-1.5", isFetching && "animate-pulse")}>
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                Atualização a cada {refreshInterval / 1000}s
+              </span>
+            )}
           </div>
 
           {workers.length > 1 && (

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BarChart3, AlertTriangle, CheckCircle2, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, AlertTriangle, CheckCircle2, Filter, ChevronLeft, ChevronRight, MessageSquare, Users, FileText, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrgRow {
@@ -97,90 +97,105 @@ export default function Relatorios() {
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
   const [page, setPage] = useState(1);
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, error } = useQuery({
     queryKey: ["super-admin-relatorios-uso"],
     queryFn: async (): Promise<OrgRow[]> => {
-      const [
-        { data: orgs, error: eOrgs },
-        { data: plans, error: ePlans },
-        { data: contatos, error: eContatos },
-        { data: perfis, error: ePerfis },
-        { data: documentos, error: eDocs },
-      ] = await Promise.all([
-        supabase.from("organizacoes").select("id, nome, identificador, plano_assinatura").order("nome"),
-        supabase.from("planos_assinatura").select("id_plano, nome_plano, max_mensagens_whatsapp_mes, max_usuarios, max_contatos, max_arquivos_conhecimento"),
-        supabase.from("contatos").select("id_organizacao"),
-        supabase.from("perfis").select("id_organizacao").eq("super_admin", false),
-        supabase.from("documentos").select("id, metadados, titulo"),
-      ]);
+      try {
+        const [
+          { data: orgs, error: eOrgs },
+          { data: plans, error: ePlans },
+          { data: contatos, error: eContatos },
+          { data: perfis, error: ePerfis },
+          { data: documentos, error: eDocs },
+        ] = await Promise.all([
+          supabase.from("organizacoes").select("id, nome, identificador, plano_assinatura").order("nome"),
+          supabase.from("planos_assinatura").select("id_plano, nome_plano, max_mensagens_whatsapp_mes, max_usuarios, max_contatos, max_arquivos_conhecimento"),
+          supabase.from("contatos").select("id_organizacao"),
+          supabase.from("perfis").select("id_organizacao").eq("super_admin", false),
+          supabase.from("documentos").select("id, metadados, titulo"),
+        ]);
 
-      if (eOrgs || ePlans) throw new Error(eOrgs?.message || ePlans?.message);
-      if (eContatos) throw eContatos;
-      if (ePerfis) throw ePerfis;
-      if (eDocs) throw eDocs;
+        if (eOrgs) throw new Error(eOrgs.message);
+        if (ePlans) throw new Error(ePlans.message);
+        if (eContatos) throw new Error(eContatos.message);
+        if (ePerfis) throw new Error(ePerfis.message);
+        if (eDocs) throw new Error(eDocs.message);
 
-      const planMap = new Map(
-        (plans || []).map((p: any) => [
-          p.id_plano,
-          {
-            nome_plano: p.nome_plano,
-            max_mensagens: p.max_mensagens_whatsapp_mes ?? null,
-            max_usuarios: p.max_usuarios ?? null,
-            max_contatos: p.max_contatos ?? null,
-            max_arquivos: p.max_arquivos_conhecimento ?? null,
-          },
-        ])
-      );
-
-      const countByOrg = (arr: { id_organizacao?: string }[] | null) => {
-        const m: Record<string, number> = {};
-        (arr || []).forEach((r) => {
-          const id = r.id_organizacao;
-          if (id) m[id] = (m[id] || 0) + 1;
+        const planMap = new Map<string, { nome_plano: string; max_mensagens: number | null; max_usuarios: number | null; max_contatos: number | null; max_arquivos: number | null }>();
+        (plans || []).forEach((p: any) => {
+          if (p && p.id_plano) {
+            planMap.set(p.id_plano, {
+              nome_plano: p.nome_plano ?? "—",
+              max_mensagens: p.max_mensagens_whatsapp_mes ?? null,
+              max_usuarios: p.max_usuarios ?? null,
+              max_contatos: p.max_contatos ?? null,
+              max_arquivos: p.max_arquivos_conhecimento ?? null,
+            });
+          }
         });
-        return m;
-      };
-      const contatosPorOrg = countByOrg(contatos);
-      const perfisPorOrg = countByOrg(perfis);
 
-      const filesByIdentificador: Record<string, Set<string>> = {};
-      (documentos || []).forEach((d: any) => {
-        const org = d.metadados?.organizacao;
-        if (!org) return;
-        if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
-        const fileKey = (d.titulo && d.titulo.trim()) || String(d.id ?? "");
-        filesByIdentificador[org].add(fileKey);
-      });
-      const docsPorIdentificador: Record<string, number> = {};
-      Object.entries(filesByIdentificador).forEach(([org, set]) => {
-        docsPorIdentificador[org] = set.size;
-      });
-
-      const usoMensagensPorOrg = await fetchContagemMensagensPorOrg(
-        supabase,
-        (orgs || []).map((o: any) => ({ id: o.id, identificador: o.identificador ?? null })),
-        { since: primeiroDiaDoMesAtual() }
-      );
-
-      return (orgs || []).map((org: any) => {
-        const plan = org.plano_assinatura ? planMap.get(org.plano_assinatura) : null;
-        return {
-          id: org.id,
-          nome: org.nome,
-          identificador: org.identificador || "",
-          plano_assinatura: org.plano_assinatura,
-          nome_plano: plan?.nome_plano ?? "—",
-          max_mensagens: plan?.max_mensagens ?? null,
-          max_usuarios: plan?.max_usuarios ?? null,
-          max_contatos: plan?.max_contatos ?? null,
-          max_arquivos: plan?.max_arquivos ?? null,
-          uso_mensagens: usoMensagensPorOrg[org.id] ?? 0,
-          uso_usuarios: perfisPorOrg[org.id] || 0,
-          uso_contatos: contatosPorOrg[org.id] || 0,
-          uso_arquivos: docsPorIdentificador[org.identificador] || 0,
+        const countByOrg = (arr: { id_organizacao?: string }[] | null) => {
+          const m: Record<string, number> = {};
+          (arr || []).forEach((r) => {
+            const id = r?.id_organizacao;
+            if (id) m[id] = (m[id] || 0) + 1;
+          });
+          return m;
         };
-      });
+        const contatosPorOrg = countByOrg(contatos);
+        const perfisPorOrg = countByOrg(perfis);
+
+        const filesByIdentificador: Record<string, Set<string>> = {};
+        (documentos || []).forEach((d: any) => {
+          const org = d?.metadados?.organizacao;
+          if (!org) return;
+          if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
+          const fileKey = (d?.titulo && String(d.titulo).trim()) || String(d?.id ?? "");
+          filesByIdentificador[org].add(fileKey);
+        });
+        const docsPorIdentificador: Record<string, number> = {};
+        Object.entries(filesByIdentificador).forEach(([org, set]) => {
+          docsPorIdentificador[org] = set.size;
+        });
+
+        let usoMensagensPorOrg: Record<string, number> = {};
+        try {
+          const orgList = (orgs || []).map((o: any) => ({ id: o?.id, identificador: o?.identificador ?? null }));
+          usoMensagensPorOrg = await Promise.race([
+            fetchContagemMensagensPorOrg(supabase, orgList, { since: primeiroDiaDoMesAtual() }),
+            new Promise<Record<string, number>>((_, reject) =>
+              setTimeout(() => reject(new Error("timeout")), 5000)
+            ),
+          ]);
+        } catch (_err) {
+          // Não bloqueia: mantém zero para todas as orgs
+        }
+
+        return (orgs || []).map((org: any) => {
+          const plan = org?.plano_assinatura ? planMap.get(org.plano_assinatura) : null;
+          return {
+            id: org?.id ?? "",
+            nome: org?.nome ?? "",
+            identificador: org?.identificador ?? "",
+            plano_assinatura: org?.plano_assinatura ?? null,
+            nome_plano: plan?.nome_plano ?? "—",
+            max_mensagens: plan?.max_mensagens ?? null,
+            max_usuarios: plan?.max_usuarios ?? null,
+            max_contatos: plan?.max_contatos ?? null,
+            max_arquivos: plan?.max_arquivos ?? null,
+            uso_mensagens: usoMensagensPorOrg[org?.id] ?? 0,
+            uso_usuarios: perfisPorOrg[org?.id] ?? 0,
+            uso_contatos: contatosPorOrg[org?.id] ?? 0,
+            uso_arquivos: docsPorIdentificador[org?.identificador] ?? 0,
+          };
+        });
+      } catch (err) {
+        console.error("[Relatorios] Erro na query:", err);
+        throw err;
+      }
     },
+    retry: 0,
+    staleTime: 60_000,
   });
 
   const filteredRows = useMemo(() => {
@@ -192,6 +207,12 @@ export default function Relatorios() {
   const safePage = Math.min(page, totalPages);
   const paginatedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
+  const totalMensagens = useMemo(() => filteredRows.reduce((s, r) => s + r.uso_mensagens, 0), [filteredRows]);
+  const totalUsuarios = useMemo(() => filteredRows.reduce((s, r) => s + r.uso_usuarios, 0), [filteredRows]);
+  const totalClientes = useMemo(() => filteredRows.reduce((s, r) => s + r.uso_contatos, 0), [filteredRows]);
+  const totalArquivos = useMemo(() => filteredRows.reduce((s, r) => s + r.uso_arquivos, 0), [filteredRows]);
+  const empresasComAlerta = useMemo(() => filteredRows.filter((r) => (r.max_usuarios != null && r.uso_usuarios >= r.max_usuarios) || (r.max_contatos != null && r.uso_contatos >= r.max_contatos) || (r.max_arquivos != null && r.uso_arquivos >= r.max_arquivos) || (r.max_mensagens != null && r.uso_mensagens >= r.max_mensagens)).length, [filteredRows]);
+
   // Reset page when filter changes
   const handleOrgChange = (value: string) => {
     setSelectedOrg(value);
@@ -202,6 +223,30 @@ export default function Relatorios() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10">
+              <BarChart3 className="h-4 w-4 text-teal-500" />
+            </div>
+            Relatórios de Consumo
+          </h1>
+          <p>Uso atual vs. limites do plano. Alertas quando próximo ou no limite.</p>
+        </div>
+        <Card className="border-destructive/50">
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+            <AlertTriangle className="h-12 w-12 text-destructive" />
+            <p className="text-center text-muted-foreground">Não foi possível carregar os dados.</p>
+            <p className="text-center text-sm text-muted-foreground max-w-md">{error instanceof Error ? error.message : String(error)}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -234,11 +279,63 @@ export default function Relatorios() {
         </div>
       </div>
 
+      {/* Resumo em cards (sem gráficos para garantir carregamento estável) */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="border-border">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <MessageSquare className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-medium">Mensagens (mês)</span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums">{totalMensagens.toLocaleString("pt-BR")}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Tabelas &#123;empresa&#125;_chats (mês atual)</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <UserCircle className="h-4 w-4 text-teal-500" />
+              <span className="text-xs font-medium">Usuários</span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums">{totalUsuarios.toLocaleString("pt-BR")}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Users className="h-4 w-4 text-violet-500" />
+              <span className="text-xs font-medium">Clientes</span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums">{totalClientes.toLocaleString("pt-BR")}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <FileText className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-medium">Arquivos BC</span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums">{totalArquivos.toLocaleString("pt-BR")}</p>
+          </CardContent>
+        </Card>
+      </div>
+      <Card className="border-border">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium">Empresas com alerta (no limite ou acima)</span>
+            </div>
+            <span className={cn("text-lg font-bold tabular-nums", empresasComAlerta > 0 ? "text-destructive" : "text-muted-foreground")}>{empresasComAlerta} de {filteredRows.length}</span>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Uso por empresa</CardTitle>
           <CardDescription>
-            Mensagens contadas das tabelas dinâmicas de conversas (mês atual). Demais limites em tempo real.
+            Mensagens contadas das tabelas dinâmicas &#123;empresa&#125;_chats (mês atual). Demais limites em tempo real.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

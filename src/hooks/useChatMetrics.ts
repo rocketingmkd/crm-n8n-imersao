@@ -58,10 +58,10 @@ export function useChatMetrics() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
       try {
-        // Buscar todas as mensagens
+        // Tabelas _chats do n8n usam id_sessao (não session_id)
         const { data: allMessages, error } = await (supabase as any)
           .from(tableName)
-          .select('id, session_id, message, data')
+          .select('id, id_sessao, message, data')
           .order('data', { ascending: false });
 
         if (error) {
@@ -83,7 +83,7 @@ export function useChatMetrics() {
           throw error;
         }
 
-        const messages = allMessages || [];
+        const messages = (allMessages || []).map((m: any) => ({ ...m, session_id: m.id_sessao ?? m.session_id }));
         
         // Total de mensagens
         const totalMessages = messages.length;

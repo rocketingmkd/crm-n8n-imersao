@@ -71,7 +71,7 @@ const KPI_COLORS = [
 ];
 
 export default function SuperAdminDashboard() {
-  const [period, setPeriod] = useState<PeriodFilter>("60d");
+  const [period, setPeriod] = useState<PeriodFilter>("90d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [orgs, setOrgs] = useState<Org[]>([]);
