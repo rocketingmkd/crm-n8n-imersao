@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import DashboardTarefas from "@/components/DashboardTarefas";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
+import { useAppointments, useCreateAppointment, useAgendamentosPorPeriodo } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
+import { useTarefas } from "@/hooks/useTarefas";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { formatTime, isToday } from "@/lib/dateUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -63,14 +64,57 @@ export default function Dashboard() {
   const createAppointment = useCreateAppointment();
   const createContact = useCreateContact();
   const { singular, plural, s } = useEntityLabel();
+  const { data: tarefas = [] } = useTarefas();
 
   // Verificar recursos do plano
   const hasAgendamento = features.agendamento_automatico;
   const hasBaseConhecimento = features.base_conhecimento;
 
+  // Aba ativa (controlado para não sair do Analytics ao clicar nos filtros)
+  const [activeTab, setActiveTab] = useState<string>('tarefas');
+
   // Analytics period filter
   type AnalyticsPeriod = 'today' | '7d' | '30d' | '90d';
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('7d');
+
+  const today = new Date();
+  const analyticsRange = (() => {
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const start = new Date(end);
+    if (analyticsPeriod === 'today') start.setDate(end.getDate());
+    else if (analyticsPeriod === '7d') start.setDate(end.getDate() - 7);
+    else if (analyticsPeriod === '30d') start.setDate(end.getDate() - 30);
+    else start.setDate(end.getDate() - 90);
+    return { start, end };
+  })();
+  const { data: appointmentsInPeriod = [], isLoading: loadingAppointmentsPeriod } = useAgendamentosPorPeriodo(analyticsRange.start, analyticsRange.end);
+
+  const periodLabel =
+    analyticsPeriod === 'today' ? 'Hoje' :
+    analyticsPeriod === '7d' ? 'Últimos 7 dias' :
+    analyticsPeriod === '30d' ? 'Último mês' : 'Últimos 3 meses';
+
+  const contatosConcluidosNoPeriodo = contacts.filter((c) => {
+    if ((c as { status_kanban?: string }).status_kanban !== 'concluido') return false;
+    const criado = (c as { criado_em?: string }).criado_em;
+    if (!criado) return true;
+    const d = new Date(criado);
+    return d >= analyticsRange.start && d <= analyticsRange.end;
+  }).length;
+  // Contatos que "entraram" no Kanban no período (criados no período)
+  const totalContatosNoPeriodoKanban = contacts.filter((c) => {
+    const criado = (c as { criado_em?: string }).criado_em;
+    if (!criado) return false;
+    const d = new Date(criado);
+    return d >= analyticsRange.start && d <= analyticsRange.end;
+  }).length;
+  // Taxa de confirmação pelo Kanban: concluídos / contatos que entraram no período
+  const taxaConfirmacaoKanban = totalContatosNoPeriodoKanban > 0
+    ? Math.round((contatosConcluidosNoPeriodo / totalContatosNoPeriodoKanban) * 100)
+    : 0;
+
+  const agendadosNoPeriodo = appointmentsInPeriod.length;
+  const confirmadosNoPeriodo = appointmentsInPeriod.filter((a) => a.situacao === 'confirmado').length;
 
   // Modals state
   const [isTodayModalOpen, setIsTodayModalOpen] = useState(false);
@@ -88,7 +132,6 @@ export default function Dashboard() {
   });
 
   // Filtrar compromissos de hoje usando inicio
-  const today = new Date();
   const todayAppointments = allAppointments.filter(apt => {
     if (apt.inicio) {
       return isToday(apt.inicio);
@@ -157,7 +200,7 @@ export default function Dashboard() {
     }
   };
 
-  const isLoading = loadingAppointments || loadingContacts || loadingChats;
+  const isLoading = loadingAppointments || loadingContacts || loadingChats || loadingAppointmentsPeriod;
 
   if (isLoading) {
     return (
@@ -260,7 +303,7 @@ export default function Dashboard() {
       </div>
 
       {/* ═══ Tabbed Content ═══ */}
-      <Tabs defaultValue="tarefas" className="animate-fade-in-up">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in-up">
         <TabsList className="w-full sm:w-auto h-10 liquid-glass-subtle p-1">
           <TabsTrigger value="tarefas" className="gap-2 text-sm px-4">
             <ListTodo className="h-4 w-4" />
@@ -381,7 +424,7 @@ export default function Dashboard() {
 
         {/* ═══ Tab: Analytics ═══ */}
         <TabsContent value="analytics" className="mt-4 space-y-6">
-          {/* Period Filter */}
+          {/* Period Filter - type="button" evita submit e mantém a aba Analytics */}
           <div className="flex items-center gap-2 flex-wrap">
             {([
               { value: 'today' as const, label: 'Hoje' },
@@ -391,9 +434,14 @@ export default function Dashboard() {
             ]).map((opt) => (
               <Button
                 key={opt.value}
+                type="button"
                 variant={analyticsPeriod === opt.value ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setAnalyticsPeriod(opt.value)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setAnalyticsPeriod(opt.value);
+                }}
                 className="text-xs"
               >
                 {opt.label}
@@ -401,43 +449,27 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* KPI Grid */}
+          {/* KPI Grid - todos respeitam o filtro de período */}
           <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               onClick={() => setIsReportsModalOpen(true)}>
               <KPICard
                 title="Conversas"
                 value={
-                  analyticsPeriod === 'today' ? (chatMetrics?.conversationsToday || 0) :
-                  analyticsPeriod === '7d' ? (chatMetrics?.conversationsThisWeek || 0) :
-                  analyticsPeriod === '30d' ? (chatMetrics?.conversationsThisMonth || 0) :
-                  (chatMetrics?.totalConversations || 0)
+                  analyticsPeriod === 'today' ? (chatMetrics?.conversationsToday ?? 0) :
+                  analyticsPeriod === '7d' ? (chatMetrics?.conversationsThisWeek ?? 0) :
+                  analyticsPeriod === '30d' ? (chatMetrics?.conversationsThisMonth ?? 0) :
+                  (chatMetrics?.conversationsLast90d ?? 0)
                 }
                 change={
-                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday || 0} mensagens` :
-                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek || 0} mensagens` :
-                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth || 0} mensagens` :
-                  `${chatMetrics?.totalMessages || 0} mensagens`
+                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday ?? 0} mensagens` :
+                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek ?? 0} mensagens` :
+                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth ?? 0} mensagens` :
+                  `${chatMetrics?.messagesLast90d ?? 0} mensagens`
                 }
                 changeType="positive"
                 icon={MessageSquare}
-                description={
-                  analyticsPeriod === 'today' ? 'Atendimentos do dia' :
-                  analyticsPeriod === '7d' ? 'Últimos 7 dias' :
-                  analyticsPeriod === '30d' ? 'Último mês' :
-                  'Últimos 3 meses'
-                }
-              />
-            </div>
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => setIsReportsModalOpen(true)}>
-              <KPICard
-                title="Total de Conversas"
-                value={chatMetrics?.totalConversations || 0}
-                change={`${chatMetrics?.conversationsThisMonth || 0} este mês`}
-                changeType="positive"
-                icon={MessagesSquare}
-                description="Conversas únicas"
+                description={periodLabel}
               />
             </div>
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
@@ -445,21 +477,14 @@ export default function Dashboard() {
               <KPICard
                 title="Mensagens"
                 value={
-                  analyticsPeriod === 'today' ? (chatMetrics?.messagesToday || 0) :
-                  analyticsPeriod === '7d' ? (chatMetrics?.messagesThisWeek || 0) :
-                  analyticsPeriod === '30d' ? (chatMetrics?.messagesThisMonth || 0) :
-                  (chatMetrics?.totalMessages || 0)
+                  analyticsPeriod === 'today' ? (chatMetrics?.messagesToday ?? 0) :
+                  analyticsPeriod === '7d' ? (chatMetrics?.messagesThisWeek ?? 0) :
+                  analyticsPeriod === '30d' ? (chatMetrics?.messagesThisMonth ?? 0) :
+                  (chatMetrics?.messagesLast90d ?? 0)
                 }
-                change={
-                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday || 0} hoje` :
-                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek || 0} esta semana` :
-                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth || 0} este mês` :
-                  `${chatMetrics?.totalMessages || 0} total`
-                }
-                
                 changeType="positive"
                 icon={Activity}
-                description="Volume de mensagens"
+                description={`Volume de mensagens · ${periodLabel}`}
               />
             </div>
 
@@ -468,43 +493,51 @@ export default function Dashboard() {
                 <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
                   onClick={() => setIsTodayModalOpen(true)}>
                   <KPICard
-                    title="Compromissos Hoje"
-                    value={todayAppointments.length}
-                    change={`${confirmedToday} confirmados`}
+                    title={analyticsPeriod === 'today' ? 'Compromissos Hoje' : 'Compromissos no período'}
+                    value={analyticsPeriod === 'today' ? todayAppointments.length : appointmentsInPeriod.length}
+                    change={`${analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo} confirmados`}
                     changeType="positive"
                     icon={Calendar}
-                    description="Agenda do dia"
+                    description={periodLabel}
                   />
                 </div>
                 <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => setIsReportsModalOpen(true)}>
+                  onClick={() => window.location.href = '/app/clientes/crm'}>
                   <KPICard
                     title="Taxa de Confirmação"
-                    value={todayAppointments.length > 0 ? `${Math.round((confirmedToday / todayAppointments.length) * 100)}%` : "0%"}
-                    change="Hoje"
+                    value={`${taxaConfirmacaoKanban}%`}
+                    change={`${contatosConcluidosNoPeriodo} concluídos / ${totalContatosNoPeriodoKanban} no Kanban`}
                     changeType="positive"
                     icon={CheckCircle2}
-                    description="Compromissos confirmados"
+                    description={`Kanban · ${periodLabel}`}
                   />
                 </div>
                 <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => window.location.href = '/app/agenda'}>
+                  onClick={() => window.location.href = '/app/clientes/crm'}>
                   <KPICard
-                    title="Próximos 7 Dias"
-                    value={allAppointments.filter(apt => {
-                      const aptDate = apt.inicio ? new Date(apt.inicio) : new Date(apt.data);
-                      const nextWeek = new Date(today);
-                      nextWeek.setDate(today.getDate() + 7);
-                      return aptDate >= today && aptDate <= nextWeek;
-                    }).length}
-                    change="Agendados"
-                    changeType="neutral"
-                    icon={TrendingUp}
-                    description="Próxima semana"
+                    title="Concluídos (Kanban)"
+                    value={contatosConcluidosNoPeriodo}
+                    change="status concluído"
+                    changeType="positive"
+                    icon={UserCheck}
+                    description={`Kanban · ${periodLabel}`}
                   />
                 </div>
               </>
             )}
+
+            {/* Tarefas (Kanban de tarefas) */}
+            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              onClick={() => setActiveTab('tarefas')}>
+              <KPICard
+                title="Tarefas"
+                value={tarefas.length}
+                change={`${tarefas.filter(t => t.status === 'a_fazer').length} a fazer · ${tarefas.filter(t => t.status === 'feito').length} concluídas`}
+                changeType="neutral"
+                icon={ListTodo}
+                description="Kanban de tarefas"
+              />
+            </div>
 
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               onClick={() => window.location.href = '/app/clientes/crm'}>
@@ -515,17 +548,6 @@ export default function Dashboard() {
                 changeType="positive"
                 icon={Users}
                 description="Base de contatos"
-              />
-            </div>
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => setIsReportsModalOpen(true)}>
-              <KPICard
-                title="Conversas na Semana"
-                value={chatMetrics?.conversationsThisWeek || 0}
-                change={`${chatMetrics?.messagesThisWeek || 0} mensagens`}
-                changeType="neutral"
-                icon={UserCheck}
-                description="Últimos 7 dias"
               />
             </div>
           </div>

@@ -77,7 +77,7 @@ export default function SuperAdminDashboard() {
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [tokenRecords, setTokenRecords] = useState<{ id_organizacao: string; total_tokens: number; custo_reais: number; criado_em: string }[]>([]);
   const [msgCountByOrgId, setMsgCountByOrgId] = useState<Record<string, number>>({});
-  const [docRecords, setDocRecords] = useState<{ id?: number; metadados?: { organizacao?: string }; titulo?: string | null }[]>([]);
+  const [docRecords, setDocRecords] = useState<{ id?: number; metadata?: { organizacao?: string }; metadados?: { organizacao?: string }; titulo?: string | null }[]>([]);
   const [counts, setCounts] = useState<{
     totalOrgs: number;
     activeOrgs: number;
@@ -98,7 +98,7 @@ export default function SuperAdminDashboard() {
         ] = await Promise.all([
           supabase.from("organizacoes").select("id, nome, identificador, criado_em, ativo").order("nome"),
           supabase.from("uso_tokens").select("id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
-          supabase.from("documentos").select("id, metadados, titulo").then((r) => r),
+          supabase.from("documentos").select("id, metadata, titulo").then((r) => r),
           supabase.from("organizacoes").select("*", { count: "exact", head: true }),
           supabase.from("organizacoes").select("*", { count: "exact", head: true }).eq("ativo", true),
           supabase.from("perfis").select("*", { count: "exact", head: true }).eq("super_admin", false),
@@ -177,7 +177,7 @@ export default function SuperAdminDashboard() {
   const filesByOrg = useMemo(() => {
     const byIdentificador: Record<string, Set<string>> = {};
     docRecords.forEach((d) => {
-      const org = d.metadados?.organizacao;
+      const org = d.metadata?.organizacao ?? d.metadados?.organizacao;
       if (!org) return;
       if (!byIdentificador[org]) byIdentificador[org] = new Set();
       const fileKey = (d.titulo && d.titulo.trim()) || String(d.id ?? "");

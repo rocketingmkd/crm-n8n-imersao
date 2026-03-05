@@ -95,7 +95,7 @@ export default function TokenUsage() {
       const [tokenRes, orgsRes, docsRes] = await Promise.all([
         supabase.from("uso_tokens").select("id, id_organizacao, total_tokens, custo_reais, criado_em").order("criado_em", { ascending: true }),
         supabase.from("organizacoes").select("id, nome, identificador, url_logo"),
-        supabase.from("documentos").select("id, metadados, titulo"),
+        supabase.from("documentos").select("id, metadata, titulo"),
       ]);
       if (tokenRes.error) throw tokenRes.error;
       setRecords(tokenRes.data || []);
@@ -105,8 +105,8 @@ export default function TokenUsage() {
       // Arquivos RAG: contar por arquivo único (organização + nome do arquivo/título), não por linha
       const filesByIdentificador: Record<string, Set<string>> = {};
       if (!docsRes.error && docsRes.data) {
-        (docsRes.data as { metadados?: { organizacao?: string }; titulo?: string | null; id?: number }[]).forEach((d) => {
-          const org = d.metadados?.organizacao;
+        (docsRes.data as { metadata?: { organizacao?: string }; metadados?: { organizacao?: string }; titulo?: string | null; id?: number }[]).forEach((d) => {
+          const org = d.metadata?.organizacao ?? d.metadados?.organizacao;
           if (!org) return;
           if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
           const fileKey = (d.titulo && d.titulo.trim()) || String(d.id ?? "");

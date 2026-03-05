@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { Activity } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Observability from "@/pages/Observability";
@@ -5,6 +6,10 @@ import N8nInsights from "@/pages/super-admin/N8nInsights";
 import GestaoVps from "@/pages/super-admin/GestaoVps";
 
 export default function ObservabilidadeUnificada() {
+  const location = useLocation();
+  const isGestaoVpsRoute = location.pathname.includes("gestao-vps");
+  const defaultTab = isGestaoVpsRoute ? "gestao-vps" : "servidor";
+
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -17,7 +22,7 @@ export default function ObservabilidadeUnificada() {
         <p>Servidor, execuções de workflows e gestão de VPS</p>
       </div>
 
-      <Tabs defaultValue="servidor" className="w-full">
+      <Tabs key={defaultTab} defaultValue={defaultTab} className="w-full">
         <TabsList className="w-full justify-start liquid-glass-subtle">
           <TabsTrigger value="servidor" className="text-xs sm:text-sm">
             Servidor

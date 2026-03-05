@@ -473,6 +473,8 @@ CREATE TABLE IF NOT EXISTS planos_assinatura (
   max_usuarios               integer,
   max_contatos               integer,
   max_arquivos_conhecimento   integer,
+image.png  -- Integração n8n
+  workflow_id_n8n            text,
   -- Preços
   preco_mensal               numeric(10,2),
   preco_anual               numeric(10,2),
@@ -550,6 +552,12 @@ BEGIN
   ) THEN
     ALTER TABLE planos_assinatura ADD COLUMN max_arquivos_conhecimento integer;
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'planos_assinatura' AND column_name = 'workflow_id_n8n'
+  ) THEN
+    ALTER TABLE planos_assinatura ADD COLUMN workflow_id_n8n text;
+  END IF;
 END $$;
 
 -- ============================================================
@@ -587,6 +595,7 @@ CREATE TABLE IF NOT EXISTS configuracoes_globais (
   criado_em                timestamptz DEFAULT now(),
   atualizado_em            timestamptz DEFAULT now(),
   whatsapp_suporte         text,
+  email_suporte            text,
   chave_openai             text,
   nome_plataforma          text NOT NULL DEFAULT 'FlowAtend',
   url_logo_plataforma      text,
@@ -623,6 +632,17 @@ GRANT ALL    ON configuracoes_globais TO service_role;
 INSERT INTO configuracoes_globais (id, nome_plataforma)
 VALUES ('00000000-0000-0000-0000-000000000001', 'FlowAtend')
 ON CONFLICT (id) DO NOTHING;
+
+-- Adicionar coluna email_suporte se não existir (instalações já existentes)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'configuracoes_globais' AND column_name = 'email_suporte'
+  ) THEN
+    ALTER TABLE configuracoes_globais ADD COLUMN email_suporte text;
+  END IF;
+END $$;
 
 -- View pública para branding (logo, nome, cor) — legível por anon para a tela de login
 CREATE OR REPLACE VIEW configuracoes_globais_branding AS
@@ -662,9 +682,9 @@ GRANT SELECT, INSERT ON mensagens TO authenticated;
 
 CREATE TABLE IF NOT EXISTS documentos (
   id        bigserial PRIMARY KEY,
-  conteudo  text,
+  content  text,
   embedding vector(1536),
-  metadados jsonb,
+  metadata jsonb,
   titulo    text
 );
 
@@ -694,11 +714,11 @@ BEGIN
   RETURN QUERY
   SELECT
     documentos.id,
-    documentos.conteudo,
-    documentos.metadados,
+    documentos.content AS conteudo,
+    documentos.metadata AS metadados,
     1 - (documentos.embedding <=> query_embedding) AS similarity
   FROM documentos
-  WHERE documentos.metadados @> filter
+  WHERE documentos.metadata @> filter
   ORDER BY documentos.embedding <=> query_embedding
   LIMIT match_count;
 END;

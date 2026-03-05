@@ -29,6 +29,7 @@ import AgentIA from "./pages/AgentIA";
 // Conhecimento agora é uma aba dentro de AgentIA
 import Integrations from "./pages/Integrations";
 import Configuracoes from "./pages/Configuracoes";
+import Conversas from "./pages/Conversas";
 import Observability from "./pages/Observability";
 import TiposAtendimento from "./pages/TiposAtendimento";
 
@@ -97,6 +98,7 @@ const App = () => (
                 <Route path="/app/conhecimento" element={<Navigate to="/app/configuracoes" replace />} />
                 <Route path="/app/integrations" element={<Navigate to="/app/configuracoes" replace />} />
                 <Route path="/app/configuracoes" element={<Configuracoes />} />
+                <Route path="/app/conversas" element={<Conversas />} />
                 <Route path="/app/crm" element={<Navigate to="/app/clientes/crm" replace />} />
                 <Route path="/app/minha-conta" element={<MinhaConta />} />
               </Route>

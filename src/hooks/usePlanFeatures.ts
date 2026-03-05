@@ -133,7 +133,7 @@ export function usePlanFeatures() {
           const { data } = await supabase
             .from('documentos')
             .select('id, titulo')
-            .eq('metadados->>organizacao', identificador);
+            .eq('metadata->>organizacao', identificador);
           const uniqueFiles = new Set(
             (data || []).map((d) => (d.titulo && d.titulo.trim()) || String(d.id ?? ''))
           );

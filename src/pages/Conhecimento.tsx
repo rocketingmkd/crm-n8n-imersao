@@ -61,13 +61,13 @@ export default function Conhecimento() {
       console.log("Organization:", organization.nome);
       console.log("Slug:", organization.identificador);
       console.log("Buscando em: documentos");
-      console.log("Filtro: metadados->>'organizacao' =", organization.identificador);
+      console.log("Filtro: metadata->>'organizacao' =", organization.identificador);
       
-      // Buscar documentos da tabela geral filtrados por organização
+      // Buscar documentos da tabela geral filtrados por organização (colunas: content, metadata, titulo)
       const { data, error } = await supabase
         .from("documentos")
         .select('*')
-        .eq('metadados->>organizacao', organization.identificador);
+        .eq('metadata->>organizacao', organization.identificador);
 
       if (error) {
         console.error("❌ Erro ao buscar documentos:", error);
@@ -129,14 +129,14 @@ export default function Conhecimento() {
       console.log("Documento:", doc);
       console.log("Título:", titulo);
       console.log("Tabela: documentos");
-      console.log("Filtro 1: metadados->>'organizacao' =", organization.identificador);
+      console.log("Filtro 1: metadata->>'organizacao' =", organization.identificador);
       console.log("Filtro 2: titulo =", titulo);
 
-      // Buscar TODAS as linhas com este título da mesma organização
+      // Buscar TODAS as linhas com este título da mesma organização (colunas: content, metadata)
       const { data, error } = await supabase
         .from("documentos")
         .select('*')
-        .eq('metadados->>organizacao', organization.identificador)
+        .eq('metadata->>organizacao', organization.identificador)
         .eq('titulo', titulo);
 
       console.log("Query executada");
@@ -155,10 +155,10 @@ export default function Conhecimento() {
         console.log("Campos disponíveis:", Object.keys(data[0]));
       }
 
-      // Combinar todo o conteúdo (títulos iguais = mesmo arquivo)
+      // Combinar todo o conteúdo (títulos iguais = mesmo arquivo) — coluna na tabela: content
       const combinedContent = data
-        ?.map(row => row.conteudo || "")
-        .filter(content => content.trim())
+        ?.map(row => row.content ?? row.conteudo ?? "")
+        .filter((c: string) => c.trim())
         .join("\n\n");
 
       // Criar documento agregado
@@ -646,13 +646,13 @@ export default function Conhecimento() {
                         )}
                         
                         {/* Metadados da organização */}
-                        {doc.metadados?.organizacao && (
+                        {(doc.metadata ?? doc.metadados)?.organizacao && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-1">
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <span className="truncate">
-                              {doc.metadados.organizacao}
+                              {(doc.metadata ?? doc.metadados)?.organizacao}
                             </span>
                           </div>
                         )}

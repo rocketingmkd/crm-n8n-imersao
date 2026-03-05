@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 interface ConfiguracoesGlobaisForm {
   whatsapp_suporte: string;
+  email_suporte: string;
   chave_openai: string;
   chave_elevenlabs: string;
   id_voz_elevenlabs: string;
@@ -55,6 +56,7 @@ export default function SuperAdminSettings() {
         if (error) throw error;
         if (data) reset({
           whatsapp_suporte: data.whatsapp_suporte || "",
+          email_suporte: (data as any).email_suporte || "",
           chave_openai: data.chave_openai || "",
           nome_plataforma: data.nome_plataforma || "FlowAtend",
           frase_login: (data as any).frase_login || "Seu universo de automações espera",
@@ -80,6 +82,7 @@ export default function SuperAdminSettings() {
     try {
       const { error } = await supabase.from('configuracoes_globais').update({
         whatsapp_suporte: data.whatsapp_suporte || null,
+        email_suporte: data.email_suporte?.trim() || null,
         chave_openai: data.chave_openai || null,
         nome_plataforma: data.nome_plataforma || 'FlowAtend',
         frase_login: data.frase_login || 'Seu universo de automações espera',
@@ -142,8 +145,8 @@ export default function SuperAdminSettings() {
           </TabsTrigger>
           <TabsTrigger value="apis" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Key className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">APIs & Suporte</span>
-            <span className="sm:hidden">APIs</span>
+            <span className="hidden sm:inline">Dados de suporte</span>
+            <span className="sm:hidden">Suporte</span>
           </TabsTrigger>
         </TabsList>
 
@@ -326,7 +329,7 @@ export default function SuperAdminSettings() {
           </Card>
         </TabsContent>
 
-        {/* ===== ABA APIs & SUPORTE ===== */}
+        {/* ===== ABA DADOS DE SUPORTE ===== */}
         <TabsContent value="apis" className="mt-4 space-y-4">
           <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader className="pb-3">
@@ -335,8 +338,8 @@ export default function SuperAdminSettings() {
                   <MessageCircle className="h-4 w-4 text-emerald-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">WhatsApp de Suporte</CardTitle>
-                  <CardDescription className="text-xs">Número exibido como botão flutuante para todos os usuários</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">Dados de suporte</CardTitle>
+                  <CardDescription className="text-xs">WhatsApp e e-mail exibidos para contato com suporte</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -344,9 +347,14 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="whatsapp_suporte" className="text-foreground text-xs font-medium">Número (formato internacional)</Label>
+                    <Label htmlFor="whatsapp_suporte" className="text-foreground text-xs font-medium">WhatsApp (formato internacional)</Label>
                     <Input id="whatsapp_suporte" type="tel" {...register("whatsapp_suporte")} placeholder="5511999999999" className="liquid-glass-input rounded-xl" />
-                    <p className="text-[10px] text-muted-foreground">Formato internacional sem espaços (ex: 5511999999999).</p>
+                    <p className="text-[10px] text-muted-foreground">Número exibido como botão flutuante. Sem espaços (ex: 5511999999999).</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email_suporte" className="text-foreground text-xs font-medium">E-mail de suporte</Label>
+                    <Input id="email_suporte" type="email" {...register("email_suporte")} placeholder="suporte@exemplo.com" className="liquid-glass-input rounded-xl" />
+                    <p className="text-[10px] text-muted-foreground">E-mail para contato com suporte (opcional).</p>
                   </div>
                   {saveButton}
                 </form>

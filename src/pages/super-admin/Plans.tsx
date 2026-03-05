@@ -39,6 +39,7 @@ interface PlanConfig {
   max_usuarios: number | null;
   max_contatos: number | null;
   max_arquivos_conhecimento: number | null;
+  workflow_id_n8n: string | null;
   preco_mensal: number | null;
   preco_anual: number | null;
 }
@@ -80,6 +81,7 @@ function emptyPlanForm(plan: PlanConfig) {
     max_usuarios: plan.max_usuarios ?? "",
     max_contatos: plan.max_contatos ?? "",
     max_arquivos_conhecimento: plan.max_arquivos_conhecimento ?? "",
+    workflow_id_n8n: plan.workflow_id_n8n ?? "",
     preco_mensal: plan.preco_mensal ?? "",
     preco_anual: plan.preco_anual ?? "",
   };
@@ -179,6 +181,7 @@ export default function Plans() {
       max_usuarios: form.max_usuarios === "" ? null : Number(form.max_usuarios),
       max_contatos: form.max_contatos === "" ? null : Number(form.max_contatos),
       max_arquivos_conhecimento: form.max_arquivos_conhecimento === "" ? null : Number(form.max_arquivos_conhecimento),
+      workflow_id_n8n: form.workflow_id_n8n?.trim() || null,
       preco_mensal: form.preco_mensal === "" ? null : Number(form.preco_mensal),
       preco_anual: form.preco_anual === "" ? null : Number(form.preco_anual),
     };
@@ -348,6 +351,11 @@ export default function Plans() {
                       </div>
                     ))}
                   </div>
+                  {plan.workflow_id_n8n && (
+                    <p className="text-[10px] text-muted-foreground mt-2 font-mono">
+                      Workflow n8n: {plan.workflow_id_n8n}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -379,6 +387,16 @@ export default function Plans() {
                   <Label>ID do plano (somente leitura)</Label>
                   <Input value={editingPlan.id_plano} disabled className="bg-muted" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Workflow ID (n8n)</Label>
+                <Input
+                  value={form.workflow_id_n8n}
+                  onChange={(e) => setFormField("workflow_id_n8n", e.target.value)}
+                  placeholder="Ex: 1, abc-123 ou ID do workflow no n8n"
+                  className="font-mono text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground">ID do workflow no n8n associado a este plano (opcional).</p>
               </div>
               <div className="space-y-2">
                 <Label>Descrição</Label>

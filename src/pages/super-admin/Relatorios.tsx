@@ -112,7 +112,7 @@ export default function Relatorios() {
           supabase.from("planos_assinatura").select("id_plano, nome_plano, max_mensagens_whatsapp_mes, max_usuarios, max_contatos, max_arquivos_conhecimento"),
           supabase.from("contatos").select("id_organizacao"),
           supabase.from("perfis").select("id_organizacao").eq("super_admin", false),
-          supabase.from("documentos").select("id, metadados, titulo"),
+          supabase.from("documentos").select("id, metadata, titulo"),
         ]);
 
         if (eOrgs) throw new Error(eOrgs.message);
@@ -147,7 +147,7 @@ export default function Relatorios() {
 
         const filesByIdentificador: Record<string, Set<string>> = {};
         (documentos || []).forEach((d: any) => {
-          const org = d?.metadados?.organizacao;
+          const org = d?.metadata?.organizacao ?? d?.metadados?.organizacao;
           if (!org) return;
           if (!filesByIdentificador[org]) filesByIdentificador[org] = new Set();
           const fileKey = (d?.titulo && String(d.titulo).trim()) || String(d?.id ?? "");

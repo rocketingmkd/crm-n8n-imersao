@@ -60,6 +60,7 @@ export interface Database {
         Row: {
           id: string
           whatsapp_suporte: string | null
+          email_suporte: string | null
           chave_openai: string | null
           criado_em: string
           atualizado_em: string
@@ -73,6 +74,7 @@ export interface Database {
         Insert: {
           id?: string
           whatsapp_suporte?: string | null
+          email_suporte?: string | null
           chave_openai?: string | null
           criado_em?: string
           atualizado_em?: string
@@ -86,6 +88,7 @@ export interface Database {
         Update: {
           id?: string
           whatsapp_suporte?: string | null
+          email_suporte?: string | null
           chave_openai?: string | null
           criado_em?: string
           atualizado_em?: string
@@ -533,6 +536,8 @@ export interface Database {
           max_mensagens_whatsapp_mes: number | null
           max_usuarios: number | null
           max_contatos: number | null
+          max_arquivos_conhecimento: number | null
+          workflow_id_n8n: string | null
           preco_mensal: number | null
           preco_anual: number | null
           criado_em: string
@@ -557,6 +562,8 @@ export interface Database {
           max_mensagens_whatsapp_mes?: number | null
           max_usuarios?: number | null
           max_contatos?: number | null
+          max_arquivos_conhecimento?: number | null
+          workflow_id_n8n?: string | null
           preco_mensal?: number | null
           preco_anual?: number | null
           criado_em?: string
@@ -581,6 +588,8 @@ export interface Database {
           max_mensagens_whatsapp_mes?: number | null
           max_usuarios?: number | null
           max_contatos?: number | null
+          max_arquivos_conhecimento?: number | null
+          workflow_id_n8n?: string | null
           preco_mensal?: number | null
           preco_anual?: number | null
           criado_em?: string
