@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Clock, User, Plus, RefreshCw, Settings } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, User, Plus, RefreshCw, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOrganization } from "@/hooks/useOrganization";
 import {
@@ -630,7 +630,7 @@ export default function Agenda() {
     });
 
     if (hasConflict) {
-      toast.error("Já existe um compromisso agendado neste horário. Por favor, escolha outro horário.");
+      toast.error("Já existe um agendamento neste horário. Por favor, escolha outro horário.");
       return;
     }
 
@@ -709,14 +709,14 @@ export default function Agenda() {
         console.log('✅ Webhook disparado com sucesso');
         console.log('📤 Payload:', webhookData);
       } catch (webhookError) {
-        console.warn('⚠️ Erro ao disparar webhook (compromisso foi criado):', webhookError);
+        console.warn('⚠️ Erro ao disparar webhook (agendamento foi criado):', webhookError);
       }
 
-      // Recarregar a página após criar compromisso e enviar webhook
+      // Recarregar a página após criar agendamento e enviar webhook
       window.location.reload();
     } catch (error) {
-      console.error('Erro ao criar compromisso:', error);
-      toast.error("Erro ao criar compromisso");
+      console.error('Erro ao criar agendamento:', error);
+      toast.error("Erro ao criar agendamento");
     }
   };
 
@@ -1079,15 +1079,23 @@ export default function Agenda() {
       </Dialog>
 
       {/* Modal de Criação de Evento */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+      <Dialog open={isCreateModalOpen} onOpenChange={(open) => !createAppointment.isPending && setIsCreateModalOpen(open)}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-lg md:text-xl">
-              Novo Compromisso
-            </DialogTitle>
-          </DialogHeader>
+          <div className="relative">
+            <DialogHeader>
+              <DialogTitle className="font-display text-lg md:text-xl">
+                Novo Agendamento
+              </DialogTitle>
+            </DialogHeader>
 
-          <div className="space-y-4 py-4">
+            {createAppointment.isPending && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                <Loader2 className="h-10 w-10 animate-spin text-accent mb-3" />
+                <p className="text-sm font-medium text-foreground">Processando...</p>
+              </div>
+            )}
+
+            <div className="space-y-4 py-4">
             {/* Data e Hora Início */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -1188,29 +1196,30 @@ export default function Agenda() {
               <Label htmlFor="observations">Observações</Label>
               <Textarea
                 id="observations"
-                placeholder="Digite observações ou notas sobre o compromisso..."
+                placeholder="Digite observações ou notas sobre o agendamento..."
                 value={formData.observacoes}
                 onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                 className="min-h-[80px] resize-none"
               />
               <p className="text-xs text-muted-foreground">
-                Opcional - Informações adicionais sobre o compromisso
+                Opcional - Informações adicionais sobre o agendamento
               </p>
-      </div>
-          </div>
+            </div>
+            </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleCreateAppointment}
-              disabled={createAppointment.isPending}
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              {createAppointment.isPending ? "Criando..." : "Criar Compromisso"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={createAppointment.isPending}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleCreateAppointment}
+                disabled={createAppointment.isPending}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {createAppointment.isPending ? "Processando..." : "Criar Agendamento"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 

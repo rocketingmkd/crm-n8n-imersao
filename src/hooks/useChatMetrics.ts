@@ -3,6 +3,11 @@ import { supabase } from "@/lib/supabase";
 import { obterNomeTabelaConversas } from "@/lib/conversas";
 import { useAuth } from "./useAuth";
 
+export interface ChatMetricsOptions {
+  start?: Date;
+  end?: Date;
+}
+
 interface ChatMetrics {
   totalConversations: number;
   totalMessages: number;
@@ -14,6 +19,10 @@ interface ChatMetrics {
   messagesThisMonth: number;
   conversationsLast90d: number;
   messagesLast90d: number;
+  /** Conversas no período (quando options.start/end são passados) */
+  periodConversations?: number;
+  /** Mensagens no período (quando options.start/end são passados) */
+  periodMessages?: number;
   recentSessions: { session_id: string; message_count: number; last_message: string }[];
 }
 
@@ -31,11 +40,13 @@ const emptyMetrics: ChatMetrics = {
   recentSessions: [],
 };
 
-export function useChatMetrics() {
+export function useChatMetrics(options?: ChatMetricsOptions) {
   const { organization } = useAuth();
+  const startStr = options?.start?.toISOString().slice(0, 19);
+  const endStr = options?.end?.toISOString().slice(0, 19);
 
   return useQuery({
-    queryKey: ["chat-metrics", organization?.identificador],
+    queryKey: ["chat-metrics", organization?.identificador, startStr, endStr],
     queryFn: async (): Promise<ChatMetrics> => {
       if (!organization?.identificador) return emptyMetrics;
 
@@ -54,10 +65,8 @@ export function useChatMetrics() {
 
       try {
         let rows: Array<{ id?: string; data?: string; session_id?: string; id_sessao?: string }> = [];
-        const { data: data1, error: err1 } = await (supabase as any)
-          .from(tableName)
-          .select("id, data, session_id")
-          .order("data", { ascending: false });
+        let query = (supabase as any).from(tableName).select("id, data, session_id").order("data", { ascending: false });
+        const { data: data1, error: err1 } = await query;
         if (!err1 && data1?.length) {
           rows = data1;
         } else if (err1?.code === "42703") {
@@ -72,8 +81,13 @@ export function useChatMetrics() {
         const totalMessages = messages.length;
         const totalConversations = new Set(messages.map((m) => m.session_id).filter(Boolean)).size;
 
-        const byPeriod = (since: string) => {
-          const list = messages.filter((m) => (m.data ?? "") >= since);
+        const byPeriod = (since: string, until?: string) => {
+          const list = messages.filter((m) => {
+            const d = m.data ?? "";
+            if (d < since) return false;
+            if (until != null && d > until) return false;
+            return true;
+          });
           return { messages: list.length, conversations: new Set(list.map((m) => m.session_id).filter(Boolean)).size };
         };
 
@@ -81,6 +95,14 @@ export function useChatMetrics() {
         const week = byPeriod(weekStartStr);
         const month = byPeriod(monthStart);
         const last90 = byPeriod(ninetyStartStr);
+
+        let periodConversations: number | undefined;
+        let periodMessages: number | undefined;
+        if (startStr != null && endStr != null) {
+          const period = byPeriod(startStr, endStr);
+          periodConversations = period.conversations;
+          periodMessages = period.messages;
+        }
 
         const sessionCounts: Record<string, { count: number; lastMessage: string }> = {};
         messages.forEach((m) => {
@@ -106,6 +128,8 @@ export function useChatMetrics() {
           messagesThisMonth: month.messages,
           conversationsLast90d: last90.conversations,
           messagesLast90d: last90.messages,
+          periodConversations,
+          periodMessages,
           recentSessions,
         };
       } catch (error) {

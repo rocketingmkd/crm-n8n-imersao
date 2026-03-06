@@ -38,9 +38,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { supabase } from "@/lib/supabase";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
-import { identificadorParaTabela } from "@/lib/conversas";
+import { obterNomeTabelaConversas } from "@/lib/conversas";
 import { toast } from "sonner";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
+import { DatePicker } from "@/components/ui/date-picker";
+import { endOfDay, startOfDay, subDays } from "date-fns";
 
 // ─── Types ───────────────────────────────────────────────
 interface AgentConfig {
@@ -436,7 +438,31 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
   const [messagesPerConversation, setMessagesPerConversation] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  const { data: chatMetrics, isLoading: isLoadingChatMetrics } = useChatMetrics();
+  type AnalyticsPeriod = "today" | "7d" | "30d" | "90d" | "custom";
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>("7d");
+  const [customStart, setCustomStart] = useState<string>("");
+  const [customEnd, setCustomEnd] = useState<string>("");
+
+  const analyticsRange = (() => {
+    const end = endOfDay(new Date());
+    if (analyticsPeriod === "today") {
+      return { start: startOfDay(new Date()), end };
+    }
+    if (analyticsPeriod === "7d") return { start: startOfDay(subDays(new Date(), 6)), end };
+    if (analyticsPeriod === "30d") return { start: startOfDay(subDays(new Date(), 29)), end };
+    if (analyticsPeriod === "90d") return { start: startOfDay(subDays(new Date(), 89)), end };
+    if (analyticsPeriod === "custom" && customStart && customEnd) {
+      const start = startOfDay(new Date(customStart + "T00:00:00"));
+      const endDate = endOfDay(new Date(customEnd + "T23:59:59"));
+      return { start, end: endDate };
+    }
+    return { start: startOfDay(subDays(new Date(), 6)), end };
+  })();
+
+  const { data: chatMetrics, isLoading: isLoadingChatMetrics } = useChatMetrics({
+    start: analyticsRange.start,
+    end: analyticsRange.end,
+  });
 
   const [reminder1Value, setReminder1Value] = useState(15);
   const [reminder1Unit, setReminder1Unit] = useState<'minutos' | 'horas' | 'dias'>('minutos');
@@ -462,7 +488,8 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
   });
   const [editConfig, setEditConfig] = useState<AgentConfig>(config);
 
-  useEffect(() => { loadConfig(); loadTotalTokens(); loadStats(); }, [profile?.id_organizacao, chatMetrics]);
+  useEffect(() => { loadConfig(); loadTotalTokens(); }, [profile?.id_organizacao]);
+  useEffect(() => { loadStats(analyticsRange.start, analyticsRange.end); }, [profile?.id_organizacao, organization?.identificador, analyticsRange.start.toISOString(), analyticsRange.end.toISOString(), chatMetrics]);
 
   const secondsToMinutes = (s: number | null | undefined): number => { const n = Number(s); return Number.isFinite(n) ? Math.round(n / 60) : 0; };
   const minutesToSeconds = (m: number): number => m * 60;
@@ -513,42 +540,93 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
     finally { setIsLoadingTokens(false); }
   };
 
-  const loadStats = async () => {
+  const loadStats = async (periodStart: Date, periodEnd: Date) => {
     if (!profile?.id_organizacao) return;
     try {
       setIsLoadingStats(true);
-      if (chatMetrics) { setConversationsToday(chatMetrics.conversationsToday); setTotalMessages(chatMetrics.totalMessages); }
+      if (chatMetrics) {
+        setConversationsToday(chatMetrics.conversationsToday);
+        setTotalMessages(chatMetrics.totalMessages);
+      }
       if (!organization?.identificador) { setIsLoadingStats(false); return; }
-      const tableName = identificadorParaTabela(organization.identificador);
-      const { data: allMessages, error } = await (supabase as any).from(tableName).select('id, message, data, session_id').order('data', { ascending: true });
-      if (error || !allMessages?.length) { setIsLoadingStats(false); return; }
+      const tableName = await obterNomeTabelaConversas(supabase, organization.identificador);
+      if (!tableName) { setIsLoadingStats(false); return; }
+      const startStr = periodStart.toISOString().slice(0, 19);
+      const endStr = periodEnd.toISOString().slice(0, 19);
+      let allMessages: any[] = [];
+      const { data: data1, error: err1 } = await (supabase as any)
+        .from(tableName)
+        .select("id, message, data, session_id")
+        .gte("data", startStr)
+        .lte("data", endStr)
+        .order("data", { ascending: true });
+      if (!err1 && data1?.length) {
+        allMessages = data1;
+      } else if (err1?.code === "42703") {
+        const { data: data2, error: err2 } = await (supabase as any)
+          .from(tableName)
+          .select("id, message, data, id_sessao")
+          .gte("data", startStr)
+          .lte("data", endStr)
+          .order("data", { ascending: true });
+        if (!err2 && data2?.length) allMessages = data2.map((m: any) => ({ ...m, session_id: m.id_sessao ?? m.session_id }));
+      }
+      if (!allMessages.length) {
+        setMessagesPerConversation(0);
+        setResponseRate(0);
+        setAvgResponseTime(0);
+        setAvgConversationTime(0);
+        setIsLoadingStats(false);
+        return;
+      }
       const sessionMessages: Record<string, any[]> = {};
-      allMessages.forEach((m: any) => { if (!sessionMessages[m.session_id]) sessionMessages[m.session_id] = []; sessionMessages[m.session_id].push(m); });
+      allMessages.forEach((m: any) => {
+        const sid = m.session_id ?? m.id_sessao ?? "";
+        if (!sessionMessages[sid]) sessionMessages[sid] = [];
+        sessionMessages[sid].push(m);
+      });
       setMessagesPerConversation(Object.keys(sessionMessages).length > 0 ? Math.round(allMessages.length / Object.keys(sessionMessages).length) : 0);
-      let responded = 0; const rTimes: number[] = []; const cDurations: number[] = [];
+      let responded = 0;
+      const rTimes: number[] = [];
+      const cDurations: number[] = [];
       Object.values(sessionMessages).forEach((msgs: any[]) => {
-        msgs.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+        msgs.sort((a, b) => new Date((a.data ?? "").toString()).getTime() - new Date((b.data ?? "").toString()).getTime());
         let hasU = false, hasA = false;
-        if (msgs.length > 0) { const d = (new Date(msgs[msgs.length - 1].data).getTime() - new Date(msgs[0].data).getTime()) / 60000; if (d > 0 && d < 1440) cDurations.push(d); }
+        if (msgs.length > 0) {
+          const d = (new Date(msgs[msgs.length - 1].data).getTime() - new Date(msgs[0].data).getTime()) / 60000;
+          if (d > 0 && d < 1440) cDurations.push(d);
+        }
         for (let i = 0; i < msgs.length; i++) {
-          if (msgs[i].message?.role === 'user' || msgs[i].message?.from === 'user') {
+          if (msgs[i].message?.role === "user" || msgs[i].message?.from === "user") {
             hasU = true;
             for (let j = i + 1; j < msgs.length; j++) {
-              if (msgs[j].message?.role === 'assistant' || msgs[j].message?.from === 'assistant' || msgs[j].message?.from === 'system') {
-                hasA = true; const m = (new Date(msgs[j].data).getTime() - new Date(msgs[i].data).getTime()) / 60000; if (m > 0 && m < 60) rTimes.push(m); break;
+              if (msgs[j].message?.role === "assistant" || msgs[j].message?.from === "assistant" || msgs[j].message?.from === "system") {
+                hasA = true;
+                const m = (new Date(msgs[j].data).getTime() - new Date(msgs[i].data).getTime()) / 60000;
+                if (m > 0 && m < 60) rTimes.push(m);
+                break;
               }
             }
           }
         }
         if (hasU && hasA) responded++;
       });
-      const withUser = Object.values(sessionMessages).filter((ms: any[]) => ms.some((m: any) => m.message?.role === 'user' || m.message?.from === 'user')).length;
+      const withUser = Object.values(sessionMessages).filter((ms: any[]) =>
+        ms.some((m: any) => m.message?.role === "user" || m.message?.from === "user")
+      ).length;
       setResponseRate(withUser > 0 ? Math.round((responded / withUser) * 100) : 0);
       setAvgResponseTime(rTimes.length > 0 ? Math.round((rTimes.reduce((s, t) => s + t, 0) / rTimes.length) * 10) / 10 : 0);
       setAvgConversationTime(cDurations.length > 0 ? Math.round((cDurations.reduce((s, t) => s + t, 0) / cDurations.length) * 10) / 10 : 0);
       const { data: ql } = await supabase.from("clientes_followup").select("id").eq("id_organizacao", profile.id_organizacao).in("situacao", ["qualificado", "agendado", "concluido"]);
       setQualifiedLeads(ql?.length || 0);
-    } catch { } finally { setIsLoadingStats(false); }
+    } catch {
+      setMessagesPerConversation(0);
+      setResponseRate(0);
+      setAvgResponseTime(0);
+      setAvgConversationTime(0);
+    } finally {
+      setIsLoadingStats(false);
+    }
   };
 
   const handleEdit = () => { setEditConfig(config); setIsEditing(true); };
@@ -756,9 +834,48 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
                 )}
               </div>
             </Card>
+
+            {/* Filtro de período */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground mr-1">Período:</span>
+              {([
+                { value: "today" as const, label: "Hoje" },
+                { value: "7d" as const, label: "7 dias" },
+                { value: "30d" as const, label: "1 mês" },
+                { value: "90d" as const, label: "3 meses" },
+                { value: "custom" as const, label: "Período" },
+              ]).map((opt) => (
+                <Button
+                  key={opt.value}
+                  type="button"
+                  variant={analyticsPeriod === opt.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAnalyticsPeriod(opt.value); }}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+              {analyticsPeriod === "custom" && (
+                <div className="flex flex-wrap items-center gap-2 ml-2">
+                  <DatePicker
+                    value={customStart}
+                    onChange={setCustomStart}
+                    placeholder="Data inicial"
+                    className="w-40"
+                  />
+                  <DatePicker
+                    value={customEnd}
+                    onChange={setCustomEnd}
+                    placeholder="Data final"
+                    className="w-40"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="grid gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 animate-fade-in-up">
               {[
-                { label: "Conversas Hoje", value: conversationsToday, loading: isLoadingStats || isLoadingChatMetrics },
+                { label: "Conversas no período", value: chatMetrics?.periodConversations ?? conversationsToday, loading: isLoadingStats || isLoadingChatMetrics, sub: analyticsPeriod === "today" ? "Hoje" : analyticsPeriod === "7d" ? "Últimos 7 dias" : analyticsPeriod === "30d" ? "Último mês" : analyticsPeriod === "90d" ? "Últimos 3 meses" : customStart && customEnd ? `${customStart} a ${customEnd}` : "" },
                 { label: "Taxa de Resposta", value: `${responseRate}%`, loading: isLoadingStats, color: "text-success", sub: "Conversas respondidas" },
                 { label: "Tempo de Resposta", value: avgResponseTime > 0 ? `${avgResponseTime}min` : '0min', loading: isLoadingStats, sub: "Média de resposta" },
                 { label: "Tempo de Conversa", value: avgConversationTime > 0 ? `${avgConversationTime}min` : '0min', loading: isLoadingStats, sub: "Duração média" },

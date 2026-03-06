@@ -1,4 +1,4 @@
-import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3 } from "lucide-react";
+import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3, Loader2 } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -165,12 +165,12 @@ export default function Dashboard() {
         id_organizacao: profile.id_organizacao,
       });
 
-      toast.success('Compromisso criado com sucesso!');
+      toast.success('Agendamento criado com sucesso!');
       setIsAppointmentModalOpen(false);
       appointmentForm.reset();
     } catch (error: any) {
-      console.error('Erro ao criar compromisso:', error);
-      toast.error(error.message || 'Erro ao criar compromisso');
+      console.error('Erro ao criar agendamento:', error);
+      toast.error(error.message || 'Erro ao criar agendamento');
     }
   };
 
@@ -249,7 +249,7 @@ export default function Dashboard() {
               <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
                 <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Novo Compromisso</h3>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Novo Agendamento</h3>
               <p className="text-sm text-muted-foreground">Agende um novo atendimento</p>
             </button>
           </>
@@ -707,16 +707,23 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Novo Compromisso */}
-      <Dialog open={isAppointmentModalOpen} onOpenChange={setIsAppointmentModalOpen}>
+      {/* Modal: Novo Agendamento */}
+      <Dialog open={isAppointmentModalOpen} onOpenChange={(open) => !createAppointment.isPending && setIsAppointmentModalOpen(open)}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Novo Compromisso</DialogTitle>
-            <DialogDescription>
-              Agende um novo atendimento para um {s}.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment as any)} className="space-y-4">
+          <div className="relative">
+            <DialogHeader>
+              <DialogTitle>Novo Agendamento</DialogTitle>
+              <DialogDescription>
+                Agende um novo atendimento para um {s}.
+              </DialogDescription>
+            </DialogHeader>
+            {createAppointment.isPending && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-3" />
+                <p className="text-sm font-medium text-foreground">Processando...</p>
+              </div>
+            )}
+            <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment as any)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="id_contato">{singular} *</Label>
               <Select
@@ -847,14 +854,16 @@ export default function Dashboard() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsAppointmentModalOpen(false)}
+                disabled={createAppointment.isPending}
               >
                 Cancelar
               </Button>
               <Button type="submit" disabled={createAppointment.isPending}>
-                {createAppointment.isPending ? 'Criando...' : 'Criar Compromisso'}
+                {createAppointment.isPending ? 'Processando...' : 'Criar Agendamento'}
               </Button>
             </DialogFooter>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
 
