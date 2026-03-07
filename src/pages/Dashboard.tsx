@@ -1,4 +1,4 @@
-import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3, Loader2 } from "lucide-react";
+import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3, Loader2, DollarSign } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -9,11 +9,12 @@ import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
+import { useTokenUsageOrg } from "@/hooks/useTokenUsageOrg";
 import { useTarefas } from "@/hooks/useTarefas";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { formatTime, isToday } from "@/lib/dateUtils";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
 
 interface AppointmentFormData {
   start_date: string;
@@ -58,9 +65,8 @@ export default function Dashboard() {
   const { data: allAppointments = [], isLoading: loadingAppointments } = useAppointments();
   const { data: contacts = [], isLoading: loadingContacts } = useContacts();
   const { data: tiposAtendimento = [] } = useTiposAtendimento();
-  const { data: chatMetrics, isLoading: loadingChats } = useChatMetrics();
   const { features } = usePlanFeatures();
-  const { profile } = useAuth();
+  const { profile, organization } = useAuth();
   const createAppointment = useCreateAppointment();
   const createContact = useCreateContact();
   const { singular, plural, s } = useEntityLabel();
@@ -70,8 +76,20 @@ export default function Dashboard() {
   const hasAgendamento = features.agendamento_automatico;
   const hasBaseConhecimento = features.base_conhecimento;
 
+  // Plano basic (plano_a) ou intermediate (plano_b): não exibir relatórios, analytics nem quadro de tarefas
+  const isBasicOrIntermediate =
+    organization?.plano_assinatura === "plano_a" || organization?.plano_assinatura === "plano_b";
+  const showTarefasAnalyticsRelatorios = !isBasicOrIntermediate;
+
   // Aba ativa (controlado para não sair do Analytics ao clicar nos filtros)
-  const [activeTab, setActiveTab] = useState<string>('tarefas');
+  const [activeTab, setActiveTab] = useState<string>("tarefas");
+
+  // Plano basic/intermediate com agendamento: exibir só a aba Agenda
+  useEffect(() => {
+    if (isBasicOrIntermediate && hasAgendamento) {
+      setActiveTab("agenda");
+    }
+  }, [isBasicOrIntermediate, hasAgendamento]);
 
   // Analytics period filter
   type AnalyticsPeriod = 'today' | '7d' | '30d' | '90d';
@@ -88,6 +106,8 @@ export default function Dashboard() {
     return { start, end };
   })();
   const { data: appointmentsInPeriod = [], isLoading: loadingAppointmentsPeriod } = useAgendamentosPorPeriodo(analyticsRange.start, analyticsRange.end);
+  const { data: chatMetrics, isLoading: loadingChats } = useChatMetrics({ start: analyticsRange.start, end: analyticsRange.end });
+  const { data: tokenUsage } = useTokenUsageOrg(analyticsRange.start, analyticsRange.end);
 
   const periodLabel =
     analyticsPeriod === 'today' ? 'Hoje' :
@@ -108,13 +128,45 @@ export default function Dashboard() {
     const d = new Date(criado);
     return d >= analyticsRange.start && d <= analyticsRange.end;
   }).length;
-  // Taxa de confirmação pelo Kanban: concluídos / contatos que entraram no período
-  const taxaConfirmacaoKanban = totalContatosNoPeriodoKanban > 0
-    ? Math.round((contatosConcluidosNoPeriodo / totalContatosNoPeriodoKanban) * 100)
-    : 0;
-
   const agendadosNoPeriodo = appointmentsInPeriod.length;
   const confirmadosNoPeriodo = appointmentsInPeriod.filter((a) => a.situacao === 'confirmado').length;
+
+  // Dados para gráficos
+  const messagesChartData = useMemo(() => {
+    const daily = chatMetrics?.dailyBreakdown ?? [];
+    return daily.map((d) => ({
+      dia: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      mensagens: d.messages,
+      conversas: d.conversations,
+    }));
+  }, [chatMetrics?.dailyBreakdown]);
+
+  const appointmentsChartData = useMemo(() => {
+    const byDay: Record<string, { total: number; confirmados: number }> = {};
+    appointmentsInPeriod.forEach((a) => {
+      const d = (a as { data?: string }).data ?? "";
+      if (!d) return;
+      if (!byDay[d]) byDay[d] = { total: 0, confirmados: 0 };
+      byDay[d].total++;
+      if (a.situacao === "confirmado") byDay[d].confirmados++;
+    });
+    return Object.entries(byDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, v]) => ({
+        dia: new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+        total: v.total,
+        confirmados: v.confirmados,
+      }));
+  }, [appointmentsInPeriod]);
+
+  const tokenChartData = useMemo(() => {
+    const daily = tokenUsage?.daily ?? [];
+    return daily.map((d) => ({
+      dia: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      tokens: d.tokens,
+      custo: d.cost,
+    }));
+  }, [tokenUsage?.daily]);
 
   // Modals state
   const [isTodayModalOpen, setIsTodayModalOpen] = useState(false);
@@ -143,6 +195,13 @@ export default function Dashboard() {
   const activeContacts = contacts.filter(c => c.situacao === 'ativo').length;
   const confirmedToday = todayAppointments.filter(apt => apt.situacao === 'confirmado').length;
   const totalInteractions = contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0);
+
+  // Taxa de confirmação pela Agenda: confirmados / total de compromissos no período
+  const totalAgendaNoPeriodo = analyticsPeriod === 'today' ? todayAppointments.length : agendadosNoPeriodo;
+  const confirmadosAgendaNoPeriodo = analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo;
+  const taxaConfirmacaoAgenda = totalAgendaNoPeriodo > 0
+    ? Math.round((confirmadosAgendaNoPeriodo / totalAgendaNoPeriodo) * 100)
+    : 0;
 
   // Submit handlers
   const onSubmitAppointment = async (data: AppointmentFormData) => {
@@ -303,29 +362,41 @@ export default function Dashboard() {
       </div>
 
       {/* ═══ Tabbed Content ═══ */}
+      {isBasicOrIntermediate && !hasAgendamento ? (
+        <div className="liquid-glass p-6 md:p-8 mt-4 rounded-2xl border border-border/50">
+          <p className="text-muted-foreground text-center">
+            Relatórios, analytics e o quadro de minhas tarefas estão disponíveis em planos superiores.
+          </p>
+        </div>
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in-up">
         <TabsList className="w-full sm:w-auto h-10 liquid-glass-subtle p-1">
-          <TabsTrigger value="tarefas" className="gap-2 text-sm px-4">
-            <ListTodo className="h-4 w-4" />
-            Minhas Tarefas
-          </TabsTrigger>
+          {showTarefasAnalyticsRelatorios && (
+            <TabsTrigger value="tarefas" className="gap-2 text-sm px-4">
+              <ListTodo className="h-4 w-4" />
+              Minhas Tarefas
+            </TabsTrigger>
+          )}
           {hasAgendamento && (
             <TabsTrigger value="agenda" className="gap-2 text-sm px-4">
               <Calendar className="h-4 w-4" />
               Agenda do Dia
             </TabsTrigger>
           )}
-          <TabsTrigger value="analytics" className="gap-2 text-sm px-4">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
+          {showTarefasAnalyticsRelatorios && (
+            <TabsTrigger value="analytics" className="gap-2 text-sm px-4">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        {/* ═══ Tab: Minhas Tarefas ═══ */}
-        <TabsContent value="tarefas" className="mt-4">
-          <DashboardTarefas />
-
-        </TabsContent>
+        {/* ═══ Tab: Minhas Tarefas (apenas planos acima de basic/intermediate) ═══ */}
+        {showTarefasAnalyticsRelatorios && (
+          <TabsContent value="tarefas" className="mt-4">
+            <DashboardTarefas />
+          </TabsContent>
+        )}
 
         {/* ═══ Tab: Agenda do Dia ═══ */}
         {hasAgendamento && (
@@ -422,7 +493,8 @@ export default function Dashboard() {
           </TabsContent>
         )}
 
-        {/* ═══ Tab: Analytics ═══ */}
+        {/* ═══ Tab: Analytics (apenas planos acima de basic/intermediate) ═══ */}
+        {showTarefasAnalyticsRelatorios && (
         <TabsContent value="analytics" className="mt-4 space-y-6">
           {/* Period Filter - type="button" evita submit e mantém a aba Analytics */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -502,14 +574,14 @@ export default function Dashboard() {
                   />
                 </div>
                 <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => window.location.href = '/app/clientes/crm'}>
+                  onClick={() => setIsTodayModalOpen(true)}>
                   <KPICard
                     title="Taxa de Confirmação"
-                    value={`${taxaConfirmacaoKanban}%`}
-                    change={`${contatosConcluidosNoPeriodo} concluídos / ${totalContatosNoPeriodoKanban} no Kanban`}
+                    value={`${taxaConfirmacaoAgenda}%`}
+                    change={`${confirmadosAgendaNoPeriodo} confirmados / ${totalAgendaNoPeriodo} na Agenda`}
                     changeType="positive"
                     icon={CheckCircle2}
-                    description={`Kanban · ${periodLabel}`}
+                    description={`Agenda · ${periodLabel}`}
                   />
                 </div>
                 <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
@@ -549,6 +621,125 @@ export default function Dashboard() {
                 icon={Users}
                 description="Base de contatos"
               />
+            </div>
+          </div>
+
+          {/* ═══ Gráficos ═══ */}
+          <div className="space-y-6">
+            <h2 className="font-display text-lg font-semibold text-foreground">Gráficos</h2>
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+              {/* Custo de Tokens */}
+              {tokenUsage && (
+                <Card className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Custo de Tokens (IA)</h3>
+                  </div>
+                  {tokenChartData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum consumo no período</p>
+                  ) : (
+                    <ChartContainer config={{ custo: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" } }} className="h-[220px] w-full">
+                      <AreaChart data={tokenChartData} margin={{ left: 0, right: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$ ${Number(v).toFixed(2)}`} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(v: number) => `R$ ${Number(v).toFixed(4)}`} />} />
+                        <Area type="monotone" dataKey="custo" stroke="hsl(142, 72%, 40%)" fill="hsl(142, 72%, 40%)" fillOpacity={0.2} strokeWidth={2} />
+                      </AreaChart>
+                    </ChartContainer>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">Total: R$ {tokenUsage.totalCost.toFixed(4)} · {tokenUsage.totalTokens.toLocaleString("pt-BR")} tokens</p>
+                </Card>
+              )}
+
+              {/* Quantidade de Tokens */}
+              {tokenUsage && (
+                <Card className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Quantidade de Tokens (IA)</h3>
+                  </div>
+                  {tokenChartData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum consumo no período</p>
+                  ) : (
+                    <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(45, 93%, 47%)" } }} className="h-[220px] w-full">
+                      <BarChart data={tokenChartData} margin={{ left: 0, right: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(v: number) => v.toLocaleString("pt-BR")} />} />
+                        <Bar dataKey="tokens" fill="hsl(45, 93%, 47%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ChartContainer>
+                  )}
+                </Card>
+              )}
+
+              {/* Mensagens por dia */}
+              <Card className="liquid-glass-subtle p-4 md:p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Mensagens por dia</h3>
+                </div>
+                {(!chatMetrics?.dailyBreakdown || chatMetrics.dailyBreakdown.length === 0) ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma mensagem no período</p>
+                ) : (
+                  <ChartContainer config={{ messages: { label: "Mensagens", color: "hsl(262, 83%, 58%)" } }} className="h-[220px] w-full">
+                    <BarChart data={chatMetrics.dailyBreakdown} margin={{ left: 0, right: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="messages" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                )}
+              </Card>
+
+              {/* Agendamentos por dia */}
+              {hasAgendamento && (
+                <Card className="liquid-glass-subtle p-4 md:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Agendamentos por dia</h3>
+                  </div>
+                  {appointmentsChartData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum agendamento no período</p>
+                  ) : (
+                    <ChartContainer config={{ total: { label: "Total", color: "hsl(200, 80%, 50%)" }, confirmados: { label: "Confirmados", color: "hsl(142, 72%, 40%)" } }} className="h-[220px] w-full">
+                      <BarChart data={appointmentsChartData} margin={{ left: 0, right: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="total" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} name="Total" />
+                        <Bar dataKey="confirmados" fill="hsl(142, 72%, 40%)" radius={[4, 4, 0, 0]} name="Confirmados" />
+                      </BarChart>
+                    </ChartContainer>
+                  )}
+                </Card>
+              )}
+
+              {/* Conversas por dia */}
+              <Card className="liquid-glass-subtle p-4 md:p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Conversas por dia</h3>
+                </div>
+                {(!chatMetrics?.dailyBreakdown || chatMetrics.dailyBreakdown.length === 0) ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma conversa no período</p>
+                ) : (
+                  <ChartContainer config={{ conversations: { label: "Conversas", color: "hsl(45, 93%, 47%)" } }} className="h-[220px] w-full">
+                    <LineChart data={chatMetrics.dailyBreakdown} margin={{ left: 0, right: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="conversations" stroke="hsl(45, 93%, 47%)" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ChartContainer>
+                )}
+              </Card>
             </div>
           </div>
 
@@ -642,7 +833,9 @@ export default function Dashboard() {
             </div>
           )}
         </TabsContent>
+        )}
       </Tabs>
+      )}
 
       {/* Modal: Compromissos de Hoje */}
       <Dialog open={isTodayModalOpen} onOpenChange={setIsTodayModalOpen}>
@@ -952,7 +1145,8 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Ver Relatórios */}
+      {/* Modal: Ver Relatórios (apenas planos acima de basic/intermediate) */}
+      {showTarefasAnalyticsRelatorios && (
       <Dialog open={isReportsModalOpen} onOpenChange={setIsReportsModalOpen}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
@@ -1074,6 +1268,7 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 }

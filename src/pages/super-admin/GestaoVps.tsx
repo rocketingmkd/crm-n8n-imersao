@@ -643,14 +643,14 @@ export default function GestaoVps({ hideHeader = false }: { hideHeader?: boolean
     <div className="space-y-6">
       {/* Header */}
       {!hideHeader && (
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Server className="h-7 w-7 text-primary" />
+        <div className="page-header">
+          <h1>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Server className="h-4 w-4 text-primary" />
+            </div>
             Gestão de VPS
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Controle workflows n8n, backup e limpeza via webhook. Todas as ações são enviadas para o fluxo n8n configurado.
-          </p>
+          <p>Controle workflows n8n, backup e limpeza via webhook</p>
         </div>
       )}
 

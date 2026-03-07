@@ -243,7 +243,6 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    box-shadow: inset -1px 0 12px -2px hsla(var(--glass-inner-shadow));
     background-color: hsla(var(--glass-bg));
     pointer-events: none;
   }
@@ -259,8 +258,7 @@
     -webkit-filter: url(#glass-distortion);
     isolation: isolate;
     pointer-events: none;
-    border-right: 1px solid hsla(var(--glass-border));
-    box-shadow: 4px 0 24px -4px hsla(var(--glass-shadow));
+    border-right: 1px solid hsla(var(--glass-border) / 0.5);
   }
 
   .liquid-glass-sidebar > *:not([class*="absolute"]) {

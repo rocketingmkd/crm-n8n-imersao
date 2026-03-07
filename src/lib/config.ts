@@ -22,6 +22,10 @@ export const config = {
   n8nRemoverPausaAgenteUrl: n8nWebhookBase + "remover-pausa-agente",
   /** URL do webhook n8n para listar status de pausa (POST: remote_J_id). Retorno [{ propertyName: null }] = ativo. */
   n8nListaPausaAgenteUrl: n8nWebhookBase + "lista-pausa-agente",
+  /** Path para enviar mensagem como humano (proxy em dev) */
+  n8nEnviarMensagemComoHumanoPath: "enviar-mensagem-como-humano",
+  /** URL do webhook n8n para enviar mensagem como humano (POST: mensagem, token, telefone). */
+  n8nEnviarMensagemComoHumanoUrl: n8nWebhookBase + "enviar-mensagem-como-humano",
 };
 
 /** Em dev usa proxy para evitar CORS; em produção usa a URL completa. */
@@ -36,4 +40,9 @@ export function getRemoverPausaAgenteUrl(): string {
 export function getListaPausaAgenteUrl(): string {
   if (import.meta.env.DEV) return `/api/n8n-proxy/${config.n8nListaPausaAgentePath}`;
   return config.n8nListaPausaAgenteUrl;
+}
+
+export function getEnviarMensagemComoHumanoUrl(): string {
+  if (import.meta.env.DEV) return `/api/n8n-proxy/${config.n8nEnviarMensagemComoHumanoPath}`;
+  return config.n8nEnviarMensagemComoHumanoUrl;
 }

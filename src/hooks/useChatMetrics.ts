@@ -23,6 +23,8 @@ interface ChatMetrics {
   periodConversations?: number;
   /** Mensagens no período (quando options.start/end são passados) */
   periodMessages?: number;
+  /** Dados diários para gráficos (quando options.start/end são passados) */
+  dailyBreakdown?: { date: string; messages: number; conversations: number }[];
   recentSessions: { session_id: string; message_count: number; last_message: string }[];
 }
 
@@ -98,10 +100,28 @@ export function useChatMetrics(options?: ChatMetricsOptions) {
 
         let periodConversations: number | undefined;
         let periodMessages: number | undefined;
+        let dailyBreakdown: { date: string; messages: number; conversations: number }[] | undefined;
         if (startStr != null && endStr != null) {
           const period = byPeriod(startStr, endStr);
           periodConversations = period.conversations;
           periodMessages = period.messages;
+          const inPeriod = messages.filter((m) => {
+            const d = m.data ?? "";
+            if (d < startStr) return false;
+            if (d > endStr) return false;
+            return true;
+          });
+          const byDay: Record<string, { messages: number; sessions: Set<string> }> = {};
+          inPeriod.forEach((m) => {
+            const date = (m.data ?? "").slice(0, 10);
+            if (!date) return;
+            if (!byDay[date]) byDay[date] = { messages: 0, sessions: new Set() };
+            byDay[date].messages++;
+            if (m.session_id) byDay[date].sessions.add(m.session_id);
+          });
+          dailyBreakdown = Object.entries(byDay)
+            .map(([date, v]) => ({ date, messages: v.messages, conversations: v.sessions.size }))
+            .sort((a, b) => a.date.localeCompare(b.date));
         }
 
         const sessionCounts: Record<string, { count: number; lastMessage: string }> = {};
@@ -130,6 +150,7 @@ export function useChatMetrics(options?: ChatMetricsOptions) {
           messagesLast90d: last90.messages,
           periodConversations,
           periodMessages,
+          dailyBreakdown,
           recentSessions,
         };
       } catch (error) {

@@ -5,18 +5,20 @@ import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { useContatos } from "@/hooks/useContatos";
 import { supabase } from "@/lib/supabase";
-import { config, getPausarAgenteUrl, getRemoverPausaAgenteUrl, getListaPausaAgenteUrl } from "@/lib/config";
+import { getPausarAgenteUrl, getRemoverPausaAgenteUrl, getListaPausaAgenteUrl, getEnviarMensagemComoHumanoUrl } from "@/lib/config";
 import {
   fetchSessoes,
   fetchMensagensSessao,
   getMessageDisplayInfo,
-  type SessaoResumida,
+  inserirMensagemHumano,
 } from "@/lib/conversas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Pause, Play } from "lucide-react";
+import { MessageCircle, Pause, Play, Send, Smile, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { EmojiPicker } from "@/components/EmojiPicker";
 import { toast } from "sonner";
 
 function formatarDataExibicao(iso: string): string {
@@ -185,6 +187,8 @@ export default function Conversas() {
   const identificador = organization?.identificador ?? null;
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [mensagemHumano, setMensagemHumano] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   const { data: contatos = [] } = useContatos();
   // id_sessao = id do contato. Mapeia id, id_sessao e telefone → nome e url_foto.
@@ -248,6 +252,21 @@ export default function Conversas() {
   });
   const pausaSegundos = configAgente?.pausa_segundos ?? 300;
 
+  const { data: whatsappInstance } = useQuery({
+    queryKey: ["instancias_whatsapp", organization?.id],
+    queryFn: async () => {
+      if (!organization?.id) return null;
+      const { data, error } = await supabase
+        .from("instancias_whatsapp")
+        .select("token")
+        .eq("id_organizacao", organization.id)
+        .single();
+      if (error) return null;
+      return data as { token: string };
+    },
+    enabled: !!organization?.id,
+  });
+
   const {
     data: fetchResult,
     isLoading: loadingSessoes,
@@ -267,6 +286,65 @@ export default function Conversas() {
       fetchMensagensSessao(supabase, identificador!, selectedSessionId!),
     enabled: !!identificador && !!selectedSessionId,
   });
+
+  const queryClient = useQueryClient();
+
+  /** Enviar mensagem como humano — webhook n8n + inserção na tabela de conversas */
+  const handleEnviarComoHumano = async () => {
+    const texto = mensagemHumano.trim();
+    if (!texto) return;
+    if (!selectedSessionId || !identificador) return;
+    const telefone = telefonePorSessao[selectedSessionId]?.trim();
+    const token = whatsappInstance?.token;
+    if (!telefone) {
+      toast.error("Telefone do cliente não encontrado para esta conversa.");
+      return;
+    }
+    if (!token) {
+      toast.error("Instância WhatsApp não configurada. Conecte o WhatsApp nas Integrações.");
+      return;
+    }
+    const url = getEnviarMensagemComoHumanoUrl();
+    if (!url) {
+      toast.info("Configure VITE_N8N_WEBHOOK_URL no .env.");
+      return;
+    }
+    setEnviando(true);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: texto, token, telefone }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { retorno?: string; message?: string };
+      if (!res.ok) throw new Error(data?.message ?? data?.retorno ?? `Erro ${res.status}`);
+      const { error: insertError } = await inserirMensagemHumano(
+        supabase,
+        identificador,
+        selectedSessionId,
+        texto
+      );
+      if (insertError) {
+        toast.warning("Mensagem enviada ao cliente, mas não foi possível registrar no histórico.");
+      } else {
+        toast.success("Mensagem enviada com sucesso!");
+      }
+      setMensagemHumano("");
+      queryClient.invalidateQueries({ queryKey: ["conversas-mensagens", identificador, selectedSessionId] });
+      queryClient.invalidateQueries({ queryKey: ["conversas-sessoes", identificador] });
+      queryClient.invalidateQueries({ queryKey: ["interacoes-por-sessao", identificador] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const isCorsOrNetwork = /failed to fetch|network error|cors/i.test(msg);
+      toast.error(isCorsOrNetwork ? "Falha na requisição (CORS/rede). Verifique a conexão." : msg);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMensagemHumano((prev) => prev + emoji);
+  };
 
   if (!identificador) {
     return (
@@ -475,6 +553,45 @@ export default function Conversas() {
                   </div>
                 </ScrollArea>
               )}
+
+              {/* Área de envio como humano */}
+              <div className="shrink-0 border-t border-border liquid-glass-subtle p-3 md:p-4">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 min-w-0 flex gap-1.5 items-end rounded-xl border border-border bg-background/60 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <Textarea
+                      placeholder="Digite sua mensagem... (Shift+Enter para nova linha)"
+                      value={mensagemHumano}
+                      onChange={(e) => setMensagemHumano(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleEnviarComoHumano();
+                        }
+                      }}
+                      className="min-h-[60px] max-h-[200px] resize-y border-0 focus-visible:ring-0 focus-visible:ring-offset-0 py-2.5"
+                      rows={3}
+                    />
+                    <EmojiPicker onSelect={handleEmojiSelect} className="self-center mb-1.5" />
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="h-11 w-11 shrink-0 rounded-xl"
+                    onClick={handleEnviarComoHumano}
+                    disabled={!mensagemHumano.trim() || enviando}
+                    aria-label="Enviar mensagem"
+                  >
+                    {enviando ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  Shift+Enter para nova linha · Enter para enviar · Webhook n8n em breve
+                </p>
+              </div>
             </>
           )}
         </section>

@@ -1,15 +1,9 @@
-import { useLocation } from "react-router-dom";
 import { Activity } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Observability from "@/pages/Observability";
 import N8nInsights from "@/pages/super-admin/N8nInsights";
-import GestaoVps from "@/pages/super-admin/GestaoVps";
 
 export default function ObservabilidadeUnificada() {
-  const location = useLocation();
-  const isGestaoVpsRoute = location.pathname.includes("gestao-vps");
-  const defaultTab = isGestaoVpsRoute ? "gestao-vps" : "servidor";
-
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -19,10 +13,10 @@ export default function ObservabilidadeUnificada() {
           </div>
           Observabilidade
         </h1>
-        <p>Servidor, execuções de workflows e gestão de VPS</p>
+        <p>Servidor e execuções de workflows</p>
       </div>
 
-      <Tabs key={defaultTab} defaultValue={defaultTab} className="w-full">
+      <Tabs defaultValue="servidor" className="w-full">
         <TabsList className="w-full justify-start liquid-glass-subtle">
           <TabsTrigger value="servidor" className="text-xs sm:text-sm">
             Servidor
@@ -30,34 +24,15 @@ export default function ObservabilidadeUnificada() {
           <TabsTrigger value="monitoramento" className="text-xs sm:text-sm">
             Monitoramento de Execuções
           </TabsTrigger>
-          <TabsTrigger value="gestao-vps" className="text-xs sm:text-sm">
-            Gestão de VPS
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="servidor">
-          <ObservabilityContent />
+          <Observability hideHeader />
         </TabsContent>
         <TabsContent value="monitoramento">
-          <N8nInsightsContent />
-        </TabsContent>
-        <TabsContent value="gestao-vps">
-          <GestaoVpsContent />
+          <N8nInsights hideHeader />
         </TabsContent>
       </Tabs>
     </div>
   );
-}
-
-/** Wrappers that render the page content without duplicating the page header */
-function ObservabilityContent() {
-  return <Observability hideHeader />;
-}
-
-function N8nInsightsContent() {
-  return <N8nInsights hideHeader />;
-}
-
-function GestaoVpsContent() {
-  return <GestaoVps hideHeader />;
 }

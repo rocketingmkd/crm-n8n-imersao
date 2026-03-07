@@ -1,10 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const ok = (data: object) =>
+  new Response(JSON.stringify({ success: true, ...data }), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+
+const fail = (msg: string) =>
+  new Response(JSON.stringify({ success: false, error: msg }), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,30 +24,44 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
 
-    const { data: { user } } = await supabaseAdmin.auth.getUser(token)
+    // Verifica autenticação usando o token do header + service role (mais robusto)
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const token = authHeader.replace('Bearer ', '').trim()
 
-    if (!user) {
-      throw new Error('Não autenticado')
+    if (!token) {
+      return fail('Não autenticado. Faça login novamente.')
     }
 
-    // Verificar se é super admin (tabela: perfis, coluna: super_admin)
-    const { data: perfil } = await supabaseAdmin
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+
+    if (authError || !user) {
+      console.error('Auth error:', authError?.message)
+      return fail('Token inválido. Faça login novamente.')
+    }
+
+    console.log('✅ Usuário autenticado:', user.id)
+
+    // Verifica se é super admin
+    const { data: perfil, error: perfilError } = await supabaseAdmin
       .from('perfis')
       .select('super_admin')
       .eq('id', user.id)
       .single()
 
-    if (!perfil || !perfil.super_admin) {
-      throw new Error('Apenas super admins podem gerenciar usuários')
+    if (perfilError) {
+      console.error('Perfil error:', perfilError.message)
+      return fail('Erro ao verificar permissões: ' + perfilError.message)
+    }
+
+    if (!perfil?.super_admin) {
+      return fail('Apenas super admins podem gerenciar usuários')
     }
 
     const body = await req.json()
@@ -48,77 +74,71 @@ serve(async (req) => {
 
       console.log('➕ Criando usuário:', email)
 
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
       })
 
-      if (authError || !authData.user) {
-        throw authError || new Error('Erro ao criar usuário')
+      if (createError || !authData.user) {
+        return fail(createError?.message || 'Erro ao criar usuário no Auth')
       }
 
       console.log('✅ Usuário criado no Auth:', authData.user.id)
 
-      // Criar perfil (tabela: perfis, colunas: id_organizacao, nome_completo, funcao, super_admin, ativo)
-      const { error: perfilError } = await supabaseAdmin
+      const { error: perfilInsertError } = await supabaseAdmin
         .from('perfis')
-        .insert({
-          id: authData.user.id,
-          id_organizacao: organizationId,
-          nome_completo: fullName,
-          funcao: role,
-          super_admin: false,
-          ativo: true,
-        })
+        .upsert(
+          {
+            id: authData.user.id,
+            id_organizacao: organizationId,
+            nome_completo: fullName,
+            funcao: role,
+            super_admin: false,
+            ativo: true,
+          },
+          { onConflict: 'id' }
+        )
 
-      if (perfilError) {
+      if (perfilInsertError) {
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-        throw perfilError
+        return fail('Erro ao criar perfil: ' + perfilInsertError.message)
       }
 
-      console.log('✅ Perfil criado')
+      console.log('✅ Perfil criado/atualizado')
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          user: { id: authData.user.id, email: authData.user.email, nome_completo: fullName, funcao: role },
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
+      return ok({
+        user: { id: authData.user.id, email: authData.user.email, nome_completo: fullName, funcao: role },
+      })
 
     } else if (action === 'delete') {
       console.log('🗑️ Deletando usuário:', userId)
 
-      const { error: perfilError } = await supabaseAdmin
+      const { error: perfilDeleteError } = await supabaseAdmin
         .from('perfis')
         .delete()
         .eq('id', userId)
 
-      if (perfilError) throw perfilError
+      if (perfilDeleteError) {
+        return fail('Erro ao deletar perfil: ' + perfilDeleteError.message)
+      }
 
-      console.log('✅ Perfil deletado')
+      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
-      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+      if (authDeleteError) {
+        return fail('Erro ao deletar usuário: ' + authDeleteError.message)
+      }
 
-      if (authError) throw authError
+      console.log('✅ Usuário deletado')
 
-      console.log('✅ Usuário deletado do Auth')
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Usuário deletado com sucesso' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
+      return ok({ message: 'Usuário deletado com sucesso' })
 
     } else {
-      throw new Error('Ação inválida')
+      return fail('Ação inválida: ' + action)
     }
 
   } catch (error) {
     console.error('❌ Erro geral:', error)
-    return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao gerenciar usuário' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    return fail(error?.message || 'Erro interno ao gerenciar usuário')
   }
 })

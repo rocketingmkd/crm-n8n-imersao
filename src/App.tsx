@@ -41,6 +41,7 @@ import Plans from "./pages/super-admin/Plans";
 import Relatorios from "./pages/super-admin/Relatorios";
 import TokenUsage from "./pages/super-admin/TokenUsage";
 import ObservabilidadeUnificada from "./pages/super-admin/ObservabilidadeUnificada";
+import GestaoVps from "./pages/super-admin/GestaoVps";
 import SuperAdminSettings from "./pages/super-admin/Settings";
 import MinhaConta from "./pages/MinhaConta";
 
@@ -81,7 +82,7 @@ const App = () => (
                 <Route path="/super-admin/token-usage" element={<TokenUsage />} />
                 <Route path="/super-admin/observability" element={<ObservabilidadeUnificada />} />
                 <Route path="/super-admin/insights" element={<ObservabilidadeUnificada />} />
-                <Route path="/super-admin/gestao-vps" element={<ObservabilidadeUnificada />} />
+                <Route path="/super-admin/gestao-vps" element={<GestaoVps />} />
                 <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
                 <Route path="/super-admin/minha-conta" element={<MinhaConta />} />
               </Route>

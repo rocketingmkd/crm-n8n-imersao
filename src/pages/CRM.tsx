@@ -6,6 +6,7 @@ import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LimitAlert } from "@/components/LimitAlert";
 import { useContacts, useCreateContact, useUpdateContact } from "@/hooks/useContacts";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
+import { useInteracoesPorContato } from "@/hooks/useInteracoesPorContato";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,7 @@ export default function CRM() {
   const updateContact = useUpdateContact();
   const { checkLimit } = usePlanFeatures();
   const { singular, plural, s, p } = useEntityLabel();
+  const { getStats, totalGeral } = useInteracoesPorContato();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -340,7 +342,7 @@ export default function CRM() {
             </div>
             <div className="liquid-glass-subtle p-3 md:p-4">
               <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total Interações</p>
-              <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-accent">{contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0)}</p>
+              <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-accent">{totalGeral}</p>
             </div>
           </div>
 
@@ -414,7 +416,7 @@ export default function CRM() {
                         </div>
                       </div>
                       <div className={cn("shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold shadow-md", colors.avatar, "border border-white/20")}>
-                        {contact.total_interacoes} {contact.total_interacoes === 1 ? "interação" : "interações"}
+                        {getStats(contact).total_interacoes} {getStats(contact).total_interacoes === 1 ? "interação" : "interações"}
                       </div>
                     </div>
                     <div className="space-y-2.5 border-t border-border/30 pt-4 relative z-10">
@@ -449,7 +451,7 @@ export default function CRM() {
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Última interação: {contact.ultima_interacao ? new Date(contact.ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}
+                            Última interação: {getStats(contact).ultima_interacao ? new Date(getStats(contact).ultima_interacao!).toLocaleDateString('pt-BR') : 'Nunca'}
                           </span>
                         </div>
                         {contact.resumo && (
@@ -649,11 +651,11 @@ export default function CRM() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-border/50 bg-background p-4">
                       <p className="text-xs text-muted-foreground mb-1">Total de Interações</p>
-                      <p className="text-2xl font-bold text-accent">{selectedContact.total_interacoes}</p>
+                      <p className="text-2xl font-bold text-accent">{getStats(selectedContact).total_interacoes}</p>
                     </div>
                     <div className="rounded-lg border border-border/50 bg-background p-4">
                       <p className="text-xs text-muted-foreground mb-1">Última Interação</p>
-                      <p className="text-sm font-semibold text-foreground">{selectedContact.ultima_interacao ? new Date(selectedContact.ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}</p>
+                      <p className="text-sm font-semibold text-foreground">{getStats(selectedContact).ultima_interacao ? new Date(getStats(selectedContact).ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}</p>
                     </div>
                   </div>
                   {selectedContact.observacoes && (

@@ -389,7 +389,7 @@ export default function Plans() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Workflow ID (n8n)</Label>
+                <Label>Skeleton - Workflow ID (n8n)</Label>
                 <Input
                   value={form.workflow_id_n8n}
                   onChange={(e) => setFormField("workflow_id_n8n", e.target.value)}

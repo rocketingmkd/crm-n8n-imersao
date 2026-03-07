@@ -74,7 +74,7 @@ export default function SuperAdminLayout() {
 
           {/* Header: Logo + User (matching org Layout) */}
           <div className={cn(
-            "border-b border-border transition-all duration-300",
+            "transition-all duration-300",
             isSidebarCollapsed ? "px-2 py-4" : "px-4 py-4"
           )}>
             <div className={cn(
@@ -185,7 +185,7 @@ export default function SuperAdminLayout() {
 
           {/* Footer: Theme + Logout */}
           <div className={cn(
-            "border-t border-border space-y-1 transition-all duration-300",
+            "space-y-1 transition-all duration-300",
             isSidebarCollapsed ? "p-2" : "p-3"
           )}>
             {isSidebarCollapsed ? (

@@ -362,3 +362,109 @@ export async function fetchMensagensSessao(
     return [];
   }
 }
+
+/** Extrai apenas dígitos de uma string (telefone, session_id, etc.). */
+function extrairDigitos(s: string): string {
+  return (s || "").replace(/\D/g, "");
+}
+
+/**
+ * Busca interações (contagem e última data) por sessão na tabela de conversas.
+ * Retorna mapa: chave normalizada (dígitos) -> { total_interacoes, ultima_interacao }.
+ * Usado para calcular interações reais a partir das mensagens, em vez de depender do campo contatos.total_interacoes.
+ */
+export async function fetchInteracoesPorSessao(
+  client: SupabaseClient,
+  identificador: string
+): Promise<Record<string, { total_interacoes: number; ultima_interacao: string }>> {
+  const tableName = await obterNomeTabelaConversas(client, identificador);
+  if (!tableName) return {};
+
+  try {
+    type Row = { data?: string; session_id?: string; id_sessao?: string };
+    let rows: Row[] = [];
+
+    const { data: data1, error: err1 } = await (client as any)
+      .from(tableName)
+      .select("data, session_id")
+      .order("data", { ascending: true });
+    if (!err1 && data1?.length) {
+      rows = data1;
+    } else if (err1?.code === "42703" || (err1?.message && /column/i.test(err1.message || ""))) {
+      const { data: data2, error: err2 } = await (client as any)
+        .from(tableName)
+        .select("data, id_sessao")
+        .order("data", { ascending: true });
+      if (!err2 && data2?.length) {
+        rows = data2.map((r: { id_sessao?: string }) => ({ ...r, session_id: r.id_sessao }));
+      }
+    }
+
+    const bySession: Record<string, { count: number; last: string }> = {};
+    for (const r of rows) {
+      const sid = (r.session_id ?? r.id_sessao ?? "").trim();
+      if (!sid) continue;
+      const key = extrairDigitos(sid) || sid;
+      if (!bySession[key]) bySession[key] = { count: 0, last: "" };
+      bySession[key].count++;
+      const d = r.data ?? "";
+      if (d > bySession[key].last) bySession[key].last = d;
+    }
+    // Também indexar por session_id raw para cobrir id_sessao que não seja telefone
+    const result: Record<string, { total_interacoes: number; ultima_interacao: string }> = {};
+    for (const [key, v] of Object.entries(bySession)) {
+      result[key] = { total_interacoes: v.count, ultima_interacao: v.last };
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Obtém chaves de busca para um contato (telefone, id_sessao) para matching com o mapa de interações.
+ */
+export function chavesContatoParaInteracao(telefone: string | null, idSessao: string | null): string[] {
+  const keys: string[] = [];
+  const telDig = extrairDigitos(telefone || "");
+  if (telDig) {
+    keys.push(telDig);
+    if (telDig.length <= 11) keys.push("55" + telDig);
+  }
+  const idDig = extrairDigitos(idSessao || "");
+  if (idDig) keys.push(idDig);
+  if (idSessao?.trim()) keys.push(idSessao.trim());
+  return keys;
+}
+
+/**
+ * Insere uma mensagem enviada pelo atendente humano na tabela de conversas.
+ * Formato: type "ai" / role "assistant" para exibir no lado do bot (esquerda), como resposta do atendente.
+ */
+export async function inserirMensagemHumano(
+  client: SupabaseClient,
+  identificador: string,
+  sessionId: string,
+  texto: string
+): Promise<{ error?: string }> {
+  const tableName = await obterNomeTabelaConversas(client, identificador);
+  if (!tableName || !sessionId || !texto?.trim()) {
+    return { error: "Tabela ou sessão não encontrada" };
+  }
+  const dataIso = new Date().toISOString();
+  const message = { type: "ai", role: "assistant", content: texto.trim(), enviado_por_humano: true };
+  const { error } = await (client as any)
+    .from(tableName)
+    .insert({ message, data: dataIso, session_id: sessionId });
+  if (error) {
+    if (error.code === "42703" && /session_id|column/i.test(error.message || "")) {
+      const { error: err2 } = await (client as any)
+        .from(tableName)
+        .insert({ message, data: dataIso, id_sessao: sessionId });
+      if (err2) return { error: err2.message || String(err2) };
+    } else {
+      return { error: error.message || String(error) };
+    }
+  }
+  return {};
+}

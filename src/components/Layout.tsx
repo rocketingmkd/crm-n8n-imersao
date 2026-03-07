@@ -140,7 +140,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 
         {/* Header: Logo + Company + User */}
         <div className={cn(
-          "border-b border-sidebar-border transition-all duration-300",
+          "transition-all duration-300",
           isCollapsed ? "px-2 py-4" : "px-4 py-4"
         )}>
           <div className={cn(
@@ -281,7 +281,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 
         {/* Footer: Plan + Theme + Logout */}
         <div className={cn(
-          "border-t border-sidebar-border space-y-1 transition-all duration-300",
+          "space-y-1 transition-all duration-300",
           isCollapsed ? "p-2" : "p-3"
         )}>
           {/* Plan */}

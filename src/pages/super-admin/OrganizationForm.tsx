@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save, Upload, X, Workflow, Loader2, MessageSquare, Check, XCircle, Clock, Users, UserPlus, Trash2, Building2, Image, Zap, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, Upload, X, Workflow, Loader2, MessageSquare, Check, XCircle, Clock, Users, UserPlus, Trash2, Building2, Image, Zap, AlertTriangle, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +60,8 @@ export default function OrganizationForm() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [isCreatingWorkflow, setIsCreatingWorkflow] = useState(false);
   const [isConfiguringWebhook, setIsConfiguringWebhook] = useState(false);
+  const [isDisconnectingInstance, setIsDisconnectingInstance] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("info");
@@ -98,6 +100,7 @@ export default function OrganizationForm() {
 
   const currentPlan = useMemo(() => plans.find(p => p.id_plano === subscriptionPlan), [plans, subscriptionPlan]);
   const maxUsers = currentPlan?.max_usuarios ?? null;
+  const isSingleUserPlan = maxUsers === 1;
 
   // Upload de logo para Supabase Storage
   const uploadLogo = async (file: File, orgId: string): Promise<string> => {
@@ -171,10 +174,52 @@ export default function OrganizationForm() {
       if (webhookData && webhookData.url) {
         const { error: updateError } = await supabase.from("instancias_whatsapp").update({ url_webhook: webhookData.url }).eq("id", whatsappInstance.id);
         if (updateError) { toast.error("Webhook configurado mas erro ao salvar no banco: " + updateError.message); }
-        else { toast.success("Webhook configurado com sucesso!"); window.location.reload(); }
-      } else { toast.success("Webhook configurado!"); }
+        else {
+          toast.success("Webhook configurado com sucesso!");
+          setActiveTab("whatsapp");
+          await refetchWhatsapp();
+        }
+      } else { toast.success("Webhook configurado!"); setActiveTab("whatsapp"); }
     } catch (error: any) { toast.error(error.message || "Erro ao configurar webhook"); }
     finally { setIsConfiguringWebhook(false); }
+  };
+
+  const handleDisconnectInstance = async () => {
+    if (!whatsappInstance || !id) return;
+    try {
+      setIsDisconnectingInstance(true);
+      setShowDisconnectDialog(false);
+      const webhookBase = import.meta.env.VITE_N8N_WEBHOOK_URL || "https://webhook.agentes-n8n.com.br/webhook/";
+      const payload = {
+        instanceId: whatsappInstance.id_instancia,
+        token: whatsappInstance.token,
+        instanceName: whatsappInstance.nome_instancia,
+        adminField01: (whatsappInstance as any).campo_admin_01,
+        phone: (whatsappInstance as any).telefone ?? (whatsappInstance as any).phone ?? "",
+        organizationId: id,
+        organizationName: organization?.nome ?? "",
+      };
+      const response = await fetch(`${webhookBase.replace(/\/?$/, "/")}apagar-instancia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Erro ao apagar instância no servidor");
+      }
+      const { error: deleteError } = await supabase.from("instancias_whatsapp").delete().eq("id", whatsappInstance.id);
+      if (deleteError) {
+        toast.error("Instância apagada no servidor, mas falha ao remover no banco: " + deleteError.message);
+        return;
+      }
+      await refetchWhatsapp();
+      toast.success("Instância desconectada com sucesso. Conexão do WhatsApp removida.");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao desconectar instância");
+    } finally {
+      setIsDisconnectingInstance(false);
+    }
   };
 
   const handleCreateWorkflow = async () => {
@@ -214,7 +259,7 @@ export default function OrganizationForm() {
     enabled: isEditing,
   });
 
-  const { data: whatsappInstance, isLoading: isLoadingWhatsapp } = useQuery({
+  const { data: whatsappInstance, isLoading: isLoadingWhatsapp, refetch: refetchWhatsapp } = useQuery({
     queryKey: ["whatsapp-instance", id],
     queryFn: async () => {
       if (!id) return null;
@@ -231,7 +276,7 @@ export default function OrganizationForm() {
       if (!id) return [];
       const { data, error } = await (supabase as any)
         .from("perfis")
-        .select("id, nome_completo, funcao, ativo, criado_em, avatar_url")
+        .select("id, nome_completo, funcao, ativo, criado_em, url_avatar")
         .eq("id_organizacao", id)
         .eq("super_admin", false)
         .order("criado_em", { ascending: false });
@@ -259,11 +304,6 @@ export default function OrganizationForm() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: OrganizationFormData) => {
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      if (userError || !currentUser) throw new Error("Sessão expirada. Por favor, faça logout e login novamente.");
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session || !session.access_token) throw new Error("Sessão expirada. Por favor, faça logout e login novamente.");
-
       let logoUrl = currentLogoUrl;
       if (logoFile && id) {
         try {
@@ -282,19 +322,17 @@ export default function OrganizationForm() {
         }).eq('id', id);
         if (error) throw error;
       } else {
-        const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        if (!apikey) throw new Error("Chave de API do Supabase não configurada");
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-organizacao`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": apikey },
-          body: JSON.stringify({
+        const { data: result, error } = await supabase.functions.invoke('criar-organizacao', {
+          body: {
             organizationName: data.name, adminEmail: data.adminEmail, adminPassword: data.adminPassword,
             adminFullName: data.adminFullName, isActive: data.ativo, subscriptionPlan: data.plano_assinatura,
-          }),
+          },
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Erro ao criar organização");
-        const newOrgId = result.organizationId || result.organization_id || result.id;
+        if (error) {
+          const body = await (error as any).context?.json?.().catch(() => null);
+          throw new Error(body?.error || error.message || "Erro ao criar organização");
+        }
+        const newOrgId = result?.organization?.id || result?.organizationId || result?.organization_id;
         if (logoFile && newOrgId) {
           try {
             setUploadingLogo(true);
@@ -309,48 +347,52 @@ export default function OrganizationForm() {
     onError: (error: any) => { toast.error(error.message || "Erro ao salvar organização"); },
   });
 
+  const invokeFunction = async (body: object) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Sessão expirada. Faça login novamente.");
+    const url = `${import.meta.env.VITE_SUPABASE_URL || "https://detsacgocmirxkgjusdf.supabase.co"}/functions/v1/gerenciar-usuarios-organizacao`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+      },
+      body: JSON.stringify(body),
+    });
+    let result: any = {};
+    try { result = await res.json(); } catch {}
+    if (!res.ok) throw new Error(result?.error || result?.message || `Erro HTTP ${res.status}`);
+    if (result?.error) throw new Error(result.error);
+    return result;
+  };
+
   const handleAddUser = async () => {
     if (!newUserForm.nome_completo || !newUserForm.email || !newUserForm.password) { toast.error("Preencha todos os campos"); return; }
     if (!id) { toast.error("Empresa não encontrada"); return; }
     if (isUserLimitReached) { toast.error(`Limite de ${maxUsers} usuários atingido para este plano`); return; }
     try {
       toast.loading("Criando usuário...", { id: "create-user" });
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) throw new Error("Sessão expirada.");
-      const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      if (!apikey) throw new Error("Chave de API não configurada");
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gerenciar-usuarios-organizacao`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": apikey },
-        body: JSON.stringify({ action: "create", organizationId: id, userData: { fullName: newUserForm.nome_completo, email: newUserForm.email, password: newUserForm.password, role: newUserForm.role } }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Erro ao criar usuário");
+      await invokeFunction({ action: "create", organizationId: id, userData: { fullName: newUserForm.nome_completo, email: newUserForm.email, password: newUserForm.password, role: isSingleUserPlan ? "admin" : newUserForm.role } });
       toast.success("Usuário criado com sucesso!", { id: "create-user" });
       setIsAddUserModalOpen(false);
       setNewUserForm({ nome_completo: "", email: "", password: "", role: "profissional" });
       refetchUsers();
-    } catch (error: any) { toast.error(error.message || "Erro ao criar usuário", { id: "create-user" }); }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar usuário", { id: "create-user" });
+    }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
       toast.loading("Deletando usuário...", { id: "delete-user" });
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) throw new Error("Sessão expirada.");
-      const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      if (!apikey) throw new Error("Chave de API não configurada");
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gerenciar-usuarios-organizacao`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": apikey },
-        body: JSON.stringify({ action: "delete", userId }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Erro ao deletar usuário");
+      await invokeFunction({ action: "delete", userId });
       toast.success("Usuário deletado com sucesso!", { id: "delete-user" });
       setUserToDelete(null);
       refetchUsers();
-    } catch (error: any) { toast.error(error.message || "Erro ao deletar usuário", { id: "delete-user" }); }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao deletar usuário", { id: "delete-user" });
+    }
   };
 
   const onSubmit = (data: OrganizationFormData) => saveMutation.mutate(data);
@@ -645,18 +687,50 @@ export default function OrganizationForm() {
                       </div>
                     )}
 
-                    <Button
-                      type="button"
-                      onClick={handleConfigureWebhook}
-                      disabled={isConfiguringWebhook}
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      {isConfiguringWebhook ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Configurando Webhook...</>
-                      ) : (
-                        <><Workflow className="mr-2 h-4 w-4" /> {(whatsappInstance as any).url_webhook ? 'Reconfigurar Webhook' : 'Configurar Webhook'}</>
-                      )}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleConfigureWebhook}
+                        disabled={isConfiguringWebhook || isDisconnectingInstance || whatsappInstance.situacao !== 'conectado'}
+                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {isConfiguringWebhook ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Configurando Webhook...</>
+                        ) : (
+                          <><Workflow className="mr-2 h-4 w-4" /> {(whatsappInstance as any).url_webhook ? 'Reconfigurar Webhook' : 'Configurar Webhook'}</>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        disabled={isConfiguringWebhook || isDisconnectingInstance}
+                        onClick={() => setShowDisconnectDialog(true)}
+                      >
+                        {isDisconnectingInstance ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Desconectando...</>
+                        ) : (
+                          <><Link2Off className="mr-2 h-4 w-4" /> Desconectar</>
+                        )}
+                      </Button>
+                    </div>
+                    <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+                      <AlertDialogContent>
+                        <AlertDialogTitle>Desconectar instância WhatsApp?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Isso removerá a conexão do WhatsApp desta empresa. A instância será apagada no servidor e no sistema. O cliente precisará conectar novamente se quiser usar o WhatsApp.
+                        </AlertDialogDescription>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => { e.preventDefault(); handleDisconnectInstance(); }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Desconectar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ) : (
                   <div className="text-center py-12">
@@ -697,6 +771,9 @@ export default function OrganizationForm() {
                           toast.error(`Limite de ${maxUsers} usuários atingido. Atualize o plano para adicionar mais.`);
                           return;
                         }
+                        if (isSingleUserPlan) {
+                          setNewUserForm(prev => ({ ...prev, role: "admin" }));
+                        }
                         setIsAddUserModalOpen(true);
                       }}
                       className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -736,7 +813,7 @@ export default function OrganizationForm() {
                       <div key={user.id} className="flex items-center justify-between p-4 rounded-xl liquid-glass-subtle transition-all hover:shadow-md">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={(user as any).avatar_url || undefined} alt={user.nome_completo} />
+                            <AvatarImage src={(user as any).url_avatar || undefined} alt={user.nome_completo} />
                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                               {user.nome_completo?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
@@ -846,17 +923,25 @@ export default function OrganizationForm() {
               <Label htmlFor="user_password">Senha *</Label>
               <Input id="user_password" type="password" placeholder="Mínimo 6 caracteres" value={newUserForm.password} onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="user_role">Função *</Label>
-              <Select value={newUserForm.role} onValueChange={(value: any) => setNewUserForm({ ...newUserForm, role: value })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="profissional">Profissional</SelectItem>
-                  <SelectItem value="assistente">Assistente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {isSingleUserPlan ? (
+              <div className="space-y-2">
+                <Label>Função</Label>
+                <p className="text-sm text-muted-foreground py-2">Este plano permite apenas 1 usuário (Administrador).</p>
+                <Input readOnly value="Administrador" className="bg-muted" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="user_role">Função *</Label>
+                <Select value={newUserForm.role} onValueChange={(value: any) => setNewUserForm({ ...newUserForm, role: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="profissional">Profissional</SelectItem>
+                    <SelectItem value="assistente">Assistente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddUserModalOpen(false)}>Cancelar</Button>

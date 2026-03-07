@@ -199,8 +199,12 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
 
       if (data) {
         console.log("Instância encontrada:", data);
-        setDbInstance(data as any);
-        
+        setDbInstance({
+          ...data,
+          admin_field_01: data.campo_admin_01 ?? (data as any).admin_field_01,
+          phone: data.telefone ?? (data as any).phone ?? "",
+        } as any);
+
         // Converter dados do banco para o formato da interface
         const instance: WhatsAppInstance = {
           id: data.id_instancia,
@@ -314,13 +318,16 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
 
       // Salvar no banco de dados
       await saveToDatabase(instance);
-      
+
+      // Carregar instância do banco para ter dbInstance (com phone/telefone) para o botão Gerar QR Code
+      await loadExistingInstance();
+
       // Mostrar card de pareamento
       setInstanceData(instance);
       setIsModalOpen(false);
       setShowPairingCard(true);
       setFormData({ companyName: "", phone: "" });
-      
+
       toast.success("Instância criada com sucesso!");
       
     } catch (error: any) {
@@ -477,18 +484,24 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
     try {
       setIsGeneratingQR(true);
       
+      const phoneNumber = dbInstance.phone ?? (dbInstance as any).telefone ?? "";
       const payload = {
         instanceId: dbInstance.id_instancia,
         token: dbInstance.token,
         instanceName: dbInstance.nome_instancia,
         adminField01: dbInstance.admin_field_01,
-        phone: dbInstance.phone,
+        phone: phoneNumber,
+        telefone: phoneNumber,
         organizationId: organization?.id,
         organizationName: organization?.nome,
       };
-      
+
+      if (!phoneNumber) {
+        console.warn("Número de telefone não encontrado na instância. Verifique o cadastro.");
+      }
+
       console.log("Payload enviado:", payload);
-      
+
       const response = await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}gerar-qrcode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
