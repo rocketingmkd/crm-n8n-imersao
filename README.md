@@ -189,7 +189,7 @@ VITE_GESTAO_VPS_WEBHOOK_URL=https://seu-n8n.com/webhook/gestao-vps-completa
 ## Instalação do Banco
 
 Execute `supabase/instalar_banco_de_dados.sql` uma única vez em um projeto Supabase limpo.
-Veja o guia completo em `supabase/INSTALACAO.md`.
+Veja o guia completo em [documentacao/INSTALACAO_BANCO.md](./documentacao/INSTALACAO_BANCO.md).
 
 ---
 
@@ -197,8 +197,9 @@ Veja o guia completo em `supabase/INSTALACAO.md`.
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [INSTALACAO_VPS.md](./INSTALACAO_VPS.md) | Guia completo para deploy do sistema em uma VPS (Docker, Traefik, HTTPS) |
-| [LOVABLE_CURSOR_GITHUB.md](./LOVABLE_CURSOR_GITHUB.md) | Setup Lovable + Cursor + GitHub no mesmo repositório |
+| [INSTALACAO_VPS.md](./documentacao/INSTALACAO_VPS.md) | Guia completo para deploy do sistema em uma VPS (Docker, Traefik, HTTPS) |
+| [LOVABLE_CURSOR_GITHUB.md](./documentacao/LOVABLE_CURSOR_GITHUB.md) | Setup Lovable + Cursor + GitHub no mesmo repositório |
+| [INSTALACAO_BANCO.md](./documentacao/INSTALACAO_BANCO.md) | Guia de instalação do banco de dados no Supabase |
 
 ---
 
