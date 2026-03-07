@@ -45,6 +45,7 @@ import GestaoVps from "./pages/super-admin/GestaoVps";
 import SuperAdminSettings from "./pages/super-admin/Settings";
 import MinhaConta from "./pages/MinhaConta";
 
+import Instalador from "./pages/Instalador";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/instalador" element={<Instalador />} />
 
               {/* Rotas do Super Admin */}
               <Route element={<SuperAdminRoute><SuperAdminLayout /></SuperAdminRoute>}>

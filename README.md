@@ -200,6 +200,7 @@ Veja o guia completo em [documentacao/INSTALACAO_BANCO.md](./documentacao/INSTAL
 | [INSTALACAO_VPS.md](./documentacao/INSTALACAO_VPS.md) | Guia completo para deploy do sistema em uma VPS (Docker, Traefik, HTTPS) |
 | [LOVABLE_CURSOR_GITHUB.md](./documentacao/LOVABLE_CURSOR_GITHUB.md) | Setup Lovable + Cursor + GitHub no mesmo repositório |
 | [INSTALACAO_BANCO.md](./documentacao/INSTALACAO_BANCO.md) | Guia de instalação do banco de dados no Supabase |
+| [INSTALADOR_AUTOMATICO.md](./documentacao/INSTALADOR_AUTOMATICO.md) | Instalador automático: página `/instalador` que gera script de deploy para VPS |
 
 ---
 

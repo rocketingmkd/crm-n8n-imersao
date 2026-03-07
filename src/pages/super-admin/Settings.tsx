@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { aplicarCorPrimaria } from "@/hooks/useCoresPataforma";
 import { FonteSistema, FONT_OPTIONS, aplicarFonte } from "@/hooks/useFonteSistema";
-import { cn } from "@/lib/utils";
+import { cn, resolverUrlImagem } from "@/lib/utils";
 
 interface ConfiguracoesGlobaisForm {
   whatsapp_suporte: string;
@@ -32,6 +32,7 @@ interface ConfiguracoesGlobaisForm {
 export default function SuperAdminSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [logoError, setLogoError] = useState<{ escuro?: boolean; claro?: boolean }>({});
   const { theme } = useTheme();
   const queryClient = useQueryClient();
 
@@ -39,6 +40,8 @@ export default function SuperAdminSettings() {
 
   const corPrimaria = watch('cor_primaria');
   const fonteSistema = watch('fonte_sistema');
+  const urlLogoPlataforma = watch('url_logo_plataforma');
+  const urlLogoPlataformaEscuro = watch('url_logo_plataforma_escuro');
 
   useEffect(() => {
     if (corPrimaria) aplicarCorPrimaria(corPrimaria, theme === 'dark');
@@ -182,10 +185,50 @@ export default function SuperAdminSettings() {
                     <div className="space-y-2">
                       <Label htmlFor="url_logo_plataforma" className="text-foreground text-xs font-medium">Logo (fundo escuro)</Label>
                       <Input id="url_logo_plataforma" {...register("url_logo_plataforma")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
+                      <div className="rounded-xl border border-border overflow-hidden bg-zinc-800 p-4 flex flex-col items-center justify-center min-h-[80px] gap-2">
+                        {urlLogoPlataforma?.trim() ? (
+                          <>
+                            <img
+                              src={resolverUrlImagem(urlLogoPlataforma) || urlLogoPlataforma.trim()}
+                              alt="Preview logo fundo escuro"
+                              className="max-h-16 w-auto object-contain"
+                              onError={(e) => {
+                                const el = e.target as HTMLImageElement;
+                                el.style.display = 'none';
+                                const fallback = el.parentElement?.querySelector('[data-logo-error]') as HTMLElement;
+                                if (fallback) fallback.classList.remove('hidden');
+                              }}
+                            />
+                            <span data-logo-error className="hidden text-xs text-amber-400">Não foi possível carregar a imagem</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-zinc-400">Preview do logo no banco (fundo escuro)</span>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="url_logo_plataforma_escuro" className="text-foreground text-xs font-medium">Logo (fundo claro)</Label>
                       <Input id="url_logo_plataforma_escuro" {...register("url_logo_plataforma_escuro")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
+                      <div className="rounded-xl border border-border overflow-hidden bg-zinc-100 dark:bg-zinc-200 p-4 flex flex-col items-center justify-center min-h-[80px] gap-2">
+                        {urlLogoPlataformaEscuro?.trim() ? (
+                          <>
+                            <img
+                              src={resolverUrlImagem(urlLogoPlataformaEscuro) || urlLogoPlataformaEscuro.trim()}
+                              alt="Preview logo fundo claro"
+                              className="max-h-16 w-auto object-contain"
+                              onError={(e) => {
+                                const el = e.target as HTMLImageElement;
+                                el.style.display = 'none';
+                                const fallback = el.parentElement?.querySelector('[data-logo-error]') as HTMLElement;
+                                if (fallback) fallback.classList.remove('hidden');
+                              }}
+                            />
+                            <span data-logo-error className="hidden text-xs text-amber-500">Não foi possível carregar a imagem</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-zinc-500 dark:text-zinc-600">Preview do logo no banco (fundo claro)</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {saveButton}
