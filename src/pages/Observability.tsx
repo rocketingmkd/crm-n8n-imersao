@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { HardDrive, Laptop, Brain, Workflow, Info, RefreshCw, Server, Wifi, Cpu, MemoryStick, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -44,7 +45,7 @@ interface PerfPoint {
 
 const MAX_PERF_POINTS = 60;
 
-function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: WorkerInfo; perfHistory: PerfPoint[]; defaultOpen?: boolean }) {
+function WorkerCard({ worker, perfHistory, defaultOpen = false, t }: { worker: WorkerInfo; perfHistory: PerfPoint[]; defaultOpen?: boolean; t: (k: string) => string }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [jobsOpen, setJobsOpen] = useState(true);
   const [networkOpen, setNetworkOpen] = useState(false);
@@ -68,7 +69,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
             </Badge>
             {worker.currentJobs > 0 && (
               <Badge variant="outline" className="text-[10px] h-5 border-amber-500 text-amber-600 dark:text-amber-400">
-                {worker.currentJobs} job(s)
+                {worker.currentJobs} {t("superAdmin.observability.workerCount")}
               </Badge>
             )}
           </div>
@@ -98,15 +99,15 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
         {/* Current Jobs */}
         <div className="border-b border-border">
           <button onClick={() => setJobsOpen(!jobsOpen)} className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
-            <span>Current Jobs ({worker.currentJobs})</span>
+            <span>{t("superAdmin.observability.currentJobs")} ({worker.currentJobs})</span>
             {jobsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </button>
           {jobsOpen && (
             <div className="px-4 pb-3 text-sm text-muted-foreground">
               {worker.currentJobs === 0 ? (
-                <p className="italic">No current jobs</p>
+                <p className="italic">{t("superAdmin.observability.noCurrentJobs")}</p>
               ) : (
-                <p>{worker.currentJobs} job(s) em execução</p>
+                <p>{worker.currentJobs} {t("superAdmin.observability.jobsRunning")}</p>
               )}
             </div>
           )}
@@ -116,7 +117,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
         {worker.networkInterfaces.length > 0 && (
           <div className="border-b border-border">
             <button onClick={() => setNetworkOpen(!networkOpen)} className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
-              <span className="flex items-center gap-2"><Wifi className="h-3.5 w-3.5" /> Network Interfaces ({worker.networkInterfaces.length})</span>
+              <span className="flex items-center gap-2"><Wifi className="h-3.5 w-3.5" /> {t("superAdmin.observability.networkInterfaces")} ({worker.networkInterfaces.length})</span>
               {networkOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </button>
             {networkOpen && (
@@ -132,13 +133,13 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
         {/* Performance Monitoring */}
         <div className="border-b border-border">
           <button onClick={() => setPerfOpen(!perfOpen)} className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
-            <span className="flex items-center gap-2"><Cpu className="h-3.5 w-3.5" /> Performance Monitoring</span>
+            <span className="flex items-center gap-2"><Cpu className="h-3.5 w-3.5" /> {t("superAdmin.observability.performanceMonitoring")}</span>
             {perfOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </button>
           {perfOpen && (
             <div className="px-4 pb-4 space-y-4">
               {/* Job Count */}
-              <p className="text-xs font-semibold text-foreground">Contador de Jobs</p>
+              <p className="text-xs font-semibold text-foreground">{t("superAdmin.observability.jobCounter")}</p>
               <ChartContainer config={workerJobChartConfig} className="h-[140px] w-full">
                 <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
@@ -146,12 +147,12 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} allowDecimals={false} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="jobs" name="Jobs em execução" stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                  <Line type="monotone" dataKey="jobs" name={t("superAdmin.observability.jobsInExecution")} stroke="hsl(0, 72%, 60%)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive animationDuration={600} animationEasing="ease-out" />
                 </LineChart>
               </ChartContainer>
 
               {/* CPU */}
-              <p className="text-xs font-semibold text-foreground">Uso de CPU (%)</p>
+              <p className="text-xs font-semibold text-foreground">{t("superAdmin.observability.cpuUsage")}</p>
               <ChartContainer config={workerCpuChartConfig} className="h-[140px] w-full">
                 <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
@@ -164,7 +165,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
               </ChartContainer>
 
               {/* Memória */}
-              <p className="text-xs font-semibold text-foreground">Uso de Memória (%)</p>
+              <p className="text-xs font-semibold text-foreground">{t("superAdmin.observability.memoryUsage")}</p>
               <ChartContainer config={workerMemChartConfig} className="h-[140px] w-full">
                 <LineChart data={perfHistory} margin={{ left: 4, right: 4, top: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
@@ -182,20 +183,20 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
         {/* Memory Monitoring */}
         <div>
           <button onClick={() => setMemOpen(!memOpen)} className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
-            <span className="flex items-center gap-2"><MemoryStick className="h-3.5 w-3.5" /> Memory Monitoring</span>
+            <span className="flex items-center gap-2"><MemoryStick className="h-3.5 w-3.5" /> {t("superAdmin.observability.memoryMonitoring")}</span>
             {memOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </button>
           {memOpen && (
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Host/OS Memory:</p>
+                <p className="text-xs font-semibold text-foreground mb-1">{t("superAdmin.observability.hostOsMemory")}</p>
                 <div className="space-y-0.5 text-xs text-muted-foreground pl-2">
                   <p>Total (os.totalmem): {worker.hostMemory.totalGb}GB</p>
                   <p>Free (os.freemem): {worker.hostMemory.freeGb}GB</p>
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Process Memory:</p>
+                <p className="text-xs font-semibold text-foreground mb-1">{t("superAdmin.observability.processMemory")}</p>
                 <div className="space-y-0.5 text-xs text-muted-foreground pl-2">
                   <p>RSS (process.memoryUsage().rss): {worker.processMemory.rss}MB</p>
                   <p>Heap total (process.memoryUsage().heapTotal): {worker.processMemory.heapTotal}MB</p>
@@ -213,6 +214,7 @@ function WorkerCard({ worker, perfHistory, defaultOpen = false }: { worker: Work
 }
 
 export default function Observability({ hideHeader = false }: { hideHeader?: boolean }) {
+  const { t } = useTranslation();
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(3_000);
   const [allWorkersExpanded, setAllWorkersExpanded] = useState(false);
   const [workerToggleKey, setWorkerToggleKey] = useState(0);
@@ -455,8 +457,8 @@ export default function Observability({ hideHeader = false }: { hideHeader?: boo
           <Card className="border-border">
             <CardContent className="py-8 text-center text-muted-foreground">
               <Workflow className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Nenhum worker encontrado.</p>
-              <p className="text-xs mt-1">Configure a API key do n8n no workflow para ver os workers.</p>
+              <p>{t("superAdmin.observability.noWorkersFound")}</p>
+              <p className="text-xs mt-1">{t("superAdmin.observability.configureApiKey")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -467,6 +469,7 @@ export default function Observability({ hideHeader = false }: { hideHeader?: boo
                 worker={w}
                 perfHistory={workerPerfHistory.current[w.id || w.name] || []}
                 defaultOpen={workers.length === 1 || allWorkersExpanded}
+                t={t}
               />
             ))}
           </div>

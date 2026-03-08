@@ -10,6 +10,13 @@ Plataforma SaaS multi-tenant para gestão inteligente de empresas de atendimento
 
 ## Funcionalidades
 
+### Plataforma (geral)
+
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| **Sistema multilíngue** | Interface em **Português (pt-BR)**, **Inglês** e **Espanhol**. Seletor de idioma (ícone de globo) no header e na tela de login. Idioma salvo em `localStorage`. |
+| **Instalador automático** | Página `/instalador` (senha: `#flowgrammersInstall2026`) gera script bash para deploy na VPS. Passo a passo do Supabase, formulário (projeto, banco, VPS) e download do script. Ver [INSTALADOR_AUTOMATICO.md](./documentacao/INSTALADOR_AUTOMATICO.md). |
+
 ### Área da Organização
 
 Funcionalidades disponíveis para usuários de cada organização (empresa/clínica) cadastrada no sistema.
@@ -135,7 +142,7 @@ Funcionalidades exclusivas para usuários com perfil `super_admin`. Acesso em `/
 - Requer webhook `VITE_GESTAO_VPS_WEBHOOK_URL` configurado
 
 #### Configs (Super Admin)
-- **Aba Visual**: nome da plataforma, frase de login, logos (claro/escuro), cor primária, fonte do sistema
+- **Aba Visual**: nome da plataforma, frase de login, logos (claro/escuro) com preview em tempo real, cor primária, fonte do sistema
 - **Aba IA & Voz**: chave OpenAI, chave ElevenLabs, ID da voz ElevenLabs
 - **Aba Dados de suporte**: WhatsApp e email de suporte
 - Configurações aplicadas globalmente (whitelabel)
@@ -147,6 +154,7 @@ Funcionalidades exclusivas para usuários com perfil `super_admin`. Acesso em `/
 | Camada | Tecnologia |
 |--------|-----------|
 | Frontend | React 18 + TypeScript + Vite (SWC) |
+| i18n | i18next + react-i18next (pt-BR, en, es) |
 | Estilo | Tailwind CSS 3 + shadcn/ui |
 | Server state | TanStack React Query v5 |
 | Roteamento | React Router DOM v6 |
@@ -213,6 +221,7 @@ Veja o guia completo em [documentacao/INSTALACAO_BANCO.md](./documentacao/INSTAL
 - **Entidade configurável**: o rótulo "Cliente/Clientes" é personalizável por organização
 - **Banco em Português**: todas as tabelas, colunas e enums em snake_case PT-BR
 - **n8n integrado**: automações de atendimento, agendamento, follow-up e RAG via webhooks
+- **Multilíngue**: interface traduzida em pt-BR (padrão), inglês e espanhol; idioma persistido em `localStorage`
 
 ---
 

@@ -27,6 +27,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface WhatsAppInstance {
   id: string;
@@ -51,6 +52,7 @@ interface DBInstance {
 }
 
 export default function Integrations({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { organization, profile } = useAuth();
   const padding = embedded ? "" : "p-4 md:p-6 lg:p-8";
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -577,7 +579,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">{t('app.integrations.loading')}</p>
         </div>
       </div>
     );
@@ -593,11 +595,11 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
             <MessageSquare className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">WhatsApp</h1>
-            <p className="text-sm text-muted-foreground">Sua instância está ativa e funcionando</p>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">{t('app.integrations.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('app.integrations.subtitle')}</p>
           </div>
           <Badge className="ml-auto bg-success/10 text-success border-success/20 gap-1.5">
-            <Wifi className="h-3 w-3" /> Conectado
+            <Wifi className="h-3 w-3" /> {t('app.integrations.connected')}
           </Badge>
         </div>
 
@@ -630,10 +632,10 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Empresa", value: instanceDetails.adminField01 || instanceData?.adminField01 },
-                { label: "Plataforma", value: instanceDetails.plataform || "N/A" },
-                { label: "Tipo", value: instanceDetails.isBusiness ? "Business" : "Pessoal" },
-                { label: "Telefone", value: instanceDetails.owner || "N/A" },
+                { label: t('app.integrations.company'), value: instanceDetails.adminField01 || instanceData?.adminField01 },
+                { label: t('app.integrations.platform'), value: instanceDetails.plataform || "N/A" },
+                { label: t('app.integrations.type'), value: instanceDetails.isBusiness ? t('app.integrations.business') : t('app.integrations.personal') },
+                { label: t('app.integrations.phoneLabel'), value: instanceDetails.owner || "N/A" },
               ].map((item) => (
                 <div key={item.label} className="rounded-xl bg-secondary/30 p-3 space-y-1">
                   <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -651,7 +653,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                 disabled={isDeletingInstance}
               >
                 <Trash2 className="h-4 w-4" />
-                Desconectar Instância
+                {t('app.integrations.disconnectInstance')}
               </Button>
             </div>
           </div>
@@ -661,13 +663,13 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Apagar Instância do WhatsApp?</AlertDialogTitle>
+              <AlertDialogTitle>{t('app.integrations.deleteInstance')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta ação não pode ser desfeita. A instância <strong>{instanceDetails?.name}</strong> será permanentemente removida.
+                {t('app.integrations.deleteInstanceDesc')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeletingInstance}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={isDeletingInstance}>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
@@ -679,12 +681,12 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                 {isDeletingInstance ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Apagando...
+                    {t('app.integrations.deleting')}
                   </>
                 ) : (
                   <>
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Apagar
+                    {t('app.integrations.delete')}
                   </>
                 )}
               </AlertDialogAction>
@@ -707,13 +709,13 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
             <MessageSquare className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">WhatsApp</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">{t('app.integrations.title')}</h1>
             <p className="text-sm text-muted-foreground">
-              {isConnected ? "Sua instância está conectada" : "Escaneie o QR Code para conectar"}
+              {isConnected ? t('app.integrations.instanceConnected') : t('app.integrations.scanToConnect')}
             </p>
           </div>
           <Badge className={`ml-auto gap-1.5 ${isConnected ? "bg-success/10 text-success border-success/20" : "bg-primary/10 text-primary border-primary/20"}`}>
-            {isConnected ? <><Wifi className="h-3 w-3" /> Conectado</> : <><WifiOff className="h-3 w-3" /> Aguardando</>}
+            {isConnected ? <><Wifi className="h-3 w-3" /> {t('app.integrations.connected')}</> : <><WifiOff className="h-3 w-3" /> {t('app.integrations.waiting')}</>}
           </Badge>
         </div>
 
@@ -723,9 +725,9 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
             <div className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { label: "Empresa", value: instanceData.adminField01 },
-                  { label: "Telefone", value: instanceData.phone },
-                  { label: "Instance ID", value: dbInstance.id_instancia, mono: true },
+                  { label: t('app.integrations.company'), value: instanceData.adminField01 },
+                  { label: t('app.integrations.phoneLabel'), value: instanceData.phone },
+                  { label: t('app.integrations.instanceId'), value: dbInstance.id_instancia, mono: true },
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl bg-secondary/30 p-3 space-y-1">
                     <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -774,11 +776,11 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-foreground flex items-center justify-center gap-2">
-                          <ScanLine className="h-4 w-4 text-primary" /> Escaneie com seu WhatsApp
+                          <ScanLine className="h-4 w-4 text-primary" /> {t('app.integrations.scanQR')}
                         </p>
                         {isCheckingConnection && (
                           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                            <Loader2 className="h-3 w-3 animate-spin text-primary" /> Verificando conexão...
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" /> {t('app.integrations.checkingConnection')}
                           </p>
                         )}
                       </div>
@@ -789,7 +791,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                         <Link2 className="h-8 w-8 text-primary" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Código de Pareamento</p>
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">{t('app.integrations.pairingCode')}</p>
                         <p className="text-4xl md:text-5xl font-bold text-foreground tracking-[0.3em] font-mono">{dbInstance.pairing_code}</p>
                       </div>
                       <Button
@@ -797,15 +799,15 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                         size="sm"
                         onClick={() => {
                           navigator.clipboard.writeText(dbInstance.pairing_code || "");
-                          toast.success("Código copiado!");
+                          toast.success(t('app.integrations.codeCopied'));
                         }}
                         className="gap-2 mx-auto"
                       >
-                        <Copy className="h-4 w-4" /> Copiar Código
+                        <Copy className="h-4 w-4" /> {t('app.integrations.copyCode')}
                       </Button>
                       {isCheckingConnection && (
                         <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                          <Loader2 className="h-3 w-3 animate-spin text-primary" /> Verificando conexão...
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" /> {t('app.integrations.checkingConnection')}
                         </p>
                       )}
                     </div>
@@ -823,7 +825,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                         <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-muted-foreground/20 rounded-bl-xl" />
                         <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-muted-foreground/20 rounded-br-xl" />
                       </div>
-                      <p className="text-sm text-muted-foreground">Clique em "Gerar QR Code" para começar</p>
+                      <p className="text-sm text-muted-foreground">{t('app.integrations.clickToGenerateQR')}</p>
                     </div>
                   )}
                 </div>
@@ -834,13 +836,13 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                 <Card className="card-luxury">
                   <div className="p-5 space-y-4">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
-                      <Smartphone className="h-5 w-5 text-primary" /> Como conectar
+                      <Smartphone className="h-5 w-5 text-primary" /> {t('app.integrations.howToConnect')}
                     </h3>
                     <div className="space-y-3">
                       {[
-                        "Abra o WhatsApp no seu celular",
-                        "Vá em Configurações → Aparelhos conectados → Conectar um aparelho",
-                        "Escaneie o QR Code ou insira o código de pareamento",
+                        t('app.integrations.step1'),
+                        t('app.integrations.step2'),
+                        t('app.integrations.step3'),
                       ].map((step, i) => (
                         <div key={i} className="flex gap-3 items-start">
                           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
@@ -863,9 +865,9 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                   className="w-full gap-2"
                 >
                   {isGeneratingQR ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Gerando QR Code...</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> {t('app.integrations.generatingQR')}</>
                   ) : (
-                    <><QrCode className="h-5 w-5" /> Gerar QR Code</>
+                    <><QrCode className="h-5 w-5" /> {t('app.integrations.generateQR')}</>
                   )}
                 </Button>
 
@@ -876,7 +878,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                       <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                       <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
-                    <span>Aguardando conexão...</span>
+                    <span>{t('app.integrations.waitingConnection')}</span>
                   </div>
                 )}
               </div>
@@ -904,9 +906,9 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
             </div>
 
             <div className="space-y-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Conecte seu WhatsApp</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('app.integrations.connectWhatsApp')}</h1>
               <p className="text-base text-muted-foreground leading-relaxed">
-                Integre o WhatsApp da sua empresa e comece a atender seus clientes automaticamente
+                {t('app.integrations.connectDesc')}
               </p>
             </div>
 
@@ -916,7 +918,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
               className="gap-2 text-lg px-10 py-6"
             >
               <MessageSquare className="h-5 w-5" />
-              Comece por aqui
+              {t('app.integrations.startHere')}
             </Button>
           </div>
         </div>
@@ -926,42 +928,42 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" /> Conectar WhatsApp
+                <MessageSquare className="h-5 w-5 text-primary" /> {t('app.integrations.connectModal')}
               </DialogTitle>
               <DialogDescription>
-                Preencha os dados abaixo para integrar seu WhatsApp Business
+                {t('app.integrations.connectModalDesc')}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="companyName">Nome da Empresa *</Label>
+                <Label htmlFor="companyName">{t('app.integrations.companyName')}</Label>
                 <Input
                   id="companyName"
                   value={formData.companyName}
                   onChange={(e) =>
                     setFormData({ ...formData, companyName: e.target.value })
                   }
-                  placeholder="ex: minha-empresa"
+                  placeholder={t('app.integrations.companyPlaceholder')}
                   disabled={isConnecting}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Será usado como identificador único (sem espaços)
+                  {t('app.integrations.companyHint')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone do WhatsApp *</Label>
+                <Label htmlFor="phone">{t('app.integrations.phone')}</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
                   onChange={handlePhoneChange}
-                  placeholder="(11) 98888-8888"
+                  placeholder={t('app.integrations.phonePlaceholder')}
                   disabled={isConnecting}
                   maxLength={15}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Número que será conectado ao WhatsApp Business
+                  {t('app.integrations.phoneHint')}
                 </p>
               </div>
             </div>
@@ -973,7 +975,7 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                 onClick={() => setIsModalOpen(false)}
                 disabled={isConnecting}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button
                 type="button"
@@ -984,12 +986,12 @@ export default function Integrations({ embedded = false }: { embedded?: boolean 
                 {isConnecting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Conectando...
+                    {t('app.integrations.connecting')}
                   </>
                 ) : (
                   <>
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Conectar
+                    {t('app.integrations.connect')}
                   </>
                 )}
               </Button>

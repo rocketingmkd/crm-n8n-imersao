@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, ChevronLeft, ChevronRight, Clock, User, Plus, RefreshCw, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -55,19 +56,21 @@ interface WorkSchedule {
   duracao_atendimento: number; // Duração do atendimento em minutos (15-240)
 }
 
-const diasDaSemana = [
-  { key: 'domingo', nome: "Domingo" },
-  { key: 'segunda', nome: "Segunda-feira" },
-  { key: 'terca', nome: "Terça-feira" },
-  { key: 'quarta', nome: "Quarta-feira" },
-  { key: 'quinta', nome: "Quinta-feira" },
-  { key: 'sexta', nome: "Sexta-feira" },
-  { key: 'sabado', nome: "Sábado" },
-] as const;
+const diasDaSemanaKeys = [
+  { key: 'domingo' as const, tKey: 'sunday' },
+  { key: 'segunda' as const, tKey: 'monday' },
+  { key: 'terca' as const, tKey: 'tuesday' },
+  { key: 'quarta' as const, tKey: 'wednesday' },
+  { key: 'quinta' as const, tKey: 'thursday' },
+  { key: 'sexta' as const, tKey: 'friday' },
+  { key: 'sabado' as const, tKey: 'saturday' },
+];
 
-type DayKey = typeof diasDaSemana[number]['key'];
+type DayKey = typeof diasDaSemanaKeys[number]['key'];
 
 export default function Agenda() {
+  const { t } = useTranslation();
+  const diasDaSemana = diasDaSemanaKeys.map((d) => ({ key: d.key, nome: t(`app.agenda.${d.tKey}`) }));
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -207,7 +210,7 @@ export default function Agenda() {
       }
     } catch (error) {
       console.error('❌ Erro ao carregar horários:', error);
-      toast.error('Erro ao carregar horários de trabalho');
+      toast.error(t('app.agenda.scheduleError'));
       
       // Em caso de erro, criar horários padrão
       const defaultSchedule: WorkSchedule = {
@@ -228,12 +231,12 @@ export default function Agenda() {
 
   const saveWorkSchedules = async () => {
     if (!profile?.id || !organizationId || !workSchedule) {
-      toast.error('Erro: usuário não identificado');
+      toast.error(t('app.agenda.userNotFound'));
       return;
     }
 
     try {
-      toast.loading('Salvando horários...', { id: 'save-schedules' });
+      toast.loading(t('app.agenda.savingSchedule'), { id: 'save-schedules' });
 
       // Converter estrutura da UI para banco
       const dataToSave = {
@@ -296,12 +299,12 @@ export default function Agenda() {
 
       if (error) throw error;
 
-      toast.success('Horários salvos com sucesso!', { id: 'save-schedules' });
+      toast.success(t('app.agenda.scheduleSaved'), { id: 'save-schedules' });
       setIsWorkScheduleModalOpen(false);
       loadWorkSchedules();
     } catch (error) {
       console.error('❌ Erro ao salvar horários:', error);
-      toast.error('Erro ao salvar horários', { id: 'save-schedules' });
+      toast.error(t('app.agenda.scheduleSaveError'), { id: 'save-schedules' });
     }
   };
 
@@ -593,7 +596,7 @@ export default function Agenda() {
   const handleCreateAppointment = async () => {
     // Validação
     if (!formData.start_date || !formData.start_time || !formData.end_date || !formData.end_time || !formData.id_contato || !formData.type) {
-      toast.error("Preencha todos os campos obrigatórios");
+      toast.error(t('app.agenda.fillRequired'));
       return;
     }
 
@@ -602,7 +605,7 @@ export default function Agenda() {
     const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
     
     if (endDateTime <= startDateTime) {
-      toast.error("Data/hora de fim deve ser posterior ao início");
+      toast.error(t('app.agenda.endAfterStart'));
       return;
     }
 
@@ -630,7 +633,7 @@ export default function Agenda() {
     });
 
     if (hasConflict) {
-      toast.error("Já existe um agendamento neste horário. Por favor, escolha outro horário.");
+      toast.error(t('app.agenda.slotConflict'));
       return;
     }
 
@@ -661,7 +664,7 @@ export default function Agenda() {
 
       // Validar organization_id
       if (!organizationId) {
-        toast.error("Erro: Organização não identificada");
+        toast.error(t('app.agenda.orgNotFound'));
         return;
       }
 
@@ -716,7 +719,7 @@ export default function Agenda() {
       window.location.reload();
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
-      toast.error("Erro ao criar agendamento");
+      toast.error(t('app.agenda.createError'));
     }
   };
 
@@ -734,12 +737,12 @@ export default function Agenda() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, allAppointments.length, contacts.length]);
 
-  if (isLoading) {
+    if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando agenda...</p>
+          <p className="text-muted-foreground">{t('app.agenda.loading')}</p>
         </div>
       </div>
     );
@@ -751,10 +754,10 @@ export default function Agenda() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
         <div>
           <h1 className="font-display text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground mb-1">
-            Agenda
+            {t('app.agenda.title')}
           </h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            Gerencie sua agenda com precisão
+            {t('app.agenda.subtitle')}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -763,7 +766,7 @@ export default function Agenda() {
             className="flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-foreground transition-all hover:bg-secondary w-full sm:w-auto"
           >
             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            Hoje
+            {t('app.agenda.today')}
           </button>
           <button 
             onClick={handleRefresh}
@@ -771,21 +774,21 @@ export default function Agenda() {
             className="flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-foreground transition-all hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             <RefreshCw className={cn("h-3.5 w-3.5 md:h-4 md:w-4", isLoading && "animate-spin")} />
-            Atualizar
+            {t('app.agenda.refresh')}
           </button>
           <button 
             onClick={() => setIsWorkScheduleModalOpen(true)}
             className="flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-foreground transition-all hover:bg-secondary w-full sm:w-auto"
           >
             <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            Horários
+            {t('app.agenda.schedule')}
           </button>
           <button 
             onClick={handleOpenCreateModal}
             className="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-accent-foreground transition-all hover:shadow-[0_0_40px_hsl(var(--accent)/0.4)] hover-scale w-full sm:w-auto"
           >
             <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            Novo Evento
+            {t('app.agenda.newEvent')}
         </button>
         </div>
       </div>
@@ -826,7 +829,7 @@ export default function Agenda() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {mode === "day" ? "Dia" : mode === "week" ? "Semana" : "Mês"}
+              {mode === "day" ? t('app.agenda.day') : mode === "week" ? t('app.agenda.week') : t('app.agenda.month')}
             </button>
           ))}
         </div>
@@ -955,9 +958,9 @@ export default function Agenda() {
       {viewMode === "month" && (
         <div className="liquid-glass p-3 md:p-4 lg:p-6 animate-fade-in-up">
           <div className="grid grid-cols-7 gap-1.5 md:gap-2 lg:gap-3">
-            {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
-              <div key={day} className="text-center pb-1 md:pb-2">
-                <span className="text-caption text-[9px] md:text-[10px] lg:text-xs">{day}</span>
+            {["dom", "seg", "ter", "qua", "qui", "sex", "sab"].map((dayKey) => (
+              <div key={dayKey} className="text-center pb-1 md:pb-2">
+                <span className="text-caption text-[9px] md:text-[10px] lg:text-xs">{t(`app.agenda.dayShort.${dayKey}`)}</span>
               </div>
             ))}
 

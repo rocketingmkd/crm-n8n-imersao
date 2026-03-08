@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +33,7 @@ function LabelComTooltip({ htmlFor, children, tooltip }: { htmlFor?: string; chi
 }
 
 export default function Instalador() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [autenticado, setAutenticado] = useState(false);
   const [senhaDigitada, setSenhaDigitada] = useState("");
@@ -56,7 +59,7 @@ export default function Instalador() {
       setErroSenha(false);
     } else {
       setErroSenha(true);
-      toast.error("Senha incorreta");
+      toast.error(t('installer.wrongPassword'));
     }
   };
 
@@ -259,7 +262,10 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
 
   if (!autenticado) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4 relative">
+        <div className="fixed top-4 right-4 z-50">
+          <LanguageSelector />
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -267,28 +273,28 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
                 <Lock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle>Instalador FlowAtend</CardTitle>
-                <CardDescription>Área restrita. Informe a senha de acesso.</CardDescription>
+                <CardTitle>{t('installer.title')}</CardTitle>
+                <CardDescription>{t('installer.restricted')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="senha">Senha</Label>
+              <Label htmlFor="senha">{t('installer.password')}</Label>
               <Input
                 id="senha"
                 type="password"
-                placeholder="Digite a senha"
+                placeholder={t('installer.passwordPlaceholder')}
                 value={senhaDigitada}
                 onChange={(e) => { setSenhaDigitada(e.target.value); setErroSenha(false); }}
                 onKeyDown={(e) => e.key === "Enter" && handleVerificarSenha()}
                 className={erroSenha ? "border-red-500" : ""}
               />
-              {erroSenha && <p className="text-xs text-red-500">Senha incorreta</p>}
+              {erroSenha && <p className="text-xs text-red-500">{t('installer.wrongPassword')}</p>}
             </div>
-            <Button onClick={handleVerificarSenha} className="w-full">Acessar</Button>
+            <Button onClick={handleVerificarSenha} className="w-full">{t('installer.access')}</Button>
             <Button variant="ghost" onClick={() => navigate("/")} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" /> Voltar
+              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
             </Button>
           </CardContent>
         </Card>
@@ -298,21 +304,26 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
 
   return (
     <TooltipProvider>
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 md:p-6 relative">
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Server className="h-8 w-8 text-primary" />
-              Instalador Automático FlowAtend
+              {t('installer.title')}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Gere o script de instalação e faça o deploy na sua VPS em poucos passos.
+              {t('installer.subtitle')}
             </p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
-            <ArrowLeft className="h-4 w-4" /> Voltar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
+            </Button>
+          </div>
         </div>
 
         {/* Passo a passo: criar banco no Supabase — FAÇA PRIMEIRO */}
@@ -320,10 +331,10 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Database className="h-5 w-5 text-primary" />
-              Passo a passo: criar o banco no Supabase
+              {t('installer.supabaseSteps')}
             </CardTitle>
             <CardDescription>
-              Faça isso primeiro, antes de preencher os dados abaixo. Sem o banco configurado, o app não funcionará.
+              {t('installer.supabaseStepsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -352,7 +363,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
               </li>
             </ol>
             <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
-              Depois de concluir os passos acima, preencha a aba <strong>Banco</strong> com os dados copiados.
+              {t('installer.afterSteps')}
             </p>
           </CardContent>
         </Card>
@@ -360,31 +371,31 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
         <Tabs defaultValue="projeto" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="projeto" className="gap-2">
-              <FileArchive className="h-4 w-4" /> Projeto
+              <FileArchive className="h-4 w-4" /> {t('installer.project')}
             </TabsTrigger>
             <TabsTrigger value="banco" className="gap-2">
-              <Database className="h-4 w-4" /> Banco
+              <Database className="h-4 w-4" /> {t('installer.database')}
             </TabsTrigger>
             <TabsTrigger value="vps" className="gap-2">
-              <Server className="h-4 w-4" /> VPS
+              <Server className="h-4 w-4" /> {t('installer.vps')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="projeto" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Fonte do Projeto</CardTitle>
-                <CardDescription>De onde obter o código do FlowAtend</CardDescription>
+                <CardTitle>{t('installer.projectSource')}</CardTitle>
+                <CardDescription>{t('installer.projectSourceDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" checked={fonteProjeto === "github"} onChange={() => setFonteProjeto("github")} />
-                    GitHub (recomendado)
+                    {t('installer.github')}
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" checked={fonteProjeto === "zip"} onChange={() => setFonteProjeto("zip")} />
-                    Arquivo ZIP
+                    {t('installer.zip')}
                   </label>
                 </div>
                 {fonteProjeto === "github" && (
@@ -393,7 +404,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                       htmlFor="githubRepo"
                       tooltip="Onde encontrar: No GitHub, abra o repositório e clique em Code → copie a URL HTTPS. Para que serve: O script clona este repositório para fazer o build do projeto."
                     >
-                      URL do repositório
+                      {t('installer.repoUrl')}
                     </LabelComTooltip>
                     <Input
                       id="githubRepo"
@@ -419,8 +430,8 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </p>
             <Card>
               <CardHeader>
-                <CardTitle>Supabase</CardTitle>
-                <CardDescription>Dados do banco de dados (Project Settings → API)</CardDescription>
+                <CardTitle>{t('installer.supabase')}</CardTitle>
+                <CardDescription>{t('installer.supabaseDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -428,7 +439,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="supabaseUrl"
                     tooltip="Onde encontrar: Supabase Dashboard → Project Settings → API → Project URL. Para que serve: URL do backend (banco, auth, storage) usado pelo app."
                   >
-                    URL
+                    {t('installer.url')}
                   </LabelComTooltip>
                   <Input id="supabaseUrl" placeholder="https://xxx.supabase.co" value={supabaseUrl} onChange={(e) => setSupabaseUrl(e.target.value)} />
                 </div>
@@ -437,7 +448,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="supabaseKey"
                     tooltip="Onde encontrar: Supabase Dashboard → Project Settings → API → Project API keys → anon public. Para que serve: Chave pública para o frontend conectar ao Supabase (segura para expor no navegador)."
                   >
-                    Chave pública (anon key)
+                    {t('installer.publicKey')}
                   </LabelComTooltip>
                   <Input id="supabaseKey" placeholder="eyJ..." value={supabaseKey} onChange={(e) => setSupabaseKey(e.target.value)} type="password" />
                 </div>
@@ -446,7 +457,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="supabaseProjectId"
                     tooltip="Onde encontrar: Supabase Dashboard → Project Settings → General → Reference ID (ou na URL do projeto). Para que serve: Identificador único do projeto no Supabase."
                   >
-                    Project ID
+                    {t('installer.projectId')}
                   </LabelComTooltip>
                   <Input id="supabaseProjectId" placeholder="abcdefghijkl" value={supabaseProjectId} onChange={(e) => setSupabaseProjectId(e.target.value)} />
                 </div>
@@ -455,7 +466,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="n8nWebhookUrl"
                     tooltip="Onde encontrar: No n8n, crie um nó Webhook e copie a URL de produção. Para que serve: Webhook base para automações (WhatsApp, agendamento, etc.). Opcional."
                   >
-                    Webhook n8n (opcional)
+                    {t('installer.n8nWebhook')}
                   </LabelComTooltip>
                   <Input id="n8nWebhookUrl" placeholder="https://seu-n8n.com/webhook/..." value={n8nWebhookUrl} onChange={(e) => setN8nWebhookUrl(e.target.value)} />
                 </div>
@@ -464,7 +475,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="gestaoVpsWebhookUrl"
                     tooltip="Onde encontrar: Workflow n8n que controla a VPS (ativar/desativar workflows). Para que serve: Usado pelo Super Admin em Gestão de VPS. Opcional."
                   >
-                    Webhook Gestão VPS (opcional)
+                    {t('installer.vpsWebhook')}
                   </LabelComTooltip>
                   <Input id="gestaoVpsWebhookUrl" placeholder="https://seu-n8n.com/webhook/gestao-vps" value={gestaoVpsWebhookUrl} onChange={(e) => setGestaoVpsWebhookUrl(e.target.value)} />
                 </div>
@@ -475,8 +486,8 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
           <TabsContent value="vps" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Servidor VPS</CardTitle>
-                <CardDescription>Credenciais SSH para acesso ao servidor</CardDescription>
+                <CardTitle>{t('installer.vpsServer')}</CardTitle>
+                <CardDescription>{t('installer.vpsCredentials')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -485,7 +496,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                       htmlFor="vpsIp"
                       tooltip="Onde encontrar: No painel da sua VPS (DigitalOcean, AWS, etc.) ou use o IP que você usa para SSH. Para que serve: Endereço do servidor onde o app será implantado."
                     >
-                      IP do servidor
+                      {t('installer.serverIp')}
                     </LabelComTooltip>
                     <Input id="vpsIp" placeholder="203.0.113.10" value={vpsIp} onChange={(e) => setVpsIp(e.target.value)} />
                   </div>
@@ -494,7 +505,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                       htmlFor="vpsUser"
                       tooltip="Onde encontrar: O usuário que você usa para fazer SSH no servidor (ex: ssh root@IP). Para que serve: Usuário SSH para conectar e enviar os arquivos."
                     >
-                      Usuário SSH
+                      {t('installer.sshUser')}
                     </LabelComTooltip>
                     <Input id="vpsUser" placeholder="root" value={vpsUser} onChange={(e) => setVpsUser(e.target.value)} />
                   </div>
@@ -504,7 +515,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="vpsPassword"
                     tooltip="Onde encontrar: A senha do usuário SSH (definida ao criar a VPS). Para que serve: Autenticação para SCP/SSH. Requer sshpass instalado. Deixe em branco se usar chave SSH."
                   >
-                    Senha SSH (ou deixe em branco para usar chave)
+                    {t('installer.sshPassword')}
                   </LabelComTooltip>
                   <Input id="vpsPassword" type="password" placeholder="Senha do servidor" value={vpsPassword} onChange={(e) => setVpsPassword(e.target.value)} />
                 </div>
@@ -512,7 +523,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                   <LabelComTooltip
                     tooltip="Onde encontrar: Arquivo ~/.ssh/id_rsa ou id_ed25519 (copie o conteúdo completo). Para que serve: Alternativa mais segura à senha. Cole a chave privada completa incluindo BEGIN e END."
                   >
-                    Chave SSH privada (alternativa à senha)
+                    {t('installer.sshKey')}
                   </LabelComTooltip>
                   <textarea
                     className="w-full min-h-[120px] rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -526,7 +537,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="dominio"
                     tooltip="Onde encontrar: Subdomínio que você configurou no DNS (ex: app.seudominio.com). Para que serve: Se informado e você tiver Traefik na VPS, o script configura HTTPS automático com Let's Encrypt."
                   >
-                    Domínio (opcional - para Traefik + HTTPS)
+                    {t('installer.domain')}
                   </LabelComTooltip>
                   <Input id="dominio" placeholder="app.seudominio.com" value={dominio} onChange={(e) => setDominio(e.target.value)} />
                 </div>
@@ -535,7 +546,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     htmlFor="nomeContainer"
                     tooltip="Onde encontrar: Nome que você escolhe para o container. Para que serve: Nome do container Docker na VPS. Use o padrão 'flowatend' ou personalize se tiver múltiplas instâncias."
                   >
-                    Nome do container Docker
+                    {t('installer.containerName')}
                   </LabelComTooltip>
                   <Input id="nomeContainer" placeholder="flowatend" value={nomeContainer} onChange={(e) => setNomeContainer(e.target.value)} />
                 </div>
@@ -548,19 +559,19 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="h-5 w-5" />
-              Gerar e baixar script
+              {t('installer.generateScript')}
             </CardTitle>
             <CardDescription>
-              O script fará: clone/build → envio para VPS → docker build → docker run
+              {t('installer.scriptInfo')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             <Button onClick={handleDownloadBash} className="gap-2">
               <Download className="h-4 w-4" />
-              Baixar script bash (Linux/Mac)
+              {t('installer.downloadBash')}
             </Button>
             <Button variant="outline" onClick={handleDownloadConfig} className="gap-2">
-              Baixar configuração (JSON)
+              {t('installer.downloadConfig')}
             </Button>
           </CardContent>
         </Card>

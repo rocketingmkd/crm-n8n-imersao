@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchContagemMensagensPorOrg } from "@/lib/conversas";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface TokenRecord {
   id: string;
@@ -37,12 +38,12 @@ interface Organization {
 
 type PeriodFilter = "7d" | "14d" | "30d" | "90d" | "all";
 
-const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
-  { value: "7d", label: "Últimos 7 dias" },
-  { value: "14d", label: "Últimas 2 semanas" },
-  { value: "30d", label: "Último mês" },
-  { value: "90d", label: "Últimos 3 meses" },
-  { value: "all", label: "Todo o período" },
+const PERIOD_OPTIONS: { value: PeriodFilter; labelKey: string }[] = [
+  { value: "7d", labelKey: "superAdmin.tokenUsage.period7d" },
+  { value: "14d", labelKey: "superAdmin.tokenUsage.period14d" },
+  { value: "30d", labelKey: "superAdmin.tokenUsage.period30d" },
+  { value: "90d", labelKey: "superAdmin.tokenUsage.period90d" },
+  { value: "all", labelKey: "superAdmin.tokenUsage.periodAll" },
 ];
 
 const CHART_COLORS = [
@@ -77,6 +78,7 @@ function getMonthLabel(d: Date) {
 }
 
 export default function TokenUsage() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState<TokenRecord[]>([]);
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -123,7 +125,7 @@ export default function TokenUsage() {
       setMsgCountByOrgId(byOrgId);
     } catch (error) {
       console.error("Erro:", error);
-      toast.error("Erro ao carregar dados");
+      toast.error(t("superAdmin.tokenUsage.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +158,7 @@ export default function TokenUsage() {
         map[r.id_organizacao] = {
           tokens: 0,
           cost: 0,
-          name: org?.nome || "Desconhecida",
+          name: org?.nome || t("superAdmin.tokenUsage.unknown"),
           identificador: ident,
           arquivosRag: ident ? (docCountByIdentificador[ident] || 0) : 0,
           mensagens: msgCountByOrgId[r.id_organizacao] || 0,
@@ -234,7 +236,7 @@ export default function TokenUsage() {
     const others = orgGroups.slice(7);
     const result = top.map((o) => ({ name: o.name.length > 18 ? o.name.slice(0, 18) + "..." : o.name, value: o.cost }));
     if (others.length > 0) {
-      result.push({ name: "Outros", value: others.reduce((s, o) => s + o.cost, 0) });
+      result.push({ name: t("superAdmin.tokenUsage.others"), value: others.reduce((s, o) => s + o.cost, 0) });
     }
     return result;
   }, [orgGroups]);
@@ -262,30 +264,30 @@ export default function TokenUsage() {
     [msgCountByOrgId]
   );
   const avgCost = orgGroups.length > 0 ? totalCost / orgGroups.length : 0;
-  const kpis = [
-    { title: "Total de Tokens", value: totalTokens.toLocaleString("pt-BR"), icon: Zap, color: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" } },
-    { title: "Custo Total", value: totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: DollarSign, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
-    { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), sub: "Tabelas {empresa}_conversas", icon: MessageSquare, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
-    { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), sub: "Arquivos únicos", icon: FileText, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
-    { title: "Média/Empresa", value: avgCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), icon: TrendingUp, color: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" } },
-    { title: "Empresas Ativas", value: orgGroups.length, icon: Activity, color: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/20" } },
-  ];
-  const dailyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
-    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
-  };
-  const weeklyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(262, 83%, 58%)" },
-    cost: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" },
-  };
-  const monthlyChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(200, 80%, 50%)" },
-    cost: { label: "Custo (R$)", color: "hsl(40, 90%, 55%)" },
-  };
-  const orgChartConfig = {
-    tokens: { label: "Tokens", color: "hsl(330, 85%, 55%)" },
-    cost: { label: "Custo (R$)", color: "hsl(25, 95%, 53%)" },
-  };
+  const kpis = useMemo(() => [
+    { titleKey: "superAdmin.tokenUsage.totalTokens", value: totalTokens.toLocaleString(), icon: Zap, color: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" } },
+    { titleKey: "superAdmin.tokenUsage.totalCost", value: totalCost.toLocaleString(undefined, { style: "currency", currency: "BRL" }), icon: DollarSign, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
+    { titleKey: "superAdmin.tokenUsage.messages", value: totalMensagens.toLocaleString(), subKey: "superAdmin.tokenUsage.messagesHint", icon: MessageSquare, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
+    { titleKey: "superAdmin.tokenUsage.ragFiles", value: totalArquivosRag.toLocaleString(), subKey: "superAdmin.tokenUsage.ragFilesHint", icon: FileText, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
+    { titleKey: "superAdmin.tokenUsage.avgPerCompany", value: avgCost.toLocaleString(undefined, { style: "currency", currency: "BRL" }), icon: TrendingUp, color: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" } },
+    { titleKey: "superAdmin.tokenUsage.activeCompanies", value: orgGroups.length, icon: Activity, color: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/20" } },
+  ], [totalTokens, totalCost, totalMensagens, totalArquivosRag, avgCost, orgGroups.length]);
+  const dailyChartConfig = useMemo(() => ({
+    tokens: { label: t("superAdmin.tokenUsage.tokens"), color: "hsl(330, 85%, 55%)" },
+    cost: { label: t("superAdmin.tokenUsage.cost"), color: "hsl(25, 95%, 53%)" },
+  }), [t]);
+  const weeklyChartConfig = useMemo(() => ({
+    tokens: { label: t("superAdmin.tokenUsage.tokens"), color: "hsl(262, 83%, 58%)" },
+    cost: { label: t("superAdmin.tokenUsage.cost"), color: "hsl(142, 72%, 40%)" },
+  }), [t]);
+  const monthlyChartConfig = useMemo(() => ({
+    tokens: { label: t("superAdmin.tokenUsage.tokens"), color: "hsl(200, 80%, 50%)" },
+    cost: { label: t("superAdmin.tokenUsage.cost"), color: "hsl(40, 90%, 55%)" },
+  }), [t]);
+  const orgChartConfig = useMemo(() => ({
+    tokens: { label: t("superAdmin.tokenUsage.tokens"), color: "hsl(330, 85%, 55%)" },
+    cost: { label: t("superAdmin.tokenUsage.cost"), color: "hsl(25, 95%, 53%)" },
+  }), [t]);
 
   if (isLoading) {
     return (
@@ -304,9 +306,9 @@ export default function TokenUsage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
               <Zap className="h-4 w-4 text-amber-500" />
             </div>
-            Consumos dos Planos
+            {t("superAdmin.tokenUsage.title")}
           </h1>
-          <p>Tokens, mensagens e arquivos RAG por empresa</p>
+          <p>{t("superAdmin.tokenUsage.subtitle")}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -318,7 +320,7 @@ export default function TokenUsage() {
               </SelectTrigger>
               <SelectContent>
                 {PERIOD_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -328,10 +330,10 @@ export default function TokenUsage() {
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={selectedOrg} onValueChange={setSelectedOrg}>
               <SelectTrigger className="w-[180px] h-8 text-xs">
-                <SelectValue placeholder="Todas as empresas" />
+                <SelectValue placeholder={t("superAdmin.tokenUsage.allCompanies")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as empresas</SelectItem>
+                <SelectItem value="all">{t("superAdmin.tokenUsage.allCompanies")}</SelectItem>
                 {orgsWithUsage.map((o) => (
                   <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>
                 ))}
@@ -345,14 +347,14 @@ export default function TokenUsage() {
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
-          const sub = "sub" in kpi ? (kpi as { sub?: string }).sub : undefined;
+          const sub = "subKey" in kpi ? t((kpi as { subKey?: string }).subKey!) : undefined;
           return (
             <div
-              key={kpi.title}
+              key={kpi.titleKey}
               className={`relative overflow-hidden rounded-xl border ${kpi.color.border} bg-card p-3 md:p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{t(kpi.titleKey)}</span>
                 <div className={`rounded-lg ${kpi.color.bg} p-1.5 md:p-2`}>
                   <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.color.text}`} />
                 </div>
@@ -372,13 +374,13 @@ export default function TokenUsage() {
           <CardHeader>
             <CardTitle className="text-base text-foreground flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
-              Consumo Diário
+              {t("superAdmin.tokenUsage.dailyConsumption")}
             </CardTitle>
-            <CardDescription>Tokens consumidos por dia</CardDescription>
+            <CardDescription>{t("superAdmin.tokenUsage.dailyConsumptionDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t("superAdmin.tokenUsage.noData")}</p>
             ) : (
               <ChartContainer config={dailyChartConfig} className="h-[220px] w-full">
                 <AreaChart data={dailyData} margin={{ left: 0, right: 4 }}>
@@ -398,13 +400,13 @@ export default function TokenUsage() {
           <CardHeader>
             <CardTitle className="text-base text-foreground flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" />
-              Consumo Semanal
+              {t("superAdmin.tokenUsage.weeklyConsumption")}
             </CardTitle>
-            <CardDescription>Tokens por semana</CardDescription>
+            <CardDescription>{t("superAdmin.tokenUsage.weeklyConsumptionDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {weeklyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t("superAdmin.tokenUsage.noData")}</p>
             ) : (
               <ChartContainer config={weeklyChartConfig} className="h-[220px] w-full">
                 <BarChart data={weeklyData} margin={{ left: 0, right: 4 }}>
@@ -427,13 +429,13 @@ export default function TokenUsage() {
           <CardHeader>
             <CardTitle className="text-base text-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Consumo Mensal
+              {t("superAdmin.tokenUsage.monthlyConsumption")}
             </CardTitle>
-            <CardDescription>Tokens por mês</CardDescription>
+            <CardDescription>{t("superAdmin.tokenUsage.monthlyConsumptionDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {monthlyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t("superAdmin.tokenUsage.noData")}</p>
             ) : (
               <ChartContainer config={monthlyChartConfig} className="h-[220px] w-full">
                 <BarChart data={monthlyData} margin={{ left: 0, right: 4 }}>
@@ -453,13 +455,13 @@ export default function TokenUsage() {
           <CardHeader>
             <CardTitle className="text-base text-foreground flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              Custo Diário (R$)
+              {t("superAdmin.tokenUsage.dailyCost")}
             </CardTitle>
-            <CardDescription>Evolução do custo por dia</CardDescription>
+            <CardDescription>{t("superAdmin.tokenUsage.dailyCostDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t("superAdmin.tokenUsage.noData")}</p>
             ) : (
               <ChartContainer config={dailyChartConfig} className="h-[220px] w-full">
                 <LineChart data={dailyData} margin={{ left: 0, right: 4 }}>
@@ -467,7 +469,7 @@ export default function TokenUsage() {
                   <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval="preserveStartEnd" />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `R$${v}`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="cost" name="Custo (R$)" stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="cost" name={t("superAdmin.tokenUsage.cost")} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ChartContainer>
             )}
@@ -483,9 +485,9 @@ export default function TokenUsage() {
             <CardHeader>
               <CardTitle className="text-base text-foreground flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-primary" />
-                Distribuição por Empresa
+                {t("superAdmin.tokenUsage.distributionByCompany")}
               </CardTitle>
-              <CardDescription>Participação no custo total</CardDescription>
+              <CardDescription>{t("superAdmin.tokenUsage.distributionDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={{}} className="h-[280px] w-full">
@@ -506,9 +508,9 @@ export default function TokenUsage() {
             <CardHeader>
               <CardTitle className="text-base text-foreground flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                Top Empresas por Custo
+                {t("superAdmin.tokenUsage.topCompaniesByCost")}
               </CardTitle>
-              <CardDescription>Maiores consumidoras</CardDescription>
+              <CardDescription>{t("superAdmin.tokenUsage.topCompaniesDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={orgChartConfig} className="h-[280px] w-full">

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -37,6 +38,7 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 export default function Organizations() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [toggleOrgId, setToggleOrgId] = useState<string | null>(null);
   const [deleteOrgId, setDeleteOrgId] = useState<string | null>(null);
@@ -77,8 +79,8 @@ export default function Organizations() {
       const { error } = await supabase.from("organizacoes").update({ ativo: newStatus }).eq("id", orgId);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success("Status atualizado!"); setToggleOrgId(null); },
-    onError: () => { toast.error("Erro ao atualizar status"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success(t("superAdmin.organizations.statusUpdated")); setToggleOrgId(null); },
+    onError: () => { toast.error(t("superAdmin.organizations.updateError")); },
   });
 
   const deleteOrganization = useMutation({
@@ -86,8 +88,8 @@ export default function Organizations() {
       const { error } = await supabase.from("organizacoes").delete().eq("id", orgId);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success("Organização excluída!"); setDeleteOrgId(null); },
-    onError: () => { toast.error("Erro ao excluir organização"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["super-admin-organizations"] }); toast.success(t("superAdmin.organizations.orgDeleted")); setDeleteOrgId(null); },
+    onError: () => { toast.error(t("superAdmin.organizations.deleteError")); },
   });
 
   const filteredOrganizations = useMemo(() => {
@@ -127,13 +129,13 @@ export default function Organizations() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
               <Building2 className="h-4 w-4 text-blue-500" />
             </div>
-            Empresas
+            {t("superAdmin.organizations.title")}
           </h1>
-          <p>{organizations?.length ?? 0} empresas · {activeCount} ativas</p>
+          <p>{t("superAdmin.organizations.subtitle", { count: organizations?.length ?? 0, active: activeCount })}</p>
         </div>
         <Button onClick={() => navigate("/super-admin/organizations/new")} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-pink" size="default">
           <Plus className="mr-2 h-4 w-4" />
-          Nova Empresa
+          {t("superAdmin.organizations.newCompany")}
         </Button>
       </div>
 
@@ -143,10 +145,10 @@ export default function Organizations() {
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou identificador..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="pl-10 h-9" />
+              <Input placeholder={t("superAdmin.organizations.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="pl-10 h-9" />
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-              <span>Exibir</span>
+              <span>{t("superAdmin.organizations.show")}</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
                 <SelectTrigger className="w-[65px] h-8 text-xs">
                   <SelectValue />
@@ -168,12 +170,12 @@ export default function Organizations() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-xs">Empresa</TableHead>
-                <TableHead className="font-semibold text-xs hidden sm:table-cell">Identificador</TableHead>
-                <TableHead className="font-semibold text-xs">Plano</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell">Criada em</TableHead>
-                <TableHead className="font-semibold text-xs text-center">Status</TableHead>
-                <TableHead className="font-semibold text-xs text-right">Ações</TableHead>
+                <TableHead className="font-semibold text-xs">{t("superAdmin.organizations.company")}</TableHead>
+                <TableHead className="font-semibold text-xs hidden sm:table-cell">{t("superAdmin.organizations.identifier")}</TableHead>
+                <TableHead className="font-semibold text-xs">{t("superAdmin.organizations.plan")}</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell">{t("superAdmin.organizations.createdAt")}</TableHead>
+                <TableHead className="font-semibold text-xs text-center">{t("superAdmin.organizations.status")}</TableHead>
+                <TableHead className="font-semibold text-xs text-right">{t("superAdmin.organizations.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -182,7 +184,7 @@ export default function Organizations() {
                   <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Building2 className="h-8 w-8 opacity-30" />
-                      <p className="text-sm">{searchQuery ? "Nenhuma empresa encontrada" : "Nenhuma empresa cadastrada"}</p>
+                      <p className="text-sm">{searchQuery ? t("superAdmin.organizations.noResults") : t("superAdmin.organizations.noCompanies")}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -220,7 +222,7 @@ export default function Organizations() {
                           : "text-[10px]"
                         }
                       >
-                        {org.ativo ? "Ativa" : "Inativa"}
+                        {org.ativo ? t("superAdmin.dashboard.activeStatus") : t("superAdmin.dashboard.inactiveStatus")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -234,27 +236,27 @@ export default function Organizations() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)}>
-                              <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
+                              <Pencil className="h-3.5 w-3.5 mr-2" /> {t("superAdmin.organizations.edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setToggleOrgId(org.id)}>
                               {org.ativo ? <PowerOff className="h-3.5 w-3.5 mr-2" /> : <Power className="h-3.5 w-3.5 mr-2" />}
-                              {org.ativo ? "Desativar" : "Ativar"}
+                              {org.ativo ? t("superAdmin.organizations.deactivate") : t("superAdmin.organizations.activate")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDeleteOrgId(org.id)} className="text-destructive focus:text-destructive">
-                              <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
+                              <Trash2 className="h-3.5 w-3.5 mr-2" /> {t("superAdmin.organizations.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                       {/* Desktop: inline buttons */}
                       <div className="hidden sm:flex justify-end gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)} title="Editar">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/super-admin/organizations/${org.id}/edit`)} title={t("superAdmin.organizations.edit")}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setToggleOrgId(org.id)} title={org.ativo ? "Desativar" : "Ativar"}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setToggleOrgId(org.id)} title={org.ativo ? t("superAdmin.organizations.deactivate") : t("superAdmin.organizations.activate")}>
                           {org.ativo ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteOrgId(org.id)} title="Excluir">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteOrgId(org.id)} title={t("superAdmin.organizations.delete")}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -274,7 +276,7 @@ export default function Organizations() {
             </span>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="h-7 text-xs" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}>
-                Anterior
+                {t("superAdmin.organizations.previous")}
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
@@ -293,7 +295,7 @@ export default function Organizations() {
                   )
                 )}
               <Button variant="outline" size="sm" className="h-7 text-xs" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}>
-                Próximo
+                {t("superAdmin.organizations.next")}
               </Button>
             </div>
           </div>
@@ -304,17 +306,17 @@ export default function Organizations() {
       <AlertDialog open={toggleOrgId !== null} onOpenChange={() => setToggleOrgId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Ação</AlertDialogTitle>
+            <AlertDialogTitle>{t("superAdmin.organizations.confirmAction")}</AlertDialogTitle>
             <AlertDialogDescription>
               {organizations?.find((o) => o.id === toggleOrgId)?.ativo
-                ? "Desativar esta empresa impedirá o acesso de todos os usuários."
-                : "Ativar esta empresa permitirá o acesso de todos os usuários."}
+                ? t("superAdmin.organizations.deactivateConfirm")
+                : t("superAdmin.organizations.activateConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { const org = organizations?.find((o) => o.id === toggleOrgId); if (org) toggleStatus.mutate({ orgId: org.id, newStatus: !org.ativo }); }}>
-              Confirmar
+              {t("superAdmin.organizations.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -325,24 +327,24 @@ export default function Organizations() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" /> Excluir Empresa
+              <Trash2 className="h-5 w-5 text-destructive" /> {t("superAdmin.organizations.deleteCompany")}
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p className="font-semibold text-destructive">⚠️ Esta ação é irreversível!</p>
-              <p>Ao excluir "<strong className="text-foreground">{organizations?.find((o) => o.id === deleteOrgId)?.nome}</strong>", todos os dados serão apagados.</p>
+              <p className="font-semibold text-destructive">{t("superAdmin.organizations.deleteWarning")}</p>
+              <p>{t("superAdmin.organizations.deleteDescription", { name: organizations?.find((o) => o.id === deleteOrgId)?.nome ?? "" })}</p>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Todos os usuários/perfis</li>
-                <li>Todos os clientes</li>
-                <li>Todos os compromissos</li>
-                <li>Configurações do Agent IA</li>
-                <li>Instâncias WhatsApp</li>
+                <li>{t("superAdmin.organizations.deleteItems")}</li>
+                <li>{t("superAdmin.organizations.deleteClients")}</li>
+                <li>{t("superAdmin.organizations.deleteAppointments")}</li>
+                <li>{t("superAdmin.organizations.deleteAgentConfig")}</li>
+                <li>{t("superAdmin.organizations.deleteWhatsapp")}</li>
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { if (deleteOrgId) deleteOrganization.mutate(deleteOrgId); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              <Trash2 className="mr-2 h-4 w-4" /> Sim, Excluir
+              <Trash2 className="mr-2 h-4 w-4" /> {t("superAdmin.organizations.yesDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

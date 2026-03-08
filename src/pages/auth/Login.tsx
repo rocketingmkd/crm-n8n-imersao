@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sun, Moon, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { AppLogo } from "@/components/AppLogo";
+import LanguageSelector from "@/components/LanguageSelector";
 import loginBg from "@/assets/login-bg.jpg";
 import loginBgVideo from "@/assets/login-bg-video.mp4";
 
@@ -16,6 +18,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -27,7 +30,7 @@ export default function Login() {
         .from('configuracoes_globais')
         .select('frase_login')
         .single();
-      return (data as any)?.frase_login || 'Seu universo de automações espera';
+      return (data as any)?.frase_login || t('auth.defaultPhrase');
     },
     staleTime: 60_000,
   });
@@ -70,19 +73,22 @@ export default function Login() {
       {/* Overlay — adapts to theme */}
       <div className={isDark ? "absolute inset-0 bg-black/50" : "absolute inset-0 bg-white/60 backdrop-blur-sm"} />
 
-      {/* Theme toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-50 h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
+      {/* Theme toggle + Language */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
+        <LanguageSelector />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className={`h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
           isDark
             ? "bg-white/10 border-white/20 text-white/70 hover:text-white hover:bg-white/20"
             : "bg-black/10 border-black/10 text-foreground/70 hover:text-foreground hover:bg-black/15"
         }`}
       >
         {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
+        </Button>
+      </div>
 
       {/* Glass Card */}
       <div className="relative z-10 w-full max-w-[440px] mx-4">
@@ -104,11 +110,11 @@ export default function Login() {
               <AppLogo variant="platform" height={64} />
             </div>
             <p className={`text-sm ${isDark ? "text-white/60" : "text-foreground/60"}`}>
-              {fraseLogin || 'Seu universo de automações espera'}
+              {fraseLogin || t('auth.defaultPhrase')}
             </p>
             <div className={`flex items-center justify-center gap-1.5 text-xs ${isDark ? "text-white/30" : "text-foreground/30"}`}>
               <Sparkles className="h-3 w-3" />
-              <span>Pressione Enter para começar</span>
+              <span>{t('auth.pressEnter')}</span>
               <Sparkles className="h-3 w-3" />
             </div>
           </div>
@@ -120,7 +126,7 @@ export default function Login() {
               <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -139,7 +145,7 @@ export default function Login() {
               <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="Senha"
+                placeholder={t('auth.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -168,7 +174,7 @@ export default function Login() {
                 to="/forgot-password"
                 className="text-xs text-primary/80 hover:text-primary hover:underline transition-colors"
               >
-                Esqueceu a senha?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -181,18 +187,18 @@ export default function Login() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Entrando...
+                  {t('auth.signingIn')}
                 </div>
               ) : (
-                'Entrar na Plataforma'
+                <>{t('auth.signIn')}</>
               )}
             </Button>
 
             {/* Register link */}
             <p className={`text-xs text-center pt-2 ${isDark ? "text-white/50" : "text-foreground/50"}`}>
-              Não tem uma conta?{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/register" className="text-primary font-semibold hover:text-primary/80 hover:underline transition-colors">
-                Criar Conta
+                {t('auth.createAccount')}
               </Link>
             </p>
           </form>
@@ -200,7 +206,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className={`text-center text-[10px] mt-6 ${isDark ? "text-white/30" : "text-foreground/30"}`}>
-          © {new Date().getFullYear()} FlowAtend. Todos os direitos reservados.
+          © {new Date().getFullYear()} FlowAtend. {t('auth.copyright')}
         </p>
       </div>
     </div>

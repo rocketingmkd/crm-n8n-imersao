@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   useN8nInsights,
   isInsightsConfigured,
@@ -54,14 +55,14 @@ type Granularity = "day" | "week";
 type SortField = "totalExec" | "failedExec" | "failureRate" | "avgRuntimeSec" | "name";
 type SortDir = "asc" | "desc";
 
-const PERIOD_OPTIONS: { value: PeriodFilter; label: string; days: number }[] = [
-  { value: "24h", label: "Últimas 24 horas", days: 1 },
-  { value: "7d", label: "Últimos 7 dias", days: 7 },
-  { value: "14d", label: "Últimas 2 semanas", days: 14 },
-  { value: "30d", label: "Últimos 30 dias", days: 30 },
-  { value: "90d", label: "Últimos 90 dias", days: 90 },
-  { value: "6m", label: "6 meses", days: 180 },
-  { value: "1y", label: "1 ano", days: 365 },
+const PERIOD_OPTIONS: { value: PeriodFilter; labelKey: string; days: number }[] = [
+  { value: "24h", labelKey: "superAdmin.observability.period24h", days: 1 },
+  { value: "7d", labelKey: "superAdmin.observability.period7d", days: 7 },
+  { value: "14d", labelKey: "superAdmin.observability.period14d", days: 14 },
+  { value: "30d", labelKey: "superAdmin.observability.period30d", days: 30 },
+  { value: "90d", labelKey: "superAdmin.observability.period90d", days: 90 },
+  { value: "6m", labelKey: "superAdmin.observability.period6m", days: 180 },
+  { value: "1y", labelKey: "superAdmin.observability.period1y", days: 365 },
 ];
 
 function getDaysAgo(days: number) {
@@ -125,6 +126,7 @@ function buildChartData(
 }
 
 export default function N8nInsights({ hideHeader = false }: { hideHeader?: boolean }) {
+  const { t } = useTranslation();
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(60000);
   const [period, setPeriod] = useState<PeriodFilter>("6m");
   const [sortField, setSortField] = useState<SortField>("totalExec");
@@ -263,10 +265,10 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
     );
   }
 
-  const chartConfig = {
-    success: { label: "Successful", color: "hsl(160, 60%, 45%)" },
-    failed: { label: "Failed", color: "hsl(15, 80%, 55%)" },
-  };
+  const chartConfig = useMemo(() => ({
+    success: { label: t("superAdmin.observability.successful"), color: "hsl(160, 60%, 45%)" },
+    failed: { label: t("superAdmin.observability.failed"), color: "hsl(15, 80%, 55%)" },
+  }), [t]);
 
   return (
     <div className="space-y-6">
@@ -277,9 +279,9 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
                 <BarChart3 className="h-4 w-4 text-indigo-500" />
               </div>
-              Monitoramento de Execuções
+              {t("superAdmin.observability.monitoringTitle")}
             </h1>
-            <p>Monitoramento de execuções dos workflows</p>
+            <p>{t("superAdmin.observability.monitoringSubtitle")}</p>
           </div>
         </div>
       )}
@@ -294,7 +296,7 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
               </SelectTrigger>
               <SelectContent>
                 {PERIOD_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -323,7 +325,7 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
         <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
           <Info className="h-4 w-4 shrink-0" />
           <span>
-            <code>VITE_N8N_WEBHOOK_URL</code> não configurada. Exibindo dados de demonstração.
+            <code>VITE_N8N_WEBHOOK_URL</code> {t("superAdmin.observability.webhookNotConfigured")}
           </span>
         </div>
       )}
@@ -331,16 +333,16 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
       {/* KPIs Multicores */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {[
-          { title: "Execuções", value: totalExecPeriod.toLocaleString("pt-BR"), sub: PERIOD_OPTIONS.find((p) => p.value === period)?.label, icon: Zap, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
-          { title: "Sucesso", value: successExecPeriod.toLocaleString("pt-BR"), sub: `${totalExecPeriod > 0 ? ((successExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% do total`, icon: CheckCircle2, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
-          { title: "Falhas", value: failedExecPeriod.toLocaleString("pt-BR"), sub: `${totalExecPeriod > 0 ? ((failedExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% do total`, icon: XCircle, color: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" } },
-          { title: "Tempo médio", value: formatRuntime(avgRuntimeSec), sub: "Run time avg.", icon: Clock, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
+          { titleKey: "superAdmin.observability.executions", value: totalExecPeriod.toLocaleString(), sub: PERIOD_OPTIONS.find((p) => p.value === period) ? t(PERIOD_OPTIONS.find((p) => p.value === period)!.labelKey) : undefined, icon: Zap, color: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" } },
+          { titleKey: "superAdmin.observability.success", value: successExecPeriod.toLocaleString(), sub: `${totalExecPeriod > 0 ? ((successExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% ${t("superAdmin.observability.ofTotal")}`, icon: CheckCircle2, color: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" } },
+          { titleKey: "superAdmin.observability.failures", value: failedExecPeriod.toLocaleString(), sub: `${totalExecPeriod > 0 ? ((failedExecPeriod / totalExecPeriod) * 100).toFixed(1) : "0"}% ${t("superAdmin.observability.ofTotal")}`, icon: XCircle, color: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" } },
+          { titleKey: "superAdmin.observability.avgTime", value: formatRuntime(avgRuntimeSec), sub: t("superAdmin.observability.runTimeAvg"), icon: Clock, color: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" } },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="liquid-glass p-3 md:p-4 transition-all duration-200 hover:scale-[1.02]">
+            <div key={kpi.titleKey} className="liquid-glass p-3 md:p-4 transition-all duration-200 hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.title}</span>
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">{t(kpi.titleKey)}</span>
                 <div className={`rounded-lg ${kpi.color.bg} p-1.5 md:p-2`}>
                   <Icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${kpi.color.text}`} />
                 </div>
@@ -357,16 +359,16 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
         <CardHeader>
           <CardTitle className="text-base text-foreground flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
-            Execuções por {granularity === "week" ? "semana" : "dia"}
+            {granularity === "week" ? t("superAdmin.observability.executionsByWeek") : t("superAdmin.observability.executionsByDay")}
           </CardTitle>
           <CardDescription>
-            Successful vs Failed — {PERIOD_OPTIONS.find((p) => p.value === period)?.label}
+            {t("superAdmin.observability.successfulVsFailed")} — {PERIOD_OPTIONS.find((p) => p.value === period) ? t(PERIOD_OPTIONS.find((p) => p.value === period)!.labelKey) : ""}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {chartData.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-12">
-              Sem dados no período selecionado
+              {t("superAdmin.observability.noDataInPeriod")}
             </p>
           ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">

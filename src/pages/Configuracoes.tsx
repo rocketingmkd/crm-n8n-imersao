@@ -4,8 +4,10 @@ import AgentIA from "@/pages/AgentIA";
 import Integrations from "@/pages/Integrations";
 import TiposAtendimento from "@/pages/TiposAtendimento";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTranslation } from "react-i18next";
 
 export default function Configuracoes() {
+  const { t } = useTranslation();
   const { features } = usePlanFeatures();
   const hasAgendamento = features.agendamento_automatico;
 
@@ -18,11 +20,11 @@ export default function Configuracoes() {
             <Settings className="h-6 w-6 text-primary" />
           </div>
           <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            Configurações
+            {t('settings.title')}
           </h1>
         </div>
         <p className="text-base md:text-lg text-muted-foreground">
-          Gerencie seu agente de IA, integrações e tipos de atendimento
+          {t('settings.subtitle')}
         </p>
       </div>
 
@@ -31,16 +33,16 @@ export default function Configuracoes() {
         <TabsList className="w-full sm:w-auto h-10 liquid-glass-subtle p-1">
           <TabsTrigger value="agente-ia" className="gap-2 text-sm px-4">
             <Bot className="h-4 w-4" />
-            Agente de IA
+            {t('settings.aiAgent')}
           </TabsTrigger>
           <TabsTrigger value="whatsapp" className="gap-2 text-sm px-4">
             <Plug className="h-4 w-4" />
-            WhatsApp
+            {t('settings.whatsapp')}
           </TabsTrigger>
           {hasAgendamento && (
             <TabsTrigger value="tipos-atendimento" className="gap-2 text-sm px-4">
               <ListTodo className="h-4 w-4" />
-              Tipos de Atendimento
+              {t('settings.serviceTypes')}
             </TabsTrigger>
           )}
         </TabsList>

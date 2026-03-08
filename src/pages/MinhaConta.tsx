@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserCircle, Camera, X, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function MinhaConta() {
+  const { t } = useTranslation();
   const { profile, user, refreshProfile } = useAuth();
   const [nomeCompleto, setNomeCompleto] = useState(profile?.nome_completo ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -27,11 +29,11 @@ export default function MinhaConta() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Selecione uma imagem (PNG, JPG, GIF ou WebP).");
+      toast.error(t("superAdmin.minhaConta.selectImage"));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("A foto deve ter no máximo 2 MB.");
+      toast.error(t("superAdmin.minhaConta.maxSize"));
       return;
     }
     setAvatarFile(file);
@@ -49,7 +51,7 @@ export default function MinhaConta() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.id || !user?.id) {
-      toast.error("Sessão inválida.");
+      toast.error(t("superAdmin.minhaConta.invalidSession"));
       return;
     }
 
@@ -70,7 +72,7 @@ export default function MinhaConta() {
           .upload(path, avatarFile, { upsert: true, contentType });
 
         if (uploadError) {
-          const msg = uploadError.message || "Erro ao enviar a foto.";
+          const msg = uploadError.message || t("superAdmin.minhaConta.uploadError");
           if (msg.includes("Bucket") || msg.includes("bucket") || msg.includes("not found")) {
             toast.error(
               "O bucket de avatares não existe. Crie o bucket 'avatars' no Supabase (Storage) ou execute o script SQL de instalação do banco."
@@ -100,10 +102,10 @@ export default function MinhaConta() {
       setAvatarFile(null);
       setAvatarPreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      toast.success("Conta atualizada com sucesso!");
+      toast.success(t("superAdmin.minhaConta.saved"));
     } catch (err: unknown) {
       console.error("Erro ao atualizar conta:", err);
-      toast.error(err instanceof Error ? err.message : "Erro ao atualizar conta.");
+      toast.error(err instanceof Error ? err.message : t("superAdmin.minhaConta.saveError"));
     } finally {
       setSaving(false);
     }
@@ -124,23 +126,23 @@ export default function MinhaConta() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/10">
             <UserCircle className="h-4 w-4 text-pink-500" />
           </div>
-          Minha conta
+          {t("superAdmin.minhaConta.title")}
         </h1>
-        <p>Atualize seu nome e sua foto de perfil.</p>
+        <p>{t("superAdmin.minhaConta.subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Dados do perfil</CardTitle>
+          <CardTitle className="text-base">{t("superAdmin.minhaConta.profileData")}</CardTitle>
           <CardDescription>
-            Estas informações aparecem no sistema quando você está logado.
+            {t("superAdmin.minhaConta.profileDataDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Foto */}
             <div className="space-y-2">
-              <Label className="text-foreground">Sua foto</Label>
+              <Label className="text-foreground">{t("superAdmin.minhaConta.photo")}</Label>
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-2 border-border">
@@ -163,7 +165,7 @@ export default function MinhaConta() {
                       size="icon"
                       className="absolute -top-1 -right-1 h-7 w-7 rounded-full border border-border bg-background shadow-sm hover:bg-muted"
                       onClick={removeNewAvatar}
-                      title="Remover nova foto"
+                      title={t("superAdmin.minhaConta.removePhoto")}
                     >
                       <X className="h-3.5 w-3.5" />
                     </Button>
@@ -181,21 +183,21 @@ export default function MinhaConta() {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
-                    {currentAvatarUrl ? "Trocar foto" : "Adicionar foto"}
+                    {currentAvatarUrl ? t("superAdmin.minhaConta.changePhoto") : t("superAdmin.minhaConta.addPhoto")}
                   </Button>
-                  <p className="mt-1">PNG, JPG, GIF ou WebP. Máx. 2 MB.</p>
+                  <p className="mt-1">{t("superAdmin.minhaConta.photoFormat")}</p>
                 </div>
               </div>
             </div>
 
             {/* Nome */}
             <div className="space-y-2">
-              <Label htmlFor="nome_completo" className="text-foreground">Nome completo</Label>
+              <Label htmlFor="nome_completo" className="text-foreground">{t("superAdmin.minhaConta.fullName")}</Label>
               <Input
                 id="nome_completo"
                 value={nomeCompleto}
                 onChange={(e) => setNomeCompleto(e.target.value)}
-                placeholder="Seu nome"
+                placeholder={t("superAdmin.minhaConta.namePlaceholder")}
                 className="max-w-md"
                 required
               />
@@ -206,12 +208,12 @@ export default function MinhaConta() {
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
+                    {t("superAdmin.minhaConta.saving")}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar alterações
+                    {t("superAdmin.minhaConta.saveChanges")}
                   </>
                 )}
               </Button>

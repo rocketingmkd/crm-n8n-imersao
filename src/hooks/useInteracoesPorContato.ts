@@ -28,7 +28,9 @@ function chavesParaContato(telefone: string | null | undefined, idSessao: string
 
 export interface InteracaoStats {
   total_interacoes: number;
+  total_conversas: number;
   ultima_interacao: string | null;
+  ultima_mensagem: string | null;
 }
 
 /**
@@ -53,7 +55,7 @@ export function useInteracoesPorContato() {
       const stats = mapaInteracoes[k];
       if (stats) return stats;
     }
-    return { total_interacoes: 0, ultima_interacao: null };
+    return { total_interacoes: 0, total_conversas: 0, ultima_interacao: null, ultima_mensagem: null };
   };
 
   const totalGeral = Object.values(mapaInteracoes).reduce((s, v) => s + v.total_interacoes, 0);

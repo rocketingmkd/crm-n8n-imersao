@@ -368,52 +368,66 @@ function extrairDigitos(s: string): string {
   return (s || "").replace(/\D/g, "");
 }
 
+export interface StatsPorSessao {
+  total_interacoes: number;
+  total_conversas: number;
+  ultima_interacao: string | null;
+  ultima_mensagem: string | null;
+}
+
 /**
- * Busca interações (contagem e última data) por sessão na tabela de conversas.
- * Retorna mapa: chave normalizada (dígitos) -> { total_interacoes, ultima_interacao }.
- * Usado para calcular interações reais a partir das mensagens, em vez de depender do campo contatos.total_interacoes.
+ * Busca interações (contagem, última data e última mensagem) por sessão na tabela de conversas.
+ * total_conversas = 1 quando há mensagens (uma sessão = uma conversa), 0 caso contrário.
+ * ultima_mensagem = texto da última mensagem trocada com o cliente.
  */
 export async function fetchInteracoesPorSessao(
   client: SupabaseClient,
   identificador: string
-): Promise<Record<string, { total_interacoes: number; ultima_interacao: string }>> {
+): Promise<Record<string, StatsPorSessao>> {
   const tableName = await obterNomeTabelaConversas(client, identificador);
   if (!tableName) return {};
 
   try {
-    type Row = { data?: string; session_id?: string; id_sessao?: string };
+    type Row = { data?: string; message?: unknown; session_id?: string; id_sessao?: string };
     let rows: Row[] = [];
 
     const { data: data1, error: err1 } = await (client as any)
       .from(tableName)
-      .select("data, session_id")
+      .select("data, message, session_id")
       .order("data", { ascending: true });
     if (!err1 && data1?.length) {
       rows = data1;
     } else if (err1?.code === "42703" || (err1?.message && /column/i.test(err1.message || ""))) {
       const { data: data2, error: err2 } = await (client as any)
         .from(tableName)
-        .select("data, id_sessao")
+        .select("data, message, id_sessao")
         .order("data", { ascending: true });
       if (!err2 && data2?.length) {
         rows = data2.map((r: { id_sessao?: string }) => ({ ...r, session_id: r.id_sessao }));
       }
     }
 
-    const bySession: Record<string, { count: number; last: string }> = {};
+    const bySession: Record<string, { count: number; last: string; lastMessage: string }> = {};
     for (const r of rows) {
       const sid = (r.session_id ?? r.id_sessao ?? "").trim();
       if (!sid) continue;
       const key = extrairDigitos(sid) || sid;
-      if (!bySession[key]) bySession[key] = { count: 0, last: "" };
+      if (!bySession[key]) bySession[key] = { count: 0, last: "", lastMessage: "" };
       bySession[key].count++;
       const d = r.data ?? "";
-      if (d > bySession[key].last) bySession[key].last = d;
+      if (d > bySession[key].last) {
+        bySession[key].last = d;
+        bySession[key].lastMessage = extrairTextoMessage(r.message) || getMessageDisplayInfo(r.message).text || "";
+      }
     }
-    // Também indexar por session_id raw para cobrir id_sessao que não seja telefone
-    const result: Record<string, { total_interacoes: number; ultima_interacao: string }> = {};
+    const result: Record<string, StatsPorSessao> = {};
     for (const [key, v] of Object.entries(bySession)) {
-      result[key] = { total_interacoes: v.count, ultima_interacao: v.last };
+      result[key] = {
+        total_interacoes: v.count,
+        total_conversas: v.count > 0 ? 1 : 0,
+        ultima_interacao: v.last || null,
+        ultima_mensagem: v.lastMessage?.trim() || null,
+      };
     }
     return result;
   } catch {

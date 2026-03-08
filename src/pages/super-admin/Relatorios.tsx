@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { BarChart3, AlertTriangle, CheckCircle2, Filter, ChevronLeft, ChevronRight, MessageSquare, Users, FileText, UserCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface OrgRow {
@@ -42,7 +43,7 @@ interface OrgRow {
 const LIMIT_THRESHOLD = 0.8;
 const PAGE_SIZE = 10;
 
-function UsageCell({ current, max, label }: { current: number; max: number | null; label: string }) {
+function UsageCell({ current, max, label, limitText, nearText }: { current: number; max: number | null; label: string; limitText: string; nearText: string }) {
   if (max == null) {
     return <span className="text-muted-foreground">{current} / ∞</span>;
   }
@@ -55,28 +56,30 @@ function UsageCell({ current, max, label }: { current: number; max: number | nul
       title={label}
     >
       {current} / {max}
-      {atLimit && " (limite)"}
-      {nearLimit && !atLimit && " (próximo)"}
+      {atLimit && ` ${limitText}`}
+      {nearLimit && !atLimit && ` ${nearText}`}
     </span>
   );
 }
 
-function AlertBadges({ row }: { row: OrgRow }) {
+function AlertBadges({ row, t }: { row: OrgRow; t: (k: string) => string }) {
+  const labels: Record<string, string> = { users: t("superAdmin.reports.users"), clients: t("superAdmin.reports.clients"), filesBc: t("superAdmin.reports.filesBc"), messages: t("superAdmin.reports.messages") };
   const alerts: string[] = [];
-  if (row.max_usuarios != null && row.uso_usuarios >= row.max_usuarios) alerts.push("Usuários");
-  if (row.max_contatos != null && row.uso_contatos >= row.max_contatos) alerts.push("Clientes");
-  if (row.max_arquivos != null && row.uso_arquivos >= row.max_arquivos) alerts.push("Arquivos BC");
-  if (row.max_mensagens != null && row.uso_mensagens >= row.max_mensagens) alerts.push("Mensagens");
+  if (row.max_usuarios != null && row.uso_usuarios >= row.max_usuarios) alerts.push(labels.users);
+  if (row.max_contatos != null && row.uso_contatos >= row.max_contatos) alerts.push(labels.clients);
+  if (row.max_arquivos != null && row.uso_arquivos >= row.max_arquivos) alerts.push(labels.filesBc);
+  if (row.max_mensagens != null && row.uso_mensagens >= row.max_mensagens) alerts.push(labels.messages);
 
   const near: string[] = [];
-  if (row.max_usuarios != null && row.uso_usuarios >= row.max_usuarios * LIMIT_THRESHOLD && row.uso_usuarios < row.max_usuarios) near.push("Usuários");
-  if (row.max_contatos != null && row.uso_contatos >= row.max_contatos * LIMIT_THRESHOLD && row.uso_contatos < row.max_contatos) near.push("Clientes");
-  if (row.max_arquivos != null && row.uso_arquivos >= row.max_arquivos * LIMIT_THRESHOLD && row.uso_arquivos < row.max_arquivos) near.push("Arquivos BC");
-  if (row.max_mensagens != null && row.uso_mensagens >= row.max_mensagens * LIMIT_THRESHOLD && row.uso_mensagens < row.max_mensagens) near.push("Mensagens");
+  if (row.max_usuarios != null && row.uso_usuarios >= row.max_usuarios * LIMIT_THRESHOLD && row.uso_usuarios < row.max_usuarios) near.push(labels.users);
+  if (row.max_contatos != null && row.uso_contatos >= row.max_contatos * LIMIT_THRESHOLD && row.uso_contatos < row.max_contatos) near.push(labels.clients);
+  if (row.max_arquivos != null && row.uso_arquivos >= row.max_arquivos * LIMIT_THRESHOLD && row.uso_arquivos < row.max_arquivos) near.push(labels.filesBc);
+  if (row.max_mensagens != null && row.uso_mensagens >= row.max_mensagens * LIMIT_THRESHOLD && row.uso_mensagens < row.max_mensagens) near.push(labels.messages);
 
   if (alerts.length === 0 && near.length === 0) {
-    return <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="Dentro dos limites" />;
+    return <CheckCircle2 className="h-4 w-4 text-green-600" aria-label={t("superAdmin.reports.withinLimits")} />;
   }
+  const nearSuffix = ` ${t("superAdmin.reports.near")}`;
   return (
     <div className="flex flex-wrap gap-1">
       {alerts.map((a) => (
@@ -86,7 +89,7 @@ function AlertBadges({ row }: { row: OrgRow }) {
       ))}
       {near.map((n) => (
         <Badge key={n} variant="secondary" className="text-xs text-amber-700 border-amber-500/50">
-          {n} próximo
+          {n}{nearSuffix}
         </Badge>
       ))}
     </div>
@@ -94,6 +97,7 @@ function AlertBadges({ row }: { row: OrgRow }) {
 }
 
 export default function Relatorios() {
+  const { t } = useTranslation();
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
   const [page, setPage] = useState(1);
 
@@ -235,16 +239,16 @@ export default function Relatorios() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10">
               <BarChart3 className="h-4 w-4 text-teal-500" />
             </div>
-            Relatórios de Consumo
+            {t("superAdmin.reports.title")}
           </h1>
-          <p>Uso atual vs. limites do plano. Alertas quando próximo ou no limite.</p>
+          <p>{t("superAdmin.reports.subtitle")}</p>
         </div>
         <Card className="border-destructive/50">
           <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
             <AlertTriangle className="h-12 w-12 text-destructive" />
-            <p className="text-center text-muted-foreground">Não foi possível carregar os dados.</p>
+            <p className="text-center text-muted-foreground">{t("superAdmin.reports.loadError")}</p>
             <p className="text-center text-sm text-muted-foreground max-w-md">{error instanceof Error ? error.message : String(error)}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>{t("superAdmin.reports.retry")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -259,18 +263,18 @@ export default function Relatorios() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10">
               <BarChart3 className="h-4 w-4 text-teal-500" />
             </div>
-            Relatórios de Consumo
+            {t("superAdmin.reports.title")}
           </h1>
-          <p>Uso atual vs. limites do plano. Alertas quando próximo ou no limite.</p>
+          <p>{t("superAdmin.reports.subtitle")}</p>
         </div>
         <div className="flex items-center gap-1.5 min-w-0 shrink-0">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <Select value={selectedOrg} onValueChange={handleOrgChange}>
             <SelectTrigger className="h-9 text-xs w-[200px]">
-              <SelectValue placeholder="Todas as empresas" />
+              <SelectValue placeholder={t("superAdmin.reports.allCompanies")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as empresas</SelectItem>
+              <SelectItem value="all">{t("superAdmin.reports.allCompanies")}</SelectItem>
               {rows.map((o) => (
                 <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>
               ))}
@@ -285,17 +289,17 @@ export default function Relatorios() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <MessageSquare className="h-4 w-4 text-blue-500" />
-              <span className="text-xs font-medium">Mensagens (mês)</span>
+              <span className="text-xs font-medium">{t("superAdmin.reports.messagesMonth")}</span>
             </div>
-            <p className="text-2xl font-bold tabular-nums">{totalMensagens.toLocaleString("pt-BR")}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Tabelas &#123;empresa&#125;_chats (mês atual)</p>
+            <p className="text-2xl font-bold tabular-nums">{totalMensagens.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t("superAdmin.reports.messagesHint")}</p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <UserCircle className="h-4 w-4 text-teal-500" />
-              <span className="text-xs font-medium">Usuários</span>
+              <span className="text-xs font-medium">{t("superAdmin.reports.users")}</span>
             </div>
             <p className="text-2xl font-bold tabular-nums">{totalUsuarios.toLocaleString("pt-BR")}</p>
           </CardContent>
@@ -304,7 +308,7 @@ export default function Relatorios() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Users className="h-4 w-4 text-violet-500" />
-              <span className="text-xs font-medium">Clientes</span>
+              <span className="text-xs font-medium">{t("superAdmin.reports.clients")}</span>
             </div>
             <p className="text-2xl font-bold tabular-nums">{totalClientes.toLocaleString("pt-BR")}</p>
           </CardContent>
@@ -313,7 +317,7 @@ export default function Relatorios() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <FileText className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-medium">Arquivos BC</span>
+              <span className="text-xs font-medium">{t("superAdmin.reports.filesBc")}</span>
             </div>
             <p className="text-2xl font-bold tabular-nums">{totalArquivos.toLocaleString("pt-BR")}</p>
           </CardContent>
@@ -324,38 +328,38 @@ export default function Relatorios() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium">Empresas com alerta (no limite ou acima)</span>
+              <span className="text-sm font-medium">{t("superAdmin.reports.companiesWithAlert")}</span>
             </div>
-            <span className={cn("text-lg font-bold tabular-nums", empresasComAlerta > 0 ? "text-destructive" : "text-muted-foreground")}>{empresasComAlerta} de {filteredRows.length}</span>
+            <span className={cn("text-lg font-bold tabular-nums", empresasComAlerta > 0 ? "text-destructive" : "text-muted-foreground")}>{empresasComAlerta} {t("superAdmin.reports.paginationOf")} {filteredRows.length}</span>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Uso por empresa</CardTitle>
+          <CardTitle className="text-base">{t("superAdmin.reports.usageByCompany")}</CardTitle>
           <CardDescription>
-            Mensagens contadas das tabelas dinâmicas &#123;empresa&#125;_chats (mês atual). Demais limites em tempo real.
+            {t("superAdmin.reports.usageTableDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="font-semibold">Empresa</TableHead>
-                <TableHead className="font-semibold">Plano</TableHead>
-                <TableHead className="font-semibold">Mensagens</TableHead>
-                <TableHead className="font-semibold">Usuários</TableHead>
-                <TableHead className="font-semibold">Clientes</TableHead>
-                <TableHead className="font-semibold">Arquivos (BC)</TableHead>
-                <TableHead className="font-semibold text-right">Alertas</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.company")}</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.plan")}</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.messages")}</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.users")}</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.clients")}</TableHead>
+                <TableHead className="font-semibold">{t("superAdmin.reports.filesBc")}</TableHead>
+                <TableHead className="font-semibold text-right">{t("superAdmin.reports.alerts")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedRows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Nenhuma empresa encontrada.
+                    {t("superAdmin.reports.noCompaniesFound")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -366,19 +370,19 @@ export default function Relatorios() {
                       <Badge variant="outline" className="text-xs">{row.nome_plano}</Badge>
                     </TableCell>
                     <TableCell>
-                      <UsageCell current={row.uso_mensagens} max={row.max_mensagens} label="Mensagens WhatsApp/mês" />
+                      <UsageCell current={row.uso_mensagens} max={row.max_mensagens} label={t("superAdmin.reports.messagesWhatsappMonth")} limitText={t("superAdmin.reports.limit")} nearText={t("superAdmin.reports.near")} />
                     </TableCell>
                     <TableCell>
-                      <UsageCell current={row.uso_usuarios} max={row.max_usuarios} label="Usuários" />
+                      <UsageCell current={row.uso_usuarios} max={row.max_usuarios} label={t("superAdmin.reports.users")} limitText={t("superAdmin.reports.limit")} nearText={t("superAdmin.reports.near")} />
                     </TableCell>
                     <TableCell>
-                      <UsageCell current={row.uso_contatos} max={row.max_contatos} label="Clientes" />
+                      <UsageCell current={row.uso_contatos} max={row.max_contatos} label={t("superAdmin.reports.clients")} limitText={t("superAdmin.reports.limit")} nearText={t("superAdmin.reports.near")} />
                     </TableCell>
                     <TableCell>
-                      <UsageCell current={row.uso_arquivos} max={row.max_arquivos} label="Arquivos na base de conhecimento" />
+                      <UsageCell current={row.uso_arquivos} max={row.max_arquivos} label={t("superAdmin.reports.filesKnowledgeBase")} limitText={t("superAdmin.reports.limit")} nearText={t("superAdmin.reports.near")} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <AlertBadges row={row} />
+                      <AlertBadges row={row} t={t} />
                     </TableCell>
                   </TableRow>
                 ))
@@ -390,7 +394,7 @@ export default function Relatorios() {
           {filteredRows.length > PAGE_SIZE && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-muted-foreground">
-                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredRows.length)} de {filteredRows.length}
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredRows.length)} {t("superAdmin.reports.paginationOf")} {filteredRows.length}
               </p>
               <div className="flex items-center gap-1">
                 <Button

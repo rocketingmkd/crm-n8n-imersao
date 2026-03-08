@@ -153,6 +153,7 @@ Verifique em **Storage** que os buckets existem e estão como **Public**. Se o u
 | `organizacoes` | Empresas clientes (raiz multi-tenant) |
 | `perfis` | Usuários com função e organização |
 | `contatos` | Contatos/clientes das organizações |
+| `historico_contatos` | Linhas de histórico por cliente (CRM) |
 | `agendamentos` | Agendamentos com início/fim ISO8601 |
 | `configuracoes` | Configurações por organização |
 | `config_agente_ia` | Personalidade e config do agente IA |
@@ -163,6 +164,16 @@ Verifique em **Storage** que os buckets existem e estão como **Public**. Se o u
 | `configuracoes_globais` | Config global da plataforma |
 | `documentos` | Base de conhecimento (RAG) |
 | `clientes_followup` | Follow-up de clientes via n8n |
+
+---
+
+## Migrations (banco já instalado)
+
+Se você já tem o banco instalado e precisa apenas de novas tabelas, execute as migrations em `supabase/migrations/` no SQL Editor:
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `20250217_historico_contatos.sql` | Tabela de histórico do cliente (linhas adicionáveis no card do CRM) |
 
 ---
 
@@ -190,3 +201,11 @@ Desative **Verify JWT** na edge function pelo dashboard.
 
 ### Tabelas de conversas (`*_conversas`)
 Essas tabelas são criadas dinamicamente pelo n8n ao cadastrar uma organização. Não são incluídas no install pois dependem do `codigo` de cada organização.
+
+---
+
+## Migrations (banco já instalado)
+
+Se você já tem o banco instalado e precisa apenas de novas tabelas, execute as migrations em `supabase/migrations/` no SQL Editor:
+
+- **`20250217_historico_contatos.sql`** — Tabela de histórico do cliente (linhas adicionáveis no card do CRM)

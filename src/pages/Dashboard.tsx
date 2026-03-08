@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import {
   ChartContainer,
@@ -62,6 +63,7 @@ interface PatientFormData {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { data: allAppointments = [], isLoading: loadingAppointments } = useAppointments();
   const { data: contacts = [], isLoading: loadingContacts } = useContacts();
   const { data: tiposAtendimento = [] } = useTiposAtendimento();
@@ -110,9 +112,9 @@ export default function Dashboard() {
   const { data: tokenUsage } = useTokenUsageOrg(analyticsRange.start, analyticsRange.end);
 
   const periodLabel =
-    analyticsPeriod === 'today' ? 'Hoje' :
-    analyticsPeriod === '7d' ? 'Últimos 7 dias' :
-    analyticsPeriod === '30d' ? 'Último mês' : 'Últimos 3 meses';
+    analyticsPeriod === 'today' ? t('app.dashboard.periodToday') :
+    analyticsPeriod === '7d' ? t('app.dashboard.period7d') :
+    analyticsPeriod === '30d' ? t('app.dashboard.period30d') : t('app.dashboard.period90d');
 
   const contatosConcluidosNoPeriodo = contacts.filter((c) => {
     if ((c as { status_kanban?: string }).status_kanban !== 'concluido') return false;
@@ -266,7 +268,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dashboard...</p>
+          <p className="text-muted-foreground">{t('app.dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -277,12 +279,10 @@ export default function Dashboard() {
       {/* Welcome Header */}
       <div className="animate-fade-in">
         <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground mb-2">
-          Bem-vindo, {profile?.nome_completo || 'Usuário'}
+          {t('app.dashboard.welcomeUser', { name: profile?.nome_completo || t('app.dashboard.user') })}
         </h1>
         <p className="text-base md:text-lg text-muted-foreground">
-          {hasAgendamento 
-            ? 'Seu dia está organizado. Aqui está sua visão geral.'
-            : 'Acompanhe suas métricas de atendimento em tempo real.'}
+          {hasAgendamento ? t('app.dashboard.subtitleWithAgenda') : t('app.dashboard.subtitleWithoutAgenda')}
         </p>
       </div>
 
@@ -297,8 +297,8 @@ export default function Dashboard() {
               <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
                 <Clock className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Hoje</h3>
-              <p className="text-sm text-muted-foreground">Ver compromissos de hoje</p>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.today')}</h3>
+              <p className="text-sm text-muted-foreground">{t('app.dashboard.todayDesc')}</p>
             </button>
 
             <button 
@@ -308,8 +308,8 @@ export default function Dashboard() {
               <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
                 <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Novo Agendamento</h3>
-              <p className="text-sm text-muted-foreground">Agende um novo atendimento</p>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.newAppointment')}</h3>
+              <p className="text-sm text-muted-foreground">{t('app.dashboard.newAppointmentDesc')}</p>
             </button>
           </>
         ) : (
@@ -321,8 +321,8 @@ export default function Dashboard() {
               <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
                 <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Atendimentos</h3>
-              <p className="text-sm text-muted-foreground">Ver métricas detalhadas</p>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.attendances')}</h3>
+              <p className="text-sm text-muted-foreground">{t('app.dashboard.attendancesDesc')}</p>
             </button>
 
             <button 
@@ -332,8 +332,8 @@ export default function Dashboard() {
               <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
                 <Activity className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Configurar Assistente Virtual</h3>
-              <p className="text-sm text-muted-foreground">Ajuste seu atendimento IA</p>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.configureAssistant')}</h3>
+              <p className="text-sm text-muted-foreground">{t('app.dashboard.configureAssistantDesc')}</p>
             </button>
           </>
         )}
@@ -345,8 +345,8 @@ export default function Dashboard() {
           <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
             <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           </div>
-          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Adicionar Contato</h3>
-          <p className="text-sm text-muted-foreground">Cadastre um novo contato</p>
+          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.addContact')}</h3>
+          <p className="text-sm text-muted-foreground">{t('app.dashboard.addContactDesc')}</p>
         </button>
 
         <button 
@@ -356,8 +356,8 @@ export default function Dashboard() {
           <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
             <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           </div>
-          <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">Ver Relatórios</h3>
-          <p className="text-sm text-muted-foreground">Analise suas métricas</p>
+              <h3 className="mb-1.5 md:mb-2 font-semibold text-foreground group-hover:text-primary transition-colors">{t('app.dashboard.viewReports')}</h3>
+              <p className="text-sm text-muted-foreground">{t('app.dashboard.viewReportsDesc')}</p>
         </button>
       </div>
 
@@ -365,7 +365,7 @@ export default function Dashboard() {
       {isBasicOrIntermediate && !hasAgendamento ? (
         <div className="liquid-glass p-6 md:p-8 mt-4 rounded-2xl border border-border/50">
           <p className="text-muted-foreground text-center">
-            Relatórios, analytics e o quadro de minhas tarefas estão disponíveis em planos superiores.
+            {t('app.dashboard.reportsUpgrade')}
           </p>
         </div>
       ) : (
@@ -374,19 +374,19 @@ export default function Dashboard() {
           {showTarefasAnalyticsRelatorios && (
             <TabsTrigger value="tarefas" className="gap-2 text-sm px-4">
               <ListTodo className="h-4 w-4" />
-              Minhas Tarefas
+              {t('app.dashboard.myTasks')}
             </TabsTrigger>
           )}
           {hasAgendamento && (
             <TabsTrigger value="agenda" className="gap-2 text-sm px-4">
               <Calendar className="h-4 w-4" />
-              Agenda do Dia
+              {t('app.dashboard.dayAgenda')}
             </TabsTrigger>
           )}
           {showTarefasAnalyticsRelatorios && (
             <TabsTrigger value="analytics" className="gap-2 text-sm px-4">
               <BarChart3 className="h-4 w-4" />
-              Analytics
+              {t('app.dashboard.analytics')}
             </TabsTrigger>
           )}
         </TabsList>
@@ -406,7 +406,7 @@ export default function Dashboard() {
                 <div>
                   <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
                     <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                    Agenda de Hoje
+                    {t('app.dashboard.dayAgenda')}
                   </h2>
                   <p className="text-sm md:text-base text-muted-foreground">
                     {new Date().toLocaleDateString("pt-BR", {
@@ -423,22 +423,22 @@ export default function Dashboard() {
                   onClick={() => window.location.href = '/app/agenda'}
                   className="hidden sm:flex gap-2"
                 >
-                  Ver Agenda Completa
+                  {t('app.dashboard.fullAgenda')}
                 </Button>
               </div>
 
               {todayAppointments.length === 0 ? (
                 <div className="text-center py-12 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-dashed border-primary/20">
                   <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="text-lg font-medium text-foreground mb-2">Nenhum compromisso hoje</p>
-                  <p className="text-sm text-muted-foreground mb-4">Aproveite para descansar ou planejar sua semana</p>
+                  <p className="text-lg font-medium text-foreground mb-2">{t('app.dashboard.noAppointmentToday')}</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('app.dashboard.restOrPlan')}</p>
                   <Button
                     variant="outline"
                     onClick={() => setIsAppointmentModalOpen(true)}
                     className="gap-2"
                   >
                     <Calendar className="h-4 w-4" />
-                    Agendar Compromisso
+                    {t('app.dashboard.scheduleAppointment')}
                   </Button>
                 </div>
               ) : (
@@ -482,7 +482,7 @@ export default function Dashboard() {
                                 : "bg-muted text-muted-foreground border border-border"
                             }`}
                           >
-                            {appointment.situacao === "confirmado" ? "Confirmado" : appointment.situacao === "pendente" ? "Pendente" : "Concluído"}
+                            {appointment.situacao === "confirmado" ? t('app.dashboard.confirmed') : appointment.situacao === "pendente" ? t('app.dashboard.pending') : t('app.dashboard.completed')}
                           </div>
                         </div>
                       );
@@ -499,10 +499,10 @@ export default function Dashboard() {
           {/* Period Filter - type="button" evita submit e mantém a aba Analytics */}
           <div className="flex items-center gap-2 flex-wrap">
             {([
-              { value: 'today' as const, label: 'Hoje' },
-              { value: '7d' as const, label: 'Últimos 7 dias' },
-              { value: '30d' as const, label: 'Último mês' },
-              { value: '90d' as const, label: 'Últimos 3 meses' },
+              { value: 'today' as const, label: t('app.dashboard.periodToday') },
+              { value: '7d' as const, label: t('app.dashboard.period7d') },
+              { value: '30d' as const, label: t('app.dashboard.period30d') },
+              { value: '90d' as const, label: t('app.dashboard.period90d') },
             ]).map((opt) => (
               <Button
                 key={opt.value}
@@ -516,7 +516,7 @@ export default function Dashboard() {
                 }}
                 className="text-xs"
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </Button>
             ))}
           </div>
@@ -526,7 +526,7 @@ export default function Dashboard() {
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               onClick={() => setIsReportsModalOpen(true)}>
               <KPICard
-                title="Conversas"
+                title={t('app.dashboard.conversations')}
                 value={
                   analyticsPeriod === 'today' ? (chatMetrics?.conversationsToday ?? 0) :
                   analyticsPeriod === '7d' ? (chatMetrics?.conversationsThisWeek ?? 0) :
@@ -534,10 +534,10 @@ export default function Dashboard() {
                   (chatMetrics?.conversationsLast90d ?? 0)
                 }
                 change={
-                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday ?? 0} mensagens` :
-                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek ?? 0} mensagens` :
-                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth ?? 0} mensagens` :
-                  `${chatMetrics?.messagesLast90d ?? 0} mensagens`
+                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday ?? 0} ${t('app.dashboard.messages')}` :
+                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek ?? 0} ${t('app.dashboard.messages')}` :
+                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth ?? 0} ${t('app.dashboard.messages')}` :
+                  `${chatMetrics?.messagesLast90d ?? 0} ${t('app.dashboard.messages')}`
                 }
                 changeType="positive"
                 icon={MessageSquare}
@@ -547,7 +547,7 @@ export default function Dashboard() {
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               onClick={() => setIsReportsModalOpen(true)}>
               <KPICard
-                title="Mensagens"
+                title={t('app.dashboard.messages')}
                 value={
                   analyticsPeriod === 'today' ? (chatMetrics?.messagesToday ?? 0) :
                   analyticsPeriod === '7d' ? (chatMetrics?.messagesThisWeek ?? 0) :
@@ -556,7 +556,7 @@ export default function Dashboard() {
                 }
                 changeType="positive"
                 icon={Activity}
-                description={`Volume de mensagens · ${periodLabel}`}
+                description={`${t('app.dashboard.messagesVolume')} · ${periodLabel}`}
               />
             </div>
 
@@ -567,7 +567,7 @@ export default function Dashboard() {
                   <KPICard
                     title={analyticsPeriod === 'today' ? 'Compromissos Hoje' : 'Compromissos no período'}
                     value={analyticsPeriod === 'today' ? todayAppointments.length : appointmentsInPeriod.length}
-                    change={`${analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo} confirmados`}
+                    change={t('app.dashboard.confirmedCount', { count: analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo })}
                     changeType="positive"
                     icon={Calendar}
                     description={periodLabel}
@@ -578,7 +578,7 @@ export default function Dashboard() {
                   <KPICard
                     title="Taxa de Confirmação"
                     value={`${taxaConfirmacaoAgenda}%`}
-                    change={`${confirmadosAgendaNoPeriodo} confirmados / ${totalAgendaNoPeriodo} na Agenda`}
+                    change={`${confirmadosAgendaNoPeriodo} ${t('app.dashboard.confirmed').toLowerCase()} / ${totalAgendaNoPeriodo} ${t('app.dashboard.inAgenda')}`}
                     changeType="positive"
                     icon={CheckCircle2}
                     description={`Agenda · ${periodLabel}`}
@@ -604,7 +604,7 @@ export default function Dashboard() {
               <KPICard
                 title="Tarefas"
                 value={tarefas.length}
-                change={`${tarefas.filter(t => t.status === 'a_fazer').length} a fazer · ${tarefas.filter(t => t.status === 'feito').length} concluídas`}
+                change={`${tarefas.filter(t => t.status === 'a_fazer').length} ${t('app.dashboard.toDo')} · ${tarefas.filter(t => t.status === 'feito').length} ${t('app.dashboard.done')}`}
                 changeType="neutral"
                 icon={ListTodo}
                 description="Kanban de tarefas"
@@ -614,12 +614,12 @@ export default function Dashboard() {
             <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               onClick={() => window.location.href = '/app/clientes/crm'}>
               <KPICard
-                title={`${plural} Totais`}
+                title={t('app.dashboard.totalContacts', { plural })}
                 value={contacts.length}
-                change={`${activeContacts} ativos`}
+                change={t('app.dashboard.activeCount', { count: activeContacts })}
                 changeType="positive"
                 icon={Users}
-                description="Base de contatos"
+                description={t('app.dashboard.contactsBase')}
               />
             </div>
           </div>
@@ -1049,7 +1049,7 @@ export default function Dashboard() {
                 onClick={() => setIsAppointmentModalOpen(false)}
                 disabled={createAppointment.isPending}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createAppointment.isPending}>
                 {createAppointment.isPending ? 'Processando...' : 'Criar Agendamento'}
@@ -1135,7 +1135,7 @@ export default function Dashboard() {
                 variant="outline"
                 onClick={() => setIsPatientModalOpen(false)}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createContact.isPending}>
                 {createContact.isPending ? 'Criando...' : `Adicionar ${singular}`}

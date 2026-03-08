@@ -28,17 +28,9 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid } from "rec
 import { supabase } from "@/lib/supabase";
 import { fetchContagemMensagensPorOrg } from "@/lib/conversas";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type PeriodFilter = "7d" | "14d" | "30d" | "60d" | "90d" | "all";
-
-const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
-  { value: "7d", label: "Últimos 7 dias" },
-  { value: "14d", label: "Últimas 2 semanas" },
-  { value: "30d", label: "Último mês" },
-  { value: "60d", label: "Últimos 2 meses" },
-  { value: "90d", label: "Últimos 3 meses" },
-  { value: "all", label: "Todo o período" },
-];
 
 function getDaysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -70,7 +62,17 @@ const KPI_COLORS = [
   { bg: "bg-pink-500/10", text: "text-pink-500", border: "border-pink-500/20" },
 ];
 
+const PERIOD_OPTIONS: { value: PeriodFilter; labelKey: string }[] = [
+  { value: "7d", labelKey: "superAdmin.dashboard.period7d" },
+  { value: "14d", labelKey: "superAdmin.dashboard.period14d" },
+  { value: "30d", labelKey: "superAdmin.dashboard.period30d" },
+  { value: "60d", labelKey: "superAdmin.dashboard.period60d" },
+  { value: "90d", labelKey: "superAdmin.dashboard.period90d" },
+  { value: "all", labelKey: "superAdmin.dashboard.periodAll" },
+];
+
 export default function SuperAdminDashboard() {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<PeriodFilter>("90d");
   const [selectedOrg, setSelectedOrg] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -127,7 +129,7 @@ export default function SuperAdminDashboard() {
         setMsgCountByOrgId(msgCounts);
       } catch (e) {
         console.error(e);
-        toast.error("Erro ao carregar dados do dashboard");
+        toast.error(t("superAdmin.dashboard.loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -230,7 +232,7 @@ export default function SuperAdminDashboard() {
   const orgChartData = useMemo(() => {
     const map: Record<string, { tokens: number; cost: number }> = {};
     filteredTokens.forEach((r) => {
-      const name = orgMap.get(r.id_organizacao)?.nome || "Desconhecida";
+      const name = orgMap.get(r.id_organizacao)?.nome || t("superAdmin.dashboard.unknown");
       if (!map[name]) map[name] = { tokens: 0, cost: 0 };
       map[name].tokens += r.total_tokens || 0;
       map[name].cost += Number(r.custo_reais) || 0;
@@ -243,7 +245,7 @@ export default function SuperAdminDashboard() {
       }))
       .sort((a, b) => b.tokens - a.tokens)
       .slice(0, 10);
-  }, [filteredTokens, orgMap]);
+  }, [filteredTokens, orgMap, t]);
 
   const msgChartData = useMemo(() => {
     const filtered = selectedOrg !== "all" ? orgs.filter((o) => o.id === selectedOrg) : orgs;
@@ -278,16 +280,16 @@ export default function SuperAdminDashboard() {
   }
 
   const kpis = [
-    { title: "Organizações", value: selectedOrg === "all" ? counts.totalOrgs : 1, description: selectedOrg === "all" ? `${counts.activeOrgs} ativas` : "Filtrada", icon: Building2, filterable: true },
-    { title: "Usuários", value: filteredCounts.users, description: selectedOrg === "all" ? "Cadastrados" : "Na organização", icon: Users, filterable: true },
-    { title: "Clientes", value: filteredCounts.patients, description: selectedOrg === "all" ? "Em todas as orgs" : "Na organização", icon: Activity, filterable: true },
-    { title: "Compromissos", value: filteredCounts.appointments, description: selectedOrg === "all" ? "Agendamentos" : "Na organização", icon: TrendingUp, filterable: true },
-    { title: "Tokens", value: totalTokens.toLocaleString("pt-BR"), description: "No período", icon: Zap, filterable: false },
-    { title: "Custo (R$)", value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: "No período", icon: DollarSign, filterable: false },
-    { title: "Mensagens", value: totalMensagens.toLocaleString("pt-BR"), description: "No período", icon: MessageSquare, filterable: false },
-    { title: "Arquivos RAG", value: totalArquivosRag.toLocaleString("pt-BR"), description: "Arquivos únicos", icon: FileText, filterable: false },
-    { title: "Média Custo/Emp.", value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: "Visão média", icon: DollarSign, filterable: false },
-    { title: "Média Tokens/Emp.", value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: "Visão média", icon: Zap, filterable: false },
+    { title: t("superAdmin.dashboard.organizations"), value: selectedOrg === "all" ? counts.totalOrgs : 1, description: selectedOrg === "all" ? `${counts.activeOrgs} ${t("superAdmin.dashboard.active")}` : t("superAdmin.dashboard.filtered"), icon: Building2, filterable: true },
+    { title: t("superAdmin.dashboard.users"), value: filteredCounts.users, description: selectedOrg === "all" ? t("superAdmin.dashboard.registered") : t("superAdmin.dashboard.inOrg"), icon: Users, filterable: true },
+    { title: t("superAdmin.dashboard.clients"), value: filteredCounts.patients, description: selectedOrg === "all" ? t("superAdmin.dashboard.inAllOrgs") : t("superAdmin.dashboard.inOrg"), icon: Activity, filterable: true },
+    { title: t("superAdmin.dashboard.appointments"), value: filteredCounts.appointments, description: selectedOrg === "all" ? t("superAdmin.dashboard.appointments") : t("superAdmin.dashboard.inOrg"), icon: TrendingUp, filterable: true },
+    { title: t("superAdmin.dashboard.tokens"), value: totalTokens.toLocaleString("pt-BR"), description: t("superAdmin.dashboard.inPeriod"), icon: Zap, filterable: false },
+    { title: t("superAdmin.dashboard.cost"), value: totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), description: t("superAdmin.dashboard.inPeriod"), icon: DollarSign, filterable: false },
+    { title: t("superAdmin.dashboard.messages"), value: totalMensagens.toLocaleString("pt-BR"), description: t("superAdmin.dashboard.inPeriod"), icon: MessageSquare, filterable: false },
+    { title: t("superAdmin.dashboard.ragFiles"), value: totalArquivosRag.toLocaleString("pt-BR"), description: t("superAdmin.dashboard.uniqueFiles"), icon: FileText, filterable: false },
+    { title: t("superAdmin.dashboard.avgCost"), value: mediaCusto.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }), description: t("superAdmin.dashboard.avgView"), icon: DollarSign, filterable: false },
+    { title: t("superAdmin.dashboard.avgTokens"), value: Math.round(mediaTokens).toLocaleString("pt-BR"), description: t("superAdmin.dashboard.avgView"), icon: Zap, filterable: false },
   ];
 
   return (
@@ -295,8 +297,8 @@ export default function SuperAdminDashboard() {
       {/* Header com filtros */}
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Visão Geral</h1>
-          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Resumo completo: tokens, mensagens, arquivos e visão média</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">{t("superAdmin.dashboard.title")}</h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("superAdmin.dashboard.subtitle")}</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -307,7 +309,7 @@ export default function SuperAdminDashboard() {
               </SelectTrigger>
               <SelectContent>
                 {PERIOD_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -316,10 +318,10 @@ export default function SuperAdminDashboard() {
             <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedOrg} onValueChange={setSelectedOrg}>
               <SelectTrigger className="h-9 text-xs w-[200px]">
-                <SelectValue placeholder="Todas as empresas" />
+                <SelectValue placeholder={t("superAdmin.dashboard.allCompanies")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as empresas</SelectItem>
+                <SelectItem value="all">{t("superAdmin.dashboard.allCompanies")}</SelectItem>
                 {orgs.map((o) => (
                   <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>
                 ))}
@@ -362,17 +364,17 @@ export default function SuperAdminDashboard() {
       <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
         <Card className="border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
+              <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <Zap className="h-4 w-4 text-amber-500" />
-              Consumo de Tokens
+              {t("superAdmin.dashboard.tokenConsumption")}
             </CardTitle>
-            <CardDescription className="text-xs">Evolução no período selecionado</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.evolutionInPeriod")}</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataInPeriod")}</div>
             ) : (
-              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(45, 93%, 47%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ tokens: { label: t("superAdmin.dashboard.tokens"), color: "hsl(45, 93%, 47%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <LineChart data={dailyChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
@@ -389,20 +391,20 @@ export default function SuperAdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <DollarSign className="h-4 w-4 text-emerald-500" />
-              Custo (R$)
+              {t("superAdmin.dashboard.costEvolution")}
             </CardTitle>
-            <CardDescription className="text-xs">Evolução no período selecionado</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.evolutionInPeriod")}</CardDescription>
           </CardHeader>
           <CardContent>
             {dailyChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataInPeriod")}</div>
             ) : (
-              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ cost: { label: t("superAdmin.dashboard.cost"), color: "hsl(142, 72%, 40%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <LineChart data={dailyChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
-                  <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, "Custo"]} />
+                  <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, t("superAdmin.dashboard.cost")]} />
                   <Line type="monotone" dataKey="cost" stroke="hsl(142, 72%, 40%)" strokeWidth={2} dot={{ r: 2 }} />
                 </LineChart>
               </ChartContainer>
@@ -414,15 +416,15 @@ export default function SuperAdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <Building2 className="h-4 w-4 text-violet-500" />
-              Tokens por Empresa (Top 10)
+              {t("superAdmin.dashboard.tokensByCompany")}
             </CardTitle>
-            <CardDescription className="text-xs">No período selecionado</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.evolutionInPeriod")}</CardDescription>
           </CardHeader>
           <CardContent>
             {orgChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataInPeriod")}</div>
             ) : (
-              <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(262, 83%, 58%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ tokens: { label: t("superAdmin.dashboard.tokens"), color: "hsl(262, 83%, 58%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={orgChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v))} />
@@ -439,20 +441,20 @@ export default function SuperAdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <DollarSign className="h-4 w-4 text-rose-500" />
-              Custo por Empresa (Top 10)
+              {t("superAdmin.dashboard.costByCompany")}
             </CardTitle>
-            <CardDescription className="text-xs">No período selecionado</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.evolutionInPeriod")}</CardDescription>
           </CardHeader>
           <CardContent>
             {orgChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataInPeriod")}</div>
             ) : (
-              <ChartContainer config={{ cost: { label: "Custo (R$)", color: "hsl(350, 89%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ cost: { label: t("superAdmin.dashboard.cost"), color: "hsl(350, 89%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={orgChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$ ${v}`} />
                   <YAxis type="category" dataKey="name" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} width={100} />
-                  <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, "Custo"]} />
+                  <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`, t("superAdmin.dashboard.cost")]} />
                   <Bar dataKey="cost" fill="hsl(350, 89%, 60%)" radius={[0, 4, 4, 0]} opacity={0.9} />
                 </BarChart>
               </ChartContainer>
@@ -467,15 +469,15 @@ export default function SuperAdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <MessageSquare className="h-4 w-4 text-blue-500" />
-              Mensagens por Empresa
+              {t("superAdmin.dashboard.messagesByCompany")}
             </CardTitle>
-            <CardDescription className="text-xs">Total de mensagens por organização</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.totalMessagesByOrg")}</CardDescription>
           </CardHeader>
           <CardContent>
             {msgChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado disponível</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataAvailable")}</div>
             ) : (
-              <ChartContainer config={{ mensagens: { label: "Mensagens", color: "hsl(217, 91%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ mensagens: { label: t("superAdmin.dashboard.messages"), color: "hsl(217, 91%, 60%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={msgChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
@@ -492,15 +494,15 @@ export default function SuperAdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-foreground flex items-center gap-2 text-sm md:text-base">
               <FileText className="h-4 w-4 text-teal-500" />
-              Arquivos de Conhecimento por Empresa
+              {t("superAdmin.dashboard.knowledgeFilesByCompany")}
             </CardTitle>
-            <CardDescription className="text-xs">Documentos RAG únicos por organização</CardDescription>
+            <CardDescription className="text-xs">{t("superAdmin.dashboard.uniqueRagDocsByOrg")}</CardDescription>
           </CardHeader>
           <CardContent>
             {filesChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">Nenhum dado disponível</div>
+              <div className="flex items-center justify-center h-48 md:h-64 text-muted-foreground text-sm">{t("superAdmin.dashboard.noDataAvailable")}</div>
             ) : (
-              <ChartContainer config={{ arquivos: { label: "Arquivos", color: "hsl(168, 76%, 42%)" } }} className="h-[200px] md:h-[280px] w-full">
+              <ChartContainer config={{ arquivos: { label: t("superAdmin.dashboard.ragFiles"), color: "hsl(168, 76%, 42%)" } }} className="h-[200px] md:h-[280px] w-full">
                 <BarChart data={filesChartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" style={{ fontSize: "10px" }} tick={{ fill: "hsl(var(--muted-foreground))" }} />
@@ -517,8 +519,8 @@ export default function SuperAdminDashboard() {
       {/* Empresas Recentes */}
       <Card className="border-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-foreground text-sm md:text-base">Empresas Recentes</CardTitle>
-          <CardDescription className="text-xs">Últimas empresas cadastradas</CardDescription>
+          <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.dashboard.recentCompanies")}</CardTitle>
+          <CardDescription className="text-xs">{t("superAdmin.dashboard.lastRegistered")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -535,14 +537,14 @@ export default function SuperAdminDashboard() {
                 </div>
                 <div className="text-right shrink-0 ml-2">
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${org.ativo ? "bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20" : "bg-muted text-muted-foreground ring-1 ring-border"}`}>
-                    {org.ativo ? "Ativa" : "Inativa"}
+                    {org.ativo ? t("superAdmin.dashboard.activeStatus") : t("superAdmin.dashboard.inactiveStatus")}
                   </span>
                   <p className="text-[10px] text-muted-foreground mt-1">{org.criado_em ? new Date(org.criado_em).toLocaleDateString("pt-BR") : "—"}</p>
                 </div>
               </div>
             ))}
             {orgs.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">Nenhuma empresa cadastrada</p>
+              <p className="text-center text-muted-foreground py-8 text-sm">{t("superAdmin.dashboard.noCompanies")}</p>
             )}
           </div>
         </CardContent>

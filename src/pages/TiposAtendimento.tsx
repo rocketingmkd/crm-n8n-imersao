@@ -23,8 +23,10 @@ import {
 } from "@/components/ui/dialog";
 import { ListTodo, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function TiposAtendimento({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { data: tipos = [], isLoading } = useTiposAtendimento();
   const criar = useCriarTipoAtendimento();
   const atualizar = useAtualizarTipoAtendimento();
@@ -53,30 +55,30 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
     e.preventDefault();
     const nomeTrim = nome.trim();
     if (!nomeTrim) {
-      toast.error("Informe o nome do tipo de atendimento.");
+      toast.error(t('app.tiposAtendimento.informName'));
       return;
     }
     try {
       if (editing) {
         await atualizar.mutateAsync({ id: editing.id, nome: nomeTrim, ativo });
-        toast.success("Tipo atualizado.");
+        toast.success(t('app.tiposAtendimento.typeUpdated'));
       } else {
         await criar.mutateAsync({ nome: nomeTrim, ativo });
-        toast.success("Tipo cadastrado.");
+        toast.success(t('app.tiposAtendimento.typeCreated'));
       }
       setDialogOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar.");
+      toast.error(err instanceof Error ? err.message : t('app.tiposAtendimento.errorSave'));
     }
   };
 
   const handleDelete = async (row: TipoAtendimento) => {
-    if (!confirm(`Excluir "${row.nome}"?`)) return;
+    if (!confirm(t('app.tiposAtendimento.deleteConfirm', { name: row.nome }))) return;
     try {
       await excluir.mutateAsync(row.id);
-      toast.success("Tipo excluído.");
+      toast.success(t('app.tiposAtendimento.typeDeleted'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao excluir.");
+      toast.error(err instanceof Error ? err.message : t('app.tiposAtendimento.errorDelete'));
     }
   };
 
@@ -86,10 +88,10 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <ListTodo className="h-7 w-7 text-primary" />
-            Tipos de Atendimento
+            {t('app.tiposAtendimento.title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre os tipos de atendimento usados na Agenda e no Dashboard (ex.: Consulta, Retorno, Exame).
+            {t('app.tiposAtendimento.subtitle')}
           </p>
         </div>
       )}
@@ -97,12 +99,12 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle className="text-base">Lista de tipos</CardTitle>
-            <CardDescription>Estes tipos aparecem ao criar compromissos.</CardDescription>
+            <CardTitle className="text-base">{t('app.tiposAtendimento.listTitle')}</CardTitle>
+            <CardDescription>{t('app.tiposAtendimento.listDesc')}</CardDescription>
           </div>
           <Button onClick={openCreate} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Novo tipo
+            {t('app.tiposAtendimento.new')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -112,15 +114,15 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
             </div>
           ) : tipos.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">
-              Nenhum tipo cadastrado. Clique em &quot;Novo tipo&quot; para adicionar.
+              {t('app.tiposAtendimento.noTypes')}. {t('app.tiposAtendimento.addFirst')}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="w-[100px]">Ativo</TableHead>
-                  <TableHead className="w-[120px] text-right">Ações</TableHead>
+                  <TableHead>{t('app.tiposAtendimento.name')}</TableHead>
+                  <TableHead className="w-[100px]">{t('app.tiposAtendimento.active')}</TableHead>
+                  <TableHead className="w-[120px] text-right">{t('app.tiposAtendimento.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,18 +131,18 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
                     <TableCell className="font-medium">{row.nome}</TableCell>
                     <TableCell>
                       <span className={row.ativo ? "text-green-600" : "text-muted-foreground"}>
-                        {row.ativo ? "Sim" : "Não"}
+                        {row.ativo ? t('app.tiposAtendimento.yes') : t('app.tiposAtendimento.no')}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(row)} title="Editar">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(row)} title={t('app.tiposAtendimento.edit')}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(row)}
-                        title="Excluir"
+                        title={t('app.tiposAtendimento.delete')}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -157,35 +159,35 @@ export default function TiposAtendimento({ embedded = false }: { embedded?: bool
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar tipo" : "Novo tipo de atendimento"}</DialogTitle>
+            <DialogTitle>{editing ? t('app.tiposAtendimento.edit') + " " + t('app.tiposAtendimento.name').toLowerCase() : t('app.tiposAtendimento.new') + " " + t('app.tiposAtendimento.name').toLowerCase()}</DialogTitle>
             <DialogDescription>
-              {editing ? "Altere o nome ou o status ativo." : "Informe o nome do tipo (ex.: Consulta, Retorno)."}
+              {editing ? t('app.tiposAtendimento.dialogEditDesc') : t('app.tiposAtendimento.dialogCreateDesc')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome *</Label>
+              <Label htmlFor="nome">{t('app.tiposAtendimento.nameRequired')}</Label>
               <Input
                 id="nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                placeholder="Ex: Consulta, Retorno, Exame"
+                placeholder={t('app.tiposAtendimento.namePlaceholder')}
                 required
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch id="ativo" checked={ativo} onCheckedChange={setAtivo} />
-              <Label htmlFor="ativo">Ativo (aparece na lista ao agendar)</Label>
+              <Label htmlFor="ativo">{t('app.tiposAtendimento.activeHint')}</Label>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={criar.isPending || atualizar.isPending}>
                 {(criar.isPending || atualizar.isPending) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {editing ? "Salvar" : "Cadastrar"}
+                {editing ? t('app.tiposAtendimento.save') : t('app.tiposAtendimento.register')}
               </Button>
             </DialogFooter>
           </form>

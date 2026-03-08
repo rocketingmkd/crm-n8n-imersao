@@ -1,10 +1,12 @@
-import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid, Camera, Building2, User, Pencil } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Filter, X, FileText, MessageSquare, List, LayoutGrid, Camera, Building2, User, Pencil, History, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LimitAlert } from "@/components/LimitAlert";
 import { useContacts, useCreateContact, useUpdateContact } from "@/hooks/useContacts";
+import { useHistoricoContato, useAdicionarHistoricoContato } from "@/hooks/useHistoricoContato";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useInteracoesPorContato } from "@/hooks/useInteracoesPorContato";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,16 +56,21 @@ type KanbanStatus =
   | "concluido"
   | "all";
 
-const kanbanStatuses = [
-  { id: "novo_contato", title: "Novo Contato", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-  { id: "qualificado", title: "Qualificado", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
-  { id: "em_atendimento", title: "Em Atendimento", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  { id: "agendado", title: "Agendado", color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" },
-  { id: "aguardando_confirmacao", title: "Aguardando Confirmação", color: "bg-orange-500/10 text-orange-600 border-orange-500/20" },
-  { id: "concluido", title: "Concluído", color: "bg-green-500/10 text-green-600 border-green-500/20" },
+const kanbanStatusKeys = [
+  { id: "novo_contato" as const, tKey: "newContactStatus", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  { id: "qualificado", tKey: "qualified", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  { id: "em_atendimento", tKey: "inService", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+  { id: "agendado", tKey: "scheduled", color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" },
+  { id: "aguardando_confirmacao", tKey: "awaitingConfirmation", color: "bg-orange-500/10 text-orange-600 border-orange-500/20" },
+  { id: "concluido", tKey: "completed", color: "bg-green-500/10 text-green-600 border-green-500/20" },
 ];
 
 export default function CRM() {
+  const { t } = useTranslation();
+  const kanbanStatuses = kanbanStatusKeys.map((st) => ({
+    ...st,
+    title: t(`app.crm.${st.tKey}`),
+  }));
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<KanbanStatus>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -80,6 +87,10 @@ export default function CRM() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [novaEntradaHistorico, setNovaEntradaHistorico] = useState("");
+
+  const { data: historico = [] } = useHistoricoContato(selectedContact?.id ?? null);
+  const adicionarHistorico = useAdicionarHistoricoContato();
 
   const editForm = useForm<PatientFormData>({
     defaultValues: { status: 'ativo', tipo_pessoa: 'pf', cpf_cnpj: '' },
@@ -111,12 +122,12 @@ export default function CRM() {
 
   const onSubmit = async (data: PatientFormData) => {
     if (!profile?.id_organizacao) {
-      toast.error('Erro: organização não identificada');
+      toast.error(t('app.crm.orgNotFound'));
       return;
     }
     const limitCheck = await checkLimit('max_contatos');
     if (!limitCheck.allowed) {
-      toast.error(`Limite de ${limitCheck.max} ${p} atingido! Faça upgrade do seu plano.`);
+      toast.error(t('app.crm.limitReached', { max: limitCheck.max, plural: p }));
       return;
     }
     try {
@@ -131,7 +142,7 @@ export default function CRM() {
         tipo_pessoa: data.tipo_pessoa,
         cpf_cnpj: data.cpf_cnpj?.trim() || null,
       } as any);
-      toast.success(`${singular} cadastrado com sucesso!`);
+      toast.success(t('app.crm.contactCreated', { entity: singular }));
       setIsDialogOpen(false);
       reset();
     } catch (error: any) {
@@ -156,7 +167,7 @@ export default function CRM() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando {p}...</p>
+          <p className="text-muted-foreground">{t('app.crm.loading', { plural: p })}</p>
         </div>
       </div>
     );
@@ -168,24 +179,24 @@ export default function CRM() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
         <div>
           <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground mb-1 md:mb-2">
-            CRM / {plural}
+            {t('app.crm.title', { plural })}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground">
-            Gerencie seus {p} com cuidado
+            {t('app.crm.subtitle', { plural: p })}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 w-full sm:w-auto">
               <UserPlus className="h-4 w-4" />
-              Adicionar {singular}
+              {t('app.crm.addContact', { singular })}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Novo {singular}</DialogTitle>
+              <DialogTitle>{t('app.crm.newContact', { singular })}</DialogTitle>
               <DialogDescription>
-                Adicione um novo {s} ao seu sistema de gestão.
+                {t('app.crm.addToSystem', { entity: s })}
               </DialogDescription>
             </DialogHeader>
             {limitInfo && limitInfo.max && (
@@ -201,7 +212,7 @@ export default function CRM() {
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
+                <Label htmlFor="name">{t('app.crm.fullName')}</Label>
                 <Input id="name" placeholder="Ex: João da Silva" {...register('name')} />
               </div>
               <div className="space-y-2">
@@ -222,12 +233,12 @@ export default function CRM() {
                 <Input id="phone" placeholder="(11) 98888-8888" {...register('phone')} />
               </div>
               <div className="space-y-2">
-                <Label>Tipo de pessoa</Label>
+                <Label>{t('app.crm.personType')}</Label>
                 <Select value={tipoPessoa} onValueChange={(v: 'pf' | 'pj') => setValue('tipo_pessoa', v)}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('app.crm.select')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pf">Pessoa Física</SelectItem>
-                    <SelectItem value="pj">Pessoa Jurídica</SelectItem>
+                    <SelectItem value="pf">{t('app.crm.physicalPerson')}</SelectItem>
+                    <SelectItem value="pj">{t('app.crm.legalPerson')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -251,11 +262,11 @@ export default function CRM() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="observations">Observações</Label>
-                <Textarea id="observations" placeholder={`Anotações sobre o ${s}...`} {...register('observations')} rows={3} className="resize-none" />
+                <Textarea id="observations" placeholder={t('app.crm.observationsPlaceholder', { entity: s })} {...register('observations')} rows={3} className="resize-none" />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); reset(); }}>Cancelar</Button>
-                <Button type="submit" disabled={createContact.isPending}>{createContact.isPending ? 'Criando...' : `Criar ${singular}`}</Button>
+                <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); reset(); }}>{t('common.cancel')}</Button>
+                <Button type="submit" disabled={createContact.isPending}>{createContact.isPending ? t('app.dashboard.creating') : t('app.crm.newContact', { singular })}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -267,11 +278,11 @@ export default function CRM() {
         <TabsList className="grid w-full max-w-xs grid-cols-2">
           <TabsTrigger value="lista" className="gap-2">
             <List className="h-4 w-4" />
-            Lista
+            {t('app.crm.list')}
           </TabsTrigger>
           <TabsTrigger value="kanban" className="gap-2">
             <LayoutGrid className="h-4 w-4" />
-            Kanban
+            {t('app.crm.kanban')}
           </TabsTrigger>
         </TabsList>
 
@@ -281,7 +292,7 @@ export default function CRM() {
           <div className="relative animate-fade-in-up">
             <Search className="absolute left-3 md:left-4 top-1/2 h-4 w-4 md:h-5 md:w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={`Buscar ${p} por nome, email ou telefone...`}
+              placeholder={t('app.crm.searchPlaceholder', { plural: p })}
               className="pl-10 md:pl-12 h-11 md:h-12 bg-card border-border/50 focus:border-accent text-sm md:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,9 +303,9 @@ export default function CRM() {
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Filtrar por:</span>
+              <span className="text-sm font-medium text-foreground">{t('app.crm.filterBy')}</span>
               <Button variant={statusFilter === "all" ? "default" : "outline"} size="sm" onClick={() => setStatusFilter("all")} className="h-8 text-xs">
-                Todos ({contacts.length})
+                {t('app.crm.all')} ({contacts.length})
               </Button>
               {kanbanStatuses.map((st) => {
                 const count = contacts.filter(c => c.status_kanban === st.id).length;
@@ -320,7 +331,7 @@ export default function CRM() {
               })}
               {statusFilter !== "all" && (
                 <Button variant="ghost" size="sm" onClick={() => setStatusFilter("all")} className="h-8 text-xs gap-1">
-                  <X className="h-3 w-3" /> Limpar
+                  <X className="h-3 w-3" /> {t('app.crm.clear')}
                 </Button>
               )}
             </div>
@@ -329,19 +340,19 @@ export default function CRM() {
           {/* Stats */}
           <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-2 md:grid-cols-4 animate-fade-in-up">
             <div className="liquid-glass-subtle p-3 md:p-4">
-              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total de {plural}</p>
+              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">{t('app.crm.totalContacts', { plural })}</p>
               <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-foreground">{contacts.length}</p>
             </div>
             <div className="liquid-glass-subtle p-3 md:p-4">
-              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Ativos</p>
+              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">{t('app.crm.active')}</p>
               <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-success">{contacts.filter(c => c.situacao === 'ativo').length}</p>
             </div>
             <div className="liquid-glass-subtle p-3 md:p-4">
-              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Inativos</p>
+              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">{t('app.crm.inactive')}</p>
               <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-muted-foreground">{contacts.filter(c => c.situacao === 'inativo').length}</p>
             </div>
             <div className="liquid-glass-subtle p-3 md:p-4">
-              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">Total Interações</p>
+              <p className="text-caption mb-1.5 md:mb-2 text-[10px] md:text-xs">{t('app.crm.totalInteractions')}</p>
               <p className="font-display text-xl md:text-2xl lg:text-3xl font-bold text-accent">{totalGeral}</p>
             </div>
           </div>
@@ -351,10 +362,10 @@ export default function CRM() {
             <div className="text-center py-12 liquid-glass">
               <UserPlus className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
               <p className="text-lg font-medium text-foreground mb-2">
-                {searchTerm ? `Nenhum ${s} encontrado` : `Nenhum ${s} cadastrado`}
+                {searchTerm ? t('app.crm.noContactFound', { entity: s }) : t('app.crm.noContactRegistered', { entity: s })}
               </p>
               <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Tente buscar com outros termos" : `Adicione seu primeiro ${s} para começar`}
+                {searchTerm ? t('app.crm.tryOtherTerms') : t('app.crm.addFirst', { entity: s })}
               </p>
             </div>
           ) : (
@@ -399,10 +410,10 @@ export default function CRM() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-foreground text-base md:text-lg truncate mb-1">{contact.nome || "Sem nome"}</h3>
+                          <h3 className="font-bold text-foreground text-base md:text-lg truncate mb-1">{contact.nome || t('app.dashboard.noName')}</h3>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", contact.situacao === "ativo" ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-gray-500/10 text-gray-600 border border-gray-500/20")}>
-                              {contact.situacao === "ativo" ? "Ativo" : "Inativo"}
+                              {contact.situacao === "ativo" ? t('app.crm.active') : t('app.crm.inactive')}
                             </span>
                             {(contact.tipo_pessoa === 'pf' || contact.tipo_pessoa === 'pj') && (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
@@ -416,7 +427,7 @@ export default function CRM() {
                         </div>
                       </div>
                       <div className={cn("shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold shadow-md", colors.avatar, "border border-white/20")}>
-                        {getStats(contact).total_interacoes} {getStats(contact).total_interacoes === 1 ? "interação" : "interações"}
+                        {getStats(contact).total_interacoes} {getStats(contact).total_interacoes === 1 ? t('app.crm.interaction') : t('app.crm.interactions')}
                       </div>
                     </div>
                     <div className="space-y-2.5 border-t border-border/30 pt-4 relative z-10">
@@ -424,13 +435,13 @@ export default function CRM() {
                         <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", colors.avatar.replace("text-", "bg-").replace("/20", "/10").replace("/10", "/10"))}>
                           <Mail className={cn("h-3.5 w-3.5", colors.accent)} />
                         </div>
-                        <span className="truncate text-xs md:text-sm text-foreground font-medium flex-1">{contact.email || "Sem email"}</span>
+                        <span className="truncate text-xs md:text-sm text-foreground font-medium flex-1">{contact.email || t('app.crm.noEmail')}</span>
                       </div>
                       <div className="flex items-center gap-2.5 p-2 rounded-lg bg-background/50 hover:bg-background/80 transition-colors">
                         <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", colors.avatar.replace("text-", "bg-").replace("/20", "/10").replace("/10", "/10"))}>
                           <Phone className={cn("h-3.5 w-3.5", colors.accent)} />
                         </div>
-                        <span className="text-xs md:text-sm text-foreground font-medium">{formatPhoneNumber(contact.telefone) || "Sem telefone"}</span>
+                        <span className="text-xs md:text-sm text-foreground font-medium">{formatPhoneNumber(contact.telefone) || t('app.crm.noPhone')}</span>
                       </div>
                       {(contact.cpf_cnpj) && (
                         <div className="flex items-center gap-2.5 p-2 rounded-lg bg-background/50">
@@ -451,18 +462,18 @@ export default function CRM() {
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Última interação: {getStats(contact).ultima_interacao ? new Date(getStats(contact).ultima_interacao!).toLocaleDateString('pt-BR') : 'Nunca'}
+                            {t('app.crm.lastInteraction')} {getStats(contact).ultima_interacao ? new Date(getStats(contact).ultima_interacao!).toLocaleDateString('pt-BR') : t('app.crm.never')}
                           </span>
                         </div>
                         {contact.resumo && (
                           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setResumoContact(contact); }}
                             className={cn("w-full gap-2 text-xs font-semibold border-2 transition-all hover:scale-105", colors.border, "hover:" + colors.border.replace("/30", "/50"))}>
-                            <MessageSquare className="h-3.5 w-3.5" /> Ver resumo da conversa
+                            <MessageSquare className="h-3.5 w-3.5" /> {t('app.crm.viewConversationSummary')}
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedContact(contact); }}
                           className={cn("w-full gap-2 text-xs font-semibold hover:bg-background/80", colors.accent)}>
-                          Ver Detalhes →
+                          {t('app.crm.viewDetails')} →
                         </Button>
                       </div>
                     </div>
@@ -542,10 +553,10 @@ export default function CRM() {
               </div>
               <div>
                 <p className="font-semibold text-foreground">{selectedContact?.nome || singular}</p>
-                <p className="text-xs text-muted-foreground">Clique no ícone da câmera para adicionar/alterar foto</p>
+                <p className="text-xs text-muted-foreground">{t('app.crm.clickCameraForPhoto')}</p>
               </div>
             </DialogTitle>
-            <DialogDescription>Informações completas do {s}</DialogDescription>
+            <DialogDescription>{t('app.crm.fullInfo', { entity: s })}</DialogDescription>
           </DialogHeader>
           {selectedContact && (
             <>
@@ -650,12 +661,12 @@ export default function CRM() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-border/50 bg-background p-4">
-                      <p className="text-xs text-muted-foreground mb-1">Total de Interações</p>
-                      <p className="text-2xl font-bold text-accent">{getStats(selectedContact).total_interacoes}</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t('app.crm.totalConversations')}</p>
+                      <p className="text-2xl font-bold text-accent">{getStats(selectedContact).total_conversas}</p>
                     </div>
-                    <div className="rounded-lg border border-border/50 bg-background p-4">
-                      <p className="text-xs text-muted-foreground mb-1">Última Interação</p>
-                      <p className="text-sm font-semibold text-foreground">{getStats(selectedContact).ultima_interacao ? new Date(getStats(selectedContact).ultima_interacao).toLocaleDateString('pt-BR') : 'Nunca'}</p>
+                    <div className="rounded-lg border border-border/50 bg-background p-4 col-span-2">
+                      <p className="text-xs text-muted-foreground mb-1">{t('app.crm.lastMessage')}</p>
+                      <p className="text-sm font-semibold text-foreground line-clamp-3">{getStats(selectedContact).ultima_mensagem || t('app.crm.never')}</p>
                     </div>
                   </div>
                   {selectedContact.observacoes && (
@@ -664,6 +675,55 @@ export default function CRM() {
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedContact.observacoes}</p>
                     </div>
                   )}
+                  <div className="space-y-2 rounded-lg border border-border/50 bg-background p-4">
+                    <div className="flex items-center gap-2"><History className="h-4 w-4 text-muted-foreground" /><h3 className="text-sm font-semibold text-foreground">Histórico</h3></div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {historico.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhuma entrada no histórico.</p>
+                      ) : (
+                        historico.map((h) => (
+                          <div key={h.id} className="flex gap-2 text-sm">
+                            <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">
+                              {new Date(h.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <p className="text-foreground flex-1">{h.conteudo}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t border-border/30">
+                      <Textarea
+                        placeholder="Adicionar linha ao histórico..."
+                        value={novaEntradaHistorico}
+                        onChange={(e) => setNovaEntradaHistorico(e.target.value)}
+                        rows={2}
+                        className="resize-none text-sm"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={async () => {
+                          if (!novaEntradaHistorico.trim() || !selectedContact?.id || !profile?.id_organizacao) return;
+                          try {
+                            await adicionarHistorico.mutateAsync({
+                              id_contato: selectedContact.id,
+                              id_organizacao: profile.id_organizacao,
+                              conteudo: novaEntradaHistorico.trim(),
+                              criado_por: profile.id,
+                            });
+                            setNovaEntradaHistorico('');
+                            toast.success('Entrada adicionada ao histórico');
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro ao adicionar');
+                          }
+                        }}
+                        disabled={!novaEntradaHistorico.trim() || adicionarHistorico.isPending}
+                        className="shrink-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Cadastrado em: {new Date(selectedContact.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>

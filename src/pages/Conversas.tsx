@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 function formatarDataExibicao(iso: string): string {
   try {
@@ -42,12 +43,12 @@ function truncar(s: string, max: number): string {
   return s.length <= max ? s : s.slice(0, max) + "…";
 }
 
-function labelCliente(sessionId: string, nomePorSessao: Record<string, string>): string {
+function labelCliente(sessionId: string, nomePorSessao: Record<string, string>, clientLabel: string): string {
   const nome = nomePorSessao[sessionId];
   if (nome?.trim()) return nome;
   if (/^\d+$/.test(sessionId) && sessionId.length >= 10)
     return sessionId.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
-  return sessionId.length > 12 ? sessionId.slice(-8) : sessionId || "Cliente";
+  return sessionId.length > 12 ? sessionId.slice(-8) : sessionId || clientLabel;
 }
 
 /** Verifica se o agente está pausado: POST lista-pausa-agente com remote_J_id. Retorno [{ propertyName: null }] = ativo. */
@@ -74,6 +75,7 @@ function BotPausarAtivarButtons({
   telefone: string | null;
   pausaSegundos: number;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<"pausar" | "ativar" | null>(null);
 
@@ -87,12 +89,12 @@ function BotPausarAtivarButtons({
 
   const handlePausar = async () => {
     if (!telefone?.trim()) {
-      toast.error("Telefone do cliente não encontrado para esta conversa.");
+      toast.error(t("app.conversas.phoneNotFound"));
       return;
     }
     const url = getPausarAgenteUrl();
     if (!url) {
-      toast.info("Configure VITE_N8N_WEBHOOK_URL no .env.");
+      toast.info(t("app.conversas.configureWebhook"));
       return;
     }
     setLoading("pausar");
@@ -108,7 +110,7 @@ function BotPausarAtivarButtons({
       const data = (await res.json().catch(() => ({}))) as { retorno?: string; message?: string };
       if (!res.ok) throw new Error(data?.message ?? data?.retorno ?? `Erro ${res.status}`);
       if (data?.retorno !== "ok") throw new Error(data?.retorno ?? "Resposta inválida do webhook.");
-      toast.success("Agente pausado.");
+      toast.success(t("app.conversas.agentPaused"));
       refetchStatus();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -121,12 +123,12 @@ function BotPausarAtivarButtons({
 
   const handleRemoverPausa = async () => {
     if (!telefone?.trim()) {
-      toast.error("Telefone do cliente não encontrado para esta conversa.");
+      toast.error(t("app.conversas.phoneNotFound"));
       return;
     }
     const url = getRemoverPausaAgenteUrl();
     if (!url) {
-      toast.info("Configure VITE_N8N_WEBHOOK_URL no .env.");
+      toast.info(t("app.conversas.configureWebhook"));
       return;
     }
     setLoading("ativar");
@@ -139,7 +141,7 @@ function BotPausarAtivarButtons({
       const data = (await res.json().catch(() => ({}))) as { retorno?: string; message?: string };
       if (!res.ok) throw new Error(data?.message ?? data?.retorno ?? `Erro ${res.status}`);
       if (data?.retorno !== undefined && data.retorno !== "ok") throw new Error(data?.retorno ?? "Resposta inválida do webhook.");
-      toast.success("Pausa removida. Agente ativado.");
+      toast.success(t("app.conversas.agentResumed"));
       refetchStatus();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -165,7 +167,7 @@ function BotPausarAtivarButtons({
         onClick={handlePausar}
       >
         <Pause className="h-3.5 w-3.5" />
-        Pausar agente
+        {t('app.conversas.pauseAgent')}
       </Button>
       <Button
         type="button"
@@ -176,14 +178,16 @@ function BotPausarAtivarButtons({
         onClick={handleRemoverPausa}
       >
         <Play className="h-3.5 w-3.5" />
-        Ativar agente
+        {t('app.conversas.resumeAgent')}
       </Button>
     </>
   );
 }
 
 export default function Conversas() {
+  const { t } = useTranslation();
   const { organization } = useAuth();
+  const clientLabel = t('app.conversas.client');
   const identificador = organization?.identificador ?? null;
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
@@ -354,12 +358,12 @@ export default function Conversas() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <MessageCircle className="h-4 w-4 text-primary" />
             </div>
-            Conversas
+            {t('app.conversas.title')}
           </h1>
-          <p>Atendimentos e conversas com clientes</p>
+          <p>{t('app.conversas.subtitle')}</p>
         </div>
         <div className="rounded-xl border border-border bg-muted/30 p-8 text-center text-muted-foreground">
-          Conversas não disponíveis para esta organização. Configure o identificador da organização.
+          {t('app.conversas.notAvailable')}
         </div>
       </div>
     );
@@ -372,9 +376,9 @@ export default function Conversas() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <MessageCircle className="h-4 w-4 text-primary" />
           </div>
-          Conversas
+          {t('app.conversas.title')}
         </h1>
-        <p>Atendimentos e conversas com clientes</p>
+        <p>{t('app.conversas.subtitle')}</p>
       </div>
 
       <div className="flex-1 min-h-0 flex gap-4 rounded-xl border border-border liquid-glass overflow-hidden">
@@ -387,11 +391,11 @@ export default function Conversas() {
         >
           {loadingSessoes ? (
             <div className="p-4 flex items-center justify-center text-muted-foreground text-sm">
-              Carregando conversas...
+              {t('app.conversas.loadingConversations')}
             </div>
           ) : erroConversas ? (
             <div className="p-4 space-y-2 text-center text-sm">
-              <p className="text-destructive font-medium">Erro ao carregar conversas</p>
+              <p className="text-destructive font-medium">{t('app.conversas.loadError')}</p>
               <p className="text-muted-foreground break-words">{erroConversas}</p>
               {tabelaConversas && (
                 <p className="text-muted-foreground text-xs">Tabela tentada: {tabelaConversas}</p>
@@ -399,12 +403,12 @@ export default function Conversas() {
             </div>
           ) : sessoes.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
-              <p>Nenhuma conversa ainda.</p>
+              <p>{t('app.conversas.noConversations')}</p>
               {tabelaConversas && (
                 <>
-                  <p className="text-xs opacity-80">Tabela: {tabelaConversas}</p>
+                  <p className="text-xs opacity-80">{t('app.conversas.table')}: {tabelaConversas}</p>
                   <p className="text-xs opacity-70 max-w-[260px] mx-auto">
-                    Se a tabela tem dados e nada aparece, verifique as políticas RLS no Supabase (permitir SELECT para sua organização).
+                    {t('app.conversas.rlsHint')}
                   </p>
                 </>
               )}
@@ -454,7 +458,7 @@ export default function Conversas() {
         <section className="flex-1 flex flex-col min-w-0 bg-background/50">
           {!selectedSessionId ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4">
-              Selecione uma conversa
+              {t('app.conversas.selectConversation')}
             </div>
           ) : (
             <>
@@ -463,7 +467,7 @@ export default function Conversas() {
                   type="button"
                   onClick={() => setSelectedSessionId(null)}
                   className="md:hidden p-1 rounded-lg hover:bg-muted text-muted-foreground"
-                  aria-label="Voltar"
+                  aria-label={t('common.back')}
                 >
                   ←
                 </button>
@@ -480,7 +484,7 @@ export default function Conversas() {
                     {labelCliente(selectedSessionId, nomePorSessao)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {sessoes.find((s) => s.session_id === selectedSessionId)?.messageCount ?? 0} mensagens
+                    {t('app.conversas.messagesCount', { count: sessoes.find((s) => s.session_id === selectedSessionId)?.messageCount ?? 0 })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -494,7 +498,7 @@ export default function Conversas() {
 
               {loadingMensagens ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                  Carregando mensagens...
+                  {t('app.conversas.loadingMessages')}
                 </div>
               ) : (
                 <ScrollArea className="flex-1 p-4">
@@ -559,7 +563,7 @@ export default function Conversas() {
                 <div className="flex gap-2 items-end">
                   <div className="flex-1 min-w-0 flex gap-1.5 items-end rounded-xl border border-border bg-background/60 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                     <Textarea
-                      placeholder="Digite sua mensagem... (Shift+Enter para nova linha)"
+                      placeholder={t('app.conversas.typeMessagePlaceholder')}
                       value={mensagemHumano}
                       onChange={(e) => setMensagemHumano(e.target.value)}
                       onKeyDown={(e) => {
@@ -579,7 +583,7 @@ export default function Conversas() {
                     className="h-11 w-11 shrink-0 rounded-xl"
                     onClick={handleEnviarComoHumano}
                     disabled={!mensagemHumano.trim() || enviando}
-                    aria-label="Enviar mensagem"
+                    aria-label={t('app.conversas.sendMessage')}
                   >
                     {enviando ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

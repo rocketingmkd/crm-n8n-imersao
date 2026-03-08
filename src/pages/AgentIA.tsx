@@ -40,6 +40,7 @@ import { supabase } from "@/lib/supabase";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import { obterNomeTabelaConversas } from "@/lib/conversas";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
 import { DatePicker } from "@/components/ui/date-picker";
 import { endOfDay, startOfDay, subDays } from "date-fns";
@@ -87,21 +88,22 @@ function dbRowToAgentConfig(row: Record<string, unknown>): AgentConfig {
   } as AgentConfig;
 }
 
-const personalityLabels: Record<string, string> = {
-  profissional: "Profissional",
-  amigavel: "Amigável",
-  formal: "Formal",
-  descontraido: "Descontraído",
-  empatico: "Empático",
-  tecnico: "Técnico",
-  criativo: "Criativo",
-  consultivo: "Consultivo",
-  motivador: "Motivador",
-  didatico: "Didático",
+const personalityKeys: Record<string, string> = {
+  profissional: "personalityProfissional",
+  amigavel: "personalityAmigavel",
+  formal: "personalityFormal",
+  descontraido: "personalityDescontraido",
+  empatico: "personalityEmpatico",
+  tecnico: "personalityTecnico",
+  criativo: "personalityCriativo",
+  consultivo: "personalityConsultivo",
+  motivador: "personalityMotivador",
+  didatico: "personalityDidatico",
 };
 
 // ─── Conhecimento Tab Component ──────────────────────────
 function ConhecimentoTab() {
+  const { t } = useTranslation();
   const { profile, organization } = useAuth();
   const { checkLimit } = usePlanFeatures();
   const [isUploading, setIsUploading] = useState(false);
@@ -147,7 +149,7 @@ function ConhecimentoTab() {
       const combinedContent = data?.map(row => row.content ?? row.conteudo ?? "").filter(c => c.trim()).join("\n\n");
       setDocumentToView({ ...doc, conteudo: combinedContent, pageCount: data?.length || 0 });
     } catch (error: any) {
-      toast.error("Erro ao carregar conteúdo do documento");
+      toast.error(t('app.agentIA.errorLoadDoc'));
     } finally {
       setIsLoadingDocumentContent(false);
     }
@@ -162,10 +164,10 @@ function ConhecimentoTab() {
         body: JSON.stringify({ tableName: "documentos", titulo: documentToDelete.titulo, organizacao: organization.identificador, organizationId: organization.id, organizationName: organization.nome }),
       });
       if (!response.ok) throw new Error("Erro ao deletar documento");
-      toast.success("Documento deletado com sucesso!");
+      toast.success(t('app.agentIA.docDeleted'));
       await loadDocuments();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao deletar documento");
+      toast.error(error.message || t('app.agentIA.errorDeleteDoc'));
     } finally {
       setIsDeletingDocument(false);
       setDocumentToDelete(null);
@@ -181,10 +183,10 @@ function ConhecimentoTab() {
         body: JSON.stringify({ tableName: "documentos", organizacao: organization.identificador, organizationId: organization.id, organizationName: organization.nome }),
       });
       if (!response.ok) throw new Error("Erro ao deletar documentos");
-      toast.success("Todos os documentos foram deletados com sucesso!");
+      toast.success(t('app.agentIA.allDocsDeleted'));
       await loadDocuments();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao deletar documentos");
+      toast.error(error.message || t('app.agentIA.errorDeleteDocs'));
     } finally {
       setIsDeletingAll(false);
       setShowDeleteAllDialog(false);
@@ -194,15 +196,15 @@ function ConhecimentoTab() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são permitidos"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Arquivo muito grande. Máximo 10MB"); return; }
+    if (file.type !== "application/pdf") { toast.error(t('app.agentIA.onlyPDF')); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error(t('app.agentIA.fileTooBig')); return; }
     setSelectedFile(file);
     setCustomFileName(file.name.replace(/\.pdf$/i, ''));
     setShowFileNameDialog(true);
   };
 
   const handleConfirmFileName = () => {
-    if (!customFileName.trim()) { toast.error("Por favor, digite um nome para o arquivo"); return; }
+    if (!customFileName.trim()) { toast.error(t('app.agentIA.enterFileName')); return; }
     setShowFileNameDialog(false);
   };
 
@@ -216,7 +218,7 @@ function ConhecimentoTab() {
     if (!selectedFile || !customFileName.trim() || !organization) return;
     const limitCheck = await checkLimit("max_arquivos_conhecimento");
     if (limitCheck.max != null && limitCheck.current >= limitCheck.max) {
-      toast.error(`Limite de arquivos atingido (${limitCheck.current}/${limitCheck.max}).`);
+      toast.error(t('app.agentIA.limitFilesReached', { current: limitCheck.current, max: limitCheck.max }));
       return;
     }
     try {
@@ -235,13 +237,13 @@ function ConhecimentoTab() {
         }),
       });
       if (!response.ok) throw new Error("Erro ao enviar arquivo");
-      toast.success("Base de conhecimento atualizada com sucesso!");
+      toast.success(t('app.agentIA.knowledgeUpdated'));
       setSelectedFile(null); setCustomFileName("");
       const fileInput = document.getElementById("pdf-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
       await loadDocuments();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao processar arquivo");
+      toast.error(error.message || t('app.agentIA.errorProcessFile'));
     } finally {
       setIsUploading(false);
     }
@@ -254,12 +256,12 @@ function ConhecimentoTab() {
       {/* Upload */}
       <Card className="card-luxury">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5 text-accent" /> Upload de Documentos</CardTitle>
-          <CardDescription>Envie documentos PDF para treinar seu agente de IA com informações específicas da sua empresa</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5 text-accent" /> {t('app.agentIA.uploadDocs')}</CardTitle>
+          <CardDescription>{t('app.agentIA.uploadDocsDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {limitInfo != null && limitInfo.max != null && (
-            <LimitAlert current={limitInfo.current} max={limitInfo.max} limitName="arquivos na base de conhecimento" />
+            <LimitAlert current={limitInfo.current} max={limitInfo.max} limitName={t('app.agentIA.limitNameKnowledge')} />
           )}
           <div className={atLimit ? "opacity-60 pointer-events-none space-y-4" : "space-y-4"}>
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-accent/50 transition-colors">
@@ -268,8 +270,8 @@ function ConhecimentoTab() {
                 <div className="flex flex-col items-center gap-3">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10"><FileText className="h-8 w-8 text-accent" /></div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{atLimit ? "Limite de arquivos atingido" : "Clique para selecionar um arquivo PDF"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{atLimit ? `Usando ${limitInfo?.current ?? 0} de ${limitInfo?.max ?? 0} arquivos.` : "Máximo 10MB por arquivo"}</p>
+                    <p className="text-sm font-medium text-foreground">{atLimit ? t('app.agentIA.limitReached') : t('app.agentIA.clickToSelectPDF')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{atLimit ? t('app.agentIA.usingFiles', { current: limitInfo?.current ?? 0, max: limitInfo?.max ?? 0 }) : t('app.agentIA.max10MB')}</p>
                   </div>
                 </div>
               </label>
@@ -281,21 +283,21 @@ function ConhecimentoTab() {
                     <FileText className="h-8 w-8 text-accent" />
                     <div><p className="text-sm font-medium text-foreground">{customFileName}</p><p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p></div>
                   </div>
-                  <Button onClick={handleCancelFileSelection} variant="ghost" size="sm">Remover</Button>
+                  <Button onClick={handleCancelFileSelection} variant="ghost" size="sm">{t('app.agentIA.remove')}</Button>
                 </div>
               </div>
             )}
             <Button onClick={handleUpload} disabled={atLimit || !selectedFile || isUploading} className="w-full gap-2" size="lg">
-              {isUploading ? <><Loader2 className="h-5 w-5 animate-spin" /> Processando...</> : <><Upload className="h-5 w-5" /> Subir Base de Conhecimento</>}
+              {isUploading ? <><Loader2 className="h-5 w-5 animate-spin" /> {t('app.agentIA.processing')}</> : <><Upload className="h-5 w-5" /> {t('app.agentIA.uploadKnowledge')}</>}
             </Button>
           </div>
           <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-foreground mb-2">ℹ️ Como funciona?</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-2">ℹ️ {t('app.agentIA.howItWorks')}</h4>
             <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Envie documentos em PDF sobre sua empresa, procedimentos, políticas, etc.</li>
-              <li>• O Agente de IA usará essas informações para responder perguntas dos clientes</li>
-              <li>• Quanto mais informações você fornecer, mais preciso será o agente</li>
-              <li>• O processamento pode levar alguns minutos</li>
+              <li>• {t('app.agentIA.howItWorks1')}</li>
+              <li>• {t('app.agentIA.howItWorks2')}</li>
+              <li>• {t('app.agentIA.howItWorks3')}</li>
+              <li>• {t('app.agentIA.howItWorks4')}</li>
             </ul>
           </div>
         </CardContent>
@@ -307,10 +309,10 @@ function ConhecimentoTab() {
       ) : documents.length > 0 ? (
         <div className="space-y-6 animate-fade-in-up">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6 text-accent" /> Base de Conhecimento</h3>
+            <h3 className="text-xl font-semibold text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6 text-accent" /> {t('app.agentIA.knowledgeBase')}</h3>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">{documents.length} {documents.length === 1 ? 'documento' : 'documentos'}</Badge>
-              <Button variant="destructive" size="sm" onClick={() => setShowDeleteAllDialog(true)} className="gap-2"><Trash2 className="h-4 w-4" /> Excluir Tudo</Button>
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">{documents.length} {documents.length === 1 ? t('app.agentIA.document') : t('app.agentIA.documents')}</Badge>
+              <Button variant="destructive" size="sm" onClick={() => setShowDeleteAllDialog(true)} className="gap-2"><Trash2 className="h-4 w-4" /> {t('app.agentIA.deleteAll')}</Button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -323,7 +325,7 @@ function ConhecimentoTab() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/5"><FileText className="h-5 w-5 text-accent" /></div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground text-base leading-tight line-clamp-2 mb-2 group-hover:text-accent transition-colors">{doc.titulo || "Documento sem título"}</h4>
+                        <h4 className="font-semibold text-foreground text-base leading-tight line-clamp-2 mb-2 group-hover:text-accent transition-colors">{doc.titulo || t('app.agentIA.noDocTitle')}</h4>
                         {(doc.created_at || doc.createdAt || doc.created) && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span>{new Date(doc.created_at || doc.createdAt || doc.created).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
@@ -334,7 +336,7 @@ function ConhecimentoTab() {
                     </div>
                     <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-4"></div>
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewDocumentDetails(doc); }} disabled={isLoadingDocumentContent} className="w-full gap-2 h-9 text-accent border-accent/30 hover:bg-accent/10 hover:border-accent font-medium">
-                      {isLoadingDocumentContent ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...</> : <><BookOpen className="h-3.5 w-3.5" /> Ver conteúdo</>}
+                      {isLoadingDocumentContent ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('app.agentIA.loading')}</> : <><BookOpen className="h-3.5 w-3.5" /> {t('app.agentIA.viewContent')}</>}
                     </Button>
                   </div>
                 </CardContent>
@@ -346,8 +348,8 @@ function ConhecimentoTab() {
         <Card className="card-luxury border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/5 mb-4"><FileText className="h-10 w-10 text-muted-foreground" /></div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum documento ainda</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">Faça upload do primeiro PDF para começar a construir a base de conhecimento.</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('app.agentIA.noDocuments')}</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">{t('app.agentIA.uploadFirstPDF')}</p>
           </CardContent>
         </Card>
       )}
@@ -355,47 +357,47 @@ function ConhecimentoTab() {
       {/* Dialogs */}
       <Dialog open={showFileNameDialog} onOpenChange={setShowFileNameDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nome do Documento</DialogTitle><DialogDescription>Digite um nome para identificar este documento na base de conhecimento.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{t('app.agentIA.docName')}</DialogTitle><DialogDescription>{t('app.agentIA.docNameDesc')}</DialogDescription></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fileName">Nome do Arquivo</Label>
-              <Input id="fileName" value={customFileName} onChange={(e) => setCustomFileName(e.target.value)} placeholder="Ex: Manual da Empresa" onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmFileName(); }} autoFocus />
+              <Label htmlFor="fileName">{t('app.agentIA.fileName')}</Label>
+              <Input id="fileName" value={customFileName} onChange={(e) => setCustomFileName(e.target.value)} placeholder={t('app.agentIA.fileNamePlaceholder')} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmFileName(); }} autoFocus />
             </div>
             {selectedFile && (
               <div className="bg-secondary/30 rounded-lg p-3 text-sm">
-                <p className="text-muted-foreground"><strong>Arquivo original:</strong> {selectedFile.name}</p>
-                <p className="text-muted-foreground"><strong>Tamanho:</strong> {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-muted-foreground"><strong>{t('app.agentIA.originalFile')}</strong> {selectedFile.name}</p>
+                <p className="text-muted-foreground"><strong>{t('app.agentIA.size')}</strong> {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelFileSelection}>Cancelar</Button>
-            <Button onClick={handleConfirmFileName} disabled={!customFileName.trim()}>Confirmar</Button>
+            <Button variant="outline" onClick={handleCancelFileSelection}>{t('app.agentIA.cancel')}</Button>
+            <Button onClick={handleConfirmFileName} disabled={!customFileName.trim()}>{t('app.agentIA.confirm')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!documentToView} onOpenChange={() => setDocumentToView(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-accent" /> {documentToView?.titulo || "Documento"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-accent" /> {documentToView?.titulo || t('app.agentIA.document')}</DialogTitle></DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <div className="bg-secondary/30 border border-border rounded-lg p-6">
               {documentToView?.conteudo ? <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed">{documentToView.conteudo}</pre> : (
-                <div className="text-center py-12 text-muted-foreground"><FileText className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Nenhum conteúdo disponível.</p></div>
+                <div className="text-center py-12 text-muted-foreground"><FileText className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>{t('app.agentIA.noContent')}</p></div>
               )}
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setDocumentToView(null)}>Fechar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setDocumentToView(null)}>{t('app.agentIA.close')}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!documentToDelete} onOpenChange={() => setDocumentToDelete(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja excluir o documento <strong>"{documentToDelete?.titulo}"</strong>? Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>{t('app.agentIA.confirmDelete')}</AlertDialogTitle><AlertDialogDescription>{t('app.agentIA.confirmDeleteDesc', { name: documentToDelete?.titulo })}</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingDocument}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingDocument}>{t('app.agentIA.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteDocument} disabled={isDeletingDocument} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isDeletingDocument ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deletando...</> : "Deletar"}
+              {isDeletingDocument ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('app.agentIA.deleting')}</> : t('app.agentIA.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -403,13 +405,13 @@ function ConhecimentoTab() {
 
       <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle className="flex items-center gap-2 text-destructive"><Trash2 className="h-5 w-5" /> Excluir Toda a Base de Conhecimento</AlertDialogTitle>
-            <AlertDialogDescription><strong className="text-destructive">ATENÇÃO:</strong> Todos os {documents.length} documentos serão permanentemente removidos. Esta ação é <strong>IRREVERSÍVEL</strong>.</AlertDialogDescription>
+          <AlertDialogHeader><AlertDialogTitle className="flex items-center gap-2 text-destructive"><Trash2 className="h-5 w-5" /> {t('app.agentIA.deleteAllKnowledge')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('app.agentIA.deleteAllWarning', { count: documents.length })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingAll}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingAll}>{t('app.agentIA.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteAll} disabled={isDeletingAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isDeletingAll ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deletando tudo...</> : <><Trash2 className="mr-2 h-4 w-4" /> Sim, excluir tudo</>}
+              {isDeletingAll ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('app.agentIA.deletingAll')}</> : <><Trash2 className="mr-2 h-4 w-4" /> {t('app.agentIA.yesDeleteAll')}</>}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -420,6 +422,7 @@ function ConhecimentoTab() {
 
 // ─── Main Component ──────────────────────────────────────
 export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
+  const { t, i18n } = useTranslation();
   const { profile, organization } = useAuth();
   const { hasFeature } = usePlanFeatures();
   const [isLoading, setIsLoading] = useState(true);
@@ -505,9 +508,9 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
   };
   const formatReminderDisplay = (minutes: number | null | undefined): string => {
     const m = Number(minutes); const min = Number.isFinite(m) && m >= 0 ? m : 0;
-    if (min < 60) return `${min} ${min === 1 ? 'minuto' : 'minutos'}`;
-    if (min < 1440) { const h = Math.round(min / 60); return `${h} ${h === 1 ? 'hora' : 'horas'}`; }
-    const d = Math.round(min / 1440); return `${d} ${d === 1 ? 'dia' : 'dias'}`;
+    if (min < 60) return `${min} ${min === 1 ? t('app.agentIA.minute') : t('app.agentIA.minutePlural')}`;
+    if (min < 1440) { const h = Math.round(min / 60); return `${h} ${h === 1 ? t('app.agentIA.hour') : t('app.agentIA.hourPlural')}`; }
+    const d = Math.round(min / 1440); return `${d} ${d === 1 ? t('app.agentIA.day') : t('app.agentIA.dayPlural')}`;
   };
 
   useEffect(() => {
@@ -529,7 +532,7 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
       if (error && error.code !== "PGRST116") throw error;
       const { data: gs } = await supabase.from("configuracoes_globais").select("chave_openai").single();
       if (data) { const m = dbRowToAgentConfig({ ...data, chave_openai: gs?.chave_openai ?? (data as any).chave_openai ?? null }); setConfig(m); setEditConfig(m); }
-    } catch (e) { console.error("Erro ao carregar configurações:", e); toast.error("Erro ao carregar configurações"); }
+    } catch (e) { console.error("Erro ao carregar configurações:", e); toast.error(t('app.agentIA.loadError')); }
     finally { setIsLoading(false); }
   };
 
@@ -648,11 +651,11 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
       else { const { data, error } = await supabase.from("config_agente_ia")// @ts-ignore
         .insert(d).select().single(); if (error) throw error; if (data) { const m = dbRowToAgentConfig({ ...data, chave_openai: config.chave_openai ?? null }); setConfig(m); setEditConfig(m); setIsEditing(false); toast.success("Configurações salvas!"); return; } }
       setConfig(editConfig); setIsEditing(false); toast.success("Configurações salvas!");
-    } catch { toast.error("Erro ao salvar configurações"); } finally { setIsSaving(false); }
+    } catch { toast.error(t('app.agentIA.loadError')); } finally { setIsSaving(false); }
   };
 
   if (isLoading) return (
-    <div className="flex items-center justify-center min-h-screen"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div><p className="text-muted-foreground">Carregando configurações...</p></div></div>
+    <div className="flex items-center justify-center min-h-screen"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div><p className="text-muted-foreground">{t('app.agentIA.loadError')}</p></div></div>
   );
 
   const EditSaveButtons = () => !isEditing ? (
@@ -687,55 +690,55 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"><Bot className="h-6 w-6 text-accent" /></div>
-                <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Agente de IA Virtual</h1>
+                <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">{t('app.agentIA.headerTitle')}</h1>
               </div>
               <Badge className="bg-accent/10 text-accent border-accent/20"><Sparkles className="h-3 w-3 mr-1" /> Premium</Badge>
             </div>
-            <p className="text-base md:text-lg text-muted-foreground">{isEditing ? "Editando configurações do assistente virtual" : "Configurações do seu assistente virtual"}</p>
+            <p className="text-base md:text-lg text-muted-foreground">{isEditing ? t('app.agentIA.headerEditing') : t('app.agentIA.headerConfig')}</p>
           </div>
         )}
 
         {/* Tabs */}
         <Tabs defaultValue="atendimento" className="space-y-6">
           <TabsList className="flex w-full max-w-4xl flex-wrap gap-1">
-            <TabsTrigger value="atendimento" className="gap-2 text-xs sm:text-sm"><Bot className="h-4 w-4" /> Atendimento</TabsTrigger>
-            <TabsTrigger value="lembretes" className="gap-2 text-xs sm:text-sm"><Bell className="h-4 w-4" /> Lembretes</TabsTrigger>
-            <TabsTrigger value="followup" className="gap-2 text-xs sm:text-sm"><Clock className="h-4 w-4" /> Follow Up</TabsTrigger>
-            <TabsTrigger value="qualificacao" className="gap-2 text-xs sm:text-sm"><FileQuestion className="h-4 w-4" /> Qualificação</TabsTrigger>
+            <TabsTrigger value="atendimento" className="gap-2 text-xs sm:text-sm"><Bot className="h-4 w-4" /> {t('app.agentIA.tabAtendimento')}</TabsTrigger>
+            <TabsTrigger value="lembretes" className="gap-2 text-xs sm:text-sm"><Bell className="h-4 w-4" /> {t('app.agentIA.tabLembretes')}</TabsTrigger>
+            <TabsTrigger value="followup" className="gap-2 text-xs sm:text-sm"><Clock className="h-4 w-4" /> {t('app.agentIA.tabFollowUp')}</TabsTrigger>
+            <TabsTrigger value="qualificacao" className="gap-2 text-xs sm:text-sm"><FileQuestion className="h-4 w-4" /> {t('app.agentIA.tabQualificacao')}</TabsTrigger>
             {hasBaseConhecimento && (
-              <TabsTrigger value="conhecimento" className="gap-2 text-xs sm:text-sm"><BookOpen className="h-4 w-4" /> Conhecimento</TabsTrigger>
+              <TabsTrigger value="conhecimento" className="gap-2 text-xs sm:text-sm"><BookOpen className="h-4 w-4" /> {t('app.agentIA.tabConhecimento')}</TabsTrigger>
             )}
-            <TabsTrigger value="analytics" className="gap-2 text-xs sm:text-sm"><BarChart3 className="h-4 w-4" /> Analytics</TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 text-xs sm:text-sm"><BarChart3 className="h-4 w-4" /> {t('app.agentIA.tabAnalytics')}</TabsTrigger>
           </TabsList>
 
           {/* ═══ Tab 1: Configurações do Atendimento ═══ */}
           <TabsContent value="atendimento">
             <Card className="card-luxury p-6 animate-fade-in-up">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2"><Bot className="h-5 w-5 text-accent" /> Configurações do Atendimento</h2>
+                <h2 className="text-xl font-semibold flex items-center gap-2"><Bot className="h-5 w-5 text-accent" /> {t('app.agentIA.sectionAtendimento')}</h2>
                 <EditSaveButtons />
               </div>
               {!isEditing ? (
                 <>
                   <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Bot className="h-4 w-4" /><span className="font-medium">Nome do Agente</span></div><p className="text-lg font-semibold text-foreground pl-6">{config.nome_agente}</p></div>
-                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Smile className="h-4 w-4" /><span className="font-medium">Personalidade</span></div><p className="text-lg font-semibold text-foreground pl-6">{personalityLabels[config.personality] || config.personality}</p></div>
-                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Clock className="h-4 w-4" /><span className="font-medium">Tempo de Pausa</span></div><p className="text-lg font-semibold text-foreground pl-6">{secondsToMinutes(config.pause_duration_seconds)} minutos</p><p className="text-xs text-muted-foreground pl-6">Pausa quando atendente humano assume</p></div>
-                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Clock className="h-4 w-4" /><span className="font-medium">Pausa por Solicitação</span></div><p className="text-lg font-semibold text-foreground pl-6">{secondsToMinutes(config.customer_pause_duration_seconds)} minutos</p><p className="text-xs text-muted-foreground pl-6">Pausa quando cliente solicita atendimento humano</p></div>
+                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Bot className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.agentName')}</span></div><p className="text-lg font-semibold text-foreground pl-6">{config.nome_agente}</p></div>
+                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Smile className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.personality')}</span></div><p className="text-lg font-semibold text-foreground pl-6">{personalityKeys[config.personality] ? t(`app.agentIA.${personalityKeys[config.personality]}`) : config.personality}</p></div>
+                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Clock className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.pauseTime')}</span></div><p className="text-lg font-semibold text-foreground pl-6">{secondsToMinutes(config.pause_duration_seconds)} {t('app.agentIA.minutePlural')}</p><p className="text-xs text-muted-foreground pl-6">{t('app.agentIA.pauseOnHuman')}</p></div>
+                    <div className="space-y-2"><div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Clock className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.pauseOnRequest')}</span></div><p className="text-lg font-semibold text-foreground pl-6">{secondsToMinutes(config.customer_pause_duration_seconds)} {t('app.agentIA.minutePlural')}</p><p className="text-xs text-muted-foreground pl-6">{t('app.agentIA.pauseOnRequestDesc')}</p></div>
                   </div>
                   <div className="mt-8 space-y-6">
-                    <div className="space-y-3"><div className="flex items-center gap-2 text-sm text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="font-medium">Mensagem de Saudação</span></div><div className="bg-accent/5 border border-accent/20 rounded-lg p-4"><p className="text-sm text-foreground leading-relaxed">{config.greeting_message}</p></div></div>
-                    <div className="space-y-3"><div className="flex items-center gap-2 text-sm text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="font-medium">Mensagem de Finalização</span></div><div className="bg-accent/5 border border-accent/20 rounded-lg p-4"><p className="text-sm text-foreground leading-relaxed">{config.closing_message}</p></div></div>
+                    <div className="space-y-3"><div className="flex items-center gap-2 text-sm text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.greetingMessage')}</span></div><div className="bg-accent/5 border border-accent/20 rounded-lg p-4"><p className="text-sm text-foreground leading-relaxed">{config.greeting_message}</p></div></div>
+                    <div className="space-y-3"><div className="flex items-center gap-2 text-sm text-muted-foreground"><MessageSquare className="h-4 w-4" /><span className="font-medium">{t('app.agentIA.closingMessage')}</span></div><div className="bg-accent/5 border border-accent/20 rounded-lg p-4"><p className="text-sm text-foreground leading-relaxed">{config.closing_message}</p></div></div>
                   </div>
                 </>
               ) : (
                 <div className="space-y-6">
-                  <div className="space-y-2"><Label>Nome do Agente de IA *</Label><Input placeholder="Ex: Sofia, Assistente Virtual" value={editConfig.nome_agente} onChange={(e) => setEditConfig({ ...editConfig, nome_agente: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Personalidade *</Label><Select value={editConfig.personality} onValueChange={(v) => setEditConfig({ ...editConfig, personality: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(personalityLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="space-y-2"><Label>Tempo de Pausa (minutos) *</Label><Input type="number" min="1" max="1440" value={secondsToMinutes(editConfig.pause_duration_seconds)} onChange={(e) => setEditConfig({ ...editConfig, pause_duration_seconds: minutesToSeconds(parseInt(e.target.value) || 30) })} /><p className="text-xs text-muted-foreground">Tempo de pausa quando atendente humano assumir</p></div>
-                  <div className="space-y-2"><Label>Pausa por Solicitação (minutos) *</Label><Input type="number" min="1" max="1440" value={secondsToMinutes(editConfig.customer_pause_duration_seconds)} onChange={(e) => setEditConfig({ ...editConfig, customer_pause_duration_seconds: minutesToSeconds(parseInt(e.target.value) || 5) })} /><p className="text-xs text-muted-foreground">Tempo de pausa quando cliente solicitar atendimento humano</p></div>
-                  <div className="space-y-2"><Label>Mensagem de Saudação *</Label><Textarea rows={4} value={editConfig.greeting_message} onChange={(e) => setEditConfig({ ...editConfig, greeting_message: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Mensagem de Finalização *</Label><Textarea rows={4} value={editConfig.closing_message} onChange={(e) => setEditConfig({ ...editConfig, closing_message: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.agentNameLabel')}</Label><Input placeholder={t('app.agentIA.agentNamePlaceholder')} value={editConfig.nome_agente} onChange={(e) => setEditConfig({ ...editConfig, nome_agente: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.personality')} *</Label><Select value={editConfig.personality} onValueChange={(v) => setEditConfig({ ...editConfig, personality: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(personalityKeys).map(([k, key]) => <SelectItem key={k} value={k}>{t(`app.agentIA.${key}`)}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.pauseMinutes')}</Label><Input type="number" min="1" max="1440" value={secondsToMinutes(editConfig.pause_duration_seconds)} onChange={(e) => setEditConfig({ ...editConfig, pause_duration_seconds: minutesToSeconds(parseInt(e.target.value) || 30) })} /><p className="text-xs text-muted-foreground">{t('app.agentIA.pauseOnHumanHint')}</p></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.pauseRequestMinutes')}</Label><Input type="number" min="1" max="1440" value={secondsToMinutes(editConfig.customer_pause_duration_seconds)} onChange={(e) => setEditConfig({ ...editConfig, customer_pause_duration_seconds: minutesToSeconds(parseInt(e.target.value) || 5) })} /><p className="text-xs text-muted-foreground">{t('app.agentIA.pauseRequestHint')}</p></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.greetingMessage')} *</Label><Textarea rows={4} value={editConfig.greeting_message} onChange={(e) => setEditConfig({ ...editConfig, greeting_message: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t('app.agentIA.closingMessage')} *</Label><Textarea rows={4} value={editConfig.closing_message} onChange={(e) => setEditConfig({ ...editConfig, closing_message: e.target.value })} /></div>
                 </div>
               )}
             </Card>
@@ -744,19 +747,19 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
           {/* ═══ Tab 2: Lembretes ═══ */}
           <TabsContent value="lembretes">
             <Card className="card-luxury p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><Bell className="h-5 w-5 text-accent" /> Lembretes de Agendamento</h2><EditSaveButtons /></div>
-              <p className="text-sm text-muted-foreground mb-6">Configure quando os lembretes serão enviados antes do agendamento</p>
+              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><Bell className="h-5 w-5 text-accent" /> {t('app.agentIA.sectionLembretes')}</h2><EditSaveButtons /></div>
+              <p className="text-sm text-muted-foreground mb-6">{t('app.agentIA.sectionLembretesDesc')}</p>
               {!isEditing ? (
                 <div className="grid gap-4 md:grid-cols-3">
-                  {[{ l: "1º Lembrete", v: config.reminder_1_minutes }, { l: "2º Lembrete", v: config.reminder_2_minutes }, { l: "3º Lembrete", v: config.reminder_3_minutes }].map((r) => (
-                    <div key={r.l} className="space-y-2 p-4 rounded-lg bg-accent/5 border border-accent/20"><span className="text-sm font-medium text-muted-foreground">{r.l}</span><p className="text-lg font-semibold text-foreground">{formatReminderDisplay(r.v)} antes</p></div>
+                  {[{ l: t('app.agentIA.reminder1'), v: config.reminder_1_minutes }, { l: t('app.agentIA.reminder2'), v: config.reminder_2_minutes }, { l: t('app.agentIA.reminder3'), v: config.reminder_3_minutes }].map((r) => (
+                    <div key={r.l} className="space-y-2 p-4 rounded-lg bg-accent/5 border border-accent/20"><span className="text-sm font-medium text-muted-foreground">{r.l}</span><p className="text-lg font-semibold text-foreground">{formatReminderDisplay(r.v)} {t('app.agentIA.before')}</p></div>
                   ))}
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-3">
-                  <TimeInput label="1º Lembrete" value={reminder1Value} unit={reminder1Unit} onValueChange={(v) => { setReminder1Value(v); setEditConfig({ ...editConfig, reminder_1_minutes: unitToMinutes(v, reminder1Unit) }); }} onUnitChange={(u) => { setReminder1Unit(u); setEditConfig({ ...editConfig, reminder_1_minutes: unitToMinutes(reminder1Value, u) }); }} />
-                  <TimeInput label="2º Lembrete" value={reminder2Value} unit={reminder2Unit} onValueChange={(v) => { setReminder2Value(v); setEditConfig({ ...editConfig, reminder_2_minutes: unitToMinutes(v, reminder2Unit) }); }} onUnitChange={(u) => { setReminder2Unit(u); setEditConfig({ ...editConfig, reminder_2_minutes: unitToMinutes(reminder2Value, u) }); }} />
-                  <TimeInput label="3º Lembrete" value={reminder3Value} unit={reminder3Unit} onValueChange={(v) => { setReminder3Value(v); setEditConfig({ ...editConfig, reminder_3_minutes: unitToMinutes(v, reminder3Unit) }); }} onUnitChange={(u) => { setReminder3Unit(u); setEditConfig({ ...editConfig, reminder_3_minutes: unitToMinutes(reminder3Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.reminder1')} value={reminder1Value} unit={reminder1Unit} onValueChange={(v) => { setReminder1Value(v); setEditConfig({ ...editConfig, reminder_1_minutes: unitToMinutes(v, reminder1Unit) }); }} onUnitChange={(u) => { setReminder1Unit(u); setEditConfig({ ...editConfig, reminder_1_minutes: unitToMinutes(reminder1Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.reminder2')} value={reminder2Value} unit={reminder2Unit} onValueChange={(v) => { setReminder2Value(v); setEditConfig({ ...editConfig, reminder_2_minutes: unitToMinutes(v, reminder2Unit) }); }} onUnitChange={(u) => { setReminder2Unit(u); setEditConfig({ ...editConfig, reminder_2_minutes: unitToMinutes(reminder2Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.reminder3')} value={reminder3Value} unit={reminder3Unit} onValueChange={(v) => { setReminder3Value(v); setEditConfig({ ...editConfig, reminder_3_minutes: unitToMinutes(v, reminder3Unit) }); }} onUnitChange={(u) => { setReminder3Unit(u); setEditConfig({ ...editConfig, reminder_3_minutes: unitToMinutes(reminder3Value, u) }); }} />
                 </div>
               )}
             </Card>
@@ -765,19 +768,19 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
           {/* ═══ Tab 3: Follow Up ═══ */}
           <TabsContent value="followup">
             <Card className="card-luxury p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><Clock className="h-5 w-5 text-accent" /> Configurações de Follow Up</h2><EditSaveButtons /></div>
-              <p className="text-sm text-muted-foreground mb-6">Configure quando os follow ups serão enviados após a última mensagem não respondida</p>
+              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><Clock className="h-5 w-5 text-accent" /> {t('app.agentIA.sectionFollowUp')}</h2><EditSaveButtons /></div>
+              <p className="text-sm text-muted-foreground mb-6">{t('app.agentIA.sectionFollowUpDesc')}</p>
               {!isEditing ? (
                 <div className="grid gap-4 md:grid-cols-3">
-                  {[{ l: "1º Follow Up", v: config.follow_up_1_minutes }, { l: "2º Follow Up", v: config.follow_up_2_minutes }, { l: "3º Follow Up", v: config.follow_up_3_minutes }].map((f) => (
-                    <div key={f.l} className="space-y-2 p-4 rounded-lg bg-accent/5 border border-accent/20"><span className="text-sm font-medium text-muted-foreground">{f.l}</span><p className="text-lg font-semibold text-foreground">{formatReminderDisplay(f.v)}</p><p className="text-xs text-muted-foreground">após a última mensagem não respondida</p></div>
+                  {[{ l: t('app.agentIA.followUp1'), v: config.follow_up_1_minutes }, { l: t('app.agentIA.followUp2'), v: config.follow_up_2_minutes }, { l: t('app.agentIA.followUp3'), v: config.follow_up_3_minutes }].map((f) => (
+                    <div key={f.l} className="space-y-2 p-4 rounded-lg bg-accent/5 border border-accent/20"><span className="text-sm font-medium text-muted-foreground">{f.l}</span><p className="text-lg font-semibold text-foreground">{formatReminderDisplay(f.v)}</p><p className="text-xs text-muted-foreground">{t('app.agentIA.afterLastMessage')}</p></div>
                   ))}
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-3">
-                  <TimeInput label="1º Follow Up" value={followUp1Value} unit={followUp1Unit} onValueChange={(v) => { setFollowUp1Value(v); setEditConfig({ ...editConfig, follow_up_1_minutes: unitToMinutes(v, followUp1Unit) }); }} onUnitChange={(u) => { setFollowUp1Unit(u); setEditConfig({ ...editConfig, follow_up_1_minutes: unitToMinutes(followUp1Value, u) }); }} />
-                  <TimeInput label="2º Follow Up" value={followUp2Value} unit={followUp2Unit} onValueChange={(v) => { setFollowUp2Value(v); setEditConfig({ ...editConfig, follow_up_2_minutes: unitToMinutes(v, followUp2Unit) }); }} onUnitChange={(u) => { setFollowUp2Unit(u); setEditConfig({ ...editConfig, follow_up_2_minutes: unitToMinutes(followUp2Value, u) }); }} />
-                  <TimeInput label="3º Follow Up" value={followUp3Value} unit={followUp3Unit} onValueChange={(v) => { setFollowUp3Value(v); setEditConfig({ ...editConfig, follow_up_3_minutes: unitToMinutes(v, followUp3Unit) }); }} onUnitChange={(u) => { setFollowUp3Unit(u); setEditConfig({ ...editConfig, follow_up_3_minutes: unitToMinutes(followUp3Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.followUp1')} value={followUp1Value} unit={followUp1Unit} onValueChange={(v) => { setFollowUp1Value(v); setEditConfig({ ...editConfig, follow_up_1_minutes: unitToMinutes(v, followUp1Unit) }); }} onUnitChange={(u) => { setFollowUp1Unit(u); setEditConfig({ ...editConfig, follow_up_1_minutes: unitToMinutes(followUp1Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.followUp2')} value={followUp2Value} unit={followUp2Unit} onValueChange={(v) => { setFollowUp2Value(v); setEditConfig({ ...editConfig, follow_up_2_minutes: unitToMinutes(v, followUp2Unit) }); }} onUnitChange={(u) => { setFollowUp2Unit(u); setEditConfig({ ...editConfig, follow_up_2_minutes: unitToMinutes(followUp2Value, u) }); }} />
+                  <TimeInput label={t('app.agentIA.followUp3')} value={followUp3Value} unit={followUp3Unit} onValueChange={(v) => { setFollowUp3Value(v); setEditConfig({ ...editConfig, follow_up_3_minutes: unitToMinutes(v, followUp3Unit) }); }} onUnitChange={(u) => { setFollowUp3Unit(u); setEditConfig({ ...editConfig, follow_up_3_minutes: unitToMinutes(followUp3Value, u) }); }} />
                 </div>
               )}
             </Card>
@@ -786,25 +789,25 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
           {/* ═══ Tab 4: Qualificação ═══ */}
           <TabsContent value="qualificacao">
             <Card className="card-luxury p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><FileQuestion className="h-5 w-5 text-accent" /> Perguntas de Qualificação</h2><EditSaveButtons /></div>
-              <p className="text-sm text-muted-foreground mb-6">Perguntas feitas pelo agente para qualificar leads automaticamente</p>
+              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-semibold flex items-center gap-2"><FileQuestion className="h-5 w-5 text-accent" /> {t('app.agentIA.sectionQualificacao')}</h2><EditSaveButtons /></div>
+              <p className="text-sm text-muted-foreground mb-6">{t('app.agentIA.sectionQualificacaoDesc')}</p>
               {!isEditing ? (
                 config.qualification_questions?.length > 0 ? (
                   <div className="space-y-3">{config.qualification_questions.map((q: string, i: number) => (
                     <div key={i} className="flex items-start gap-3 p-4 rounded-lg bg-accent/5 border border-accent/20"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent">{i + 1}</span><p className="text-sm text-foreground">{q}</p></div>
                   ))}</div>
-                ) : <p className="text-muted-foreground italic">Nenhuma pergunta configurada.</p>
+                ) : <p className="text-muted-foreground italic">{t('app.agentIA.noQuestions')}</p>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex justify-end"><Button type="button" variant="outline" size="sm" onClick={() => setEditConfig({ ...editConfig, qualification_questions: [...(editConfig.qualification_questions || []), ""] })}><Plus className="h-4 w-4 mr-2" /> Adicionar Pergunta</Button></div>
+                  <div className="flex justify-end"><Button type="button" variant="outline" size="sm" onClick={() => setEditConfig({ ...editConfig, qualification_questions: [...(editConfig.qualification_questions || []), ""] })}><Plus className="h-4 w-4 mr-2" /> {t('app.agentIA.addQuestion')}</Button></div>
                   <div className="space-y-3">
                     {editConfig.qualification_questions?.map((q: string, i: number) => (
                       <div key={i} className="flex gap-2">
-                        <Input value={q} onChange={(e) => { const nq = [...(editConfig.qualification_questions || [])]; nq[i] = e.target.value; setEditConfig({ ...editConfig, qualification_questions: nq }); }} placeholder="Digite a pergunta..." />
+                        <Input value={q} onChange={(e) => { const nq = [...(editConfig.qualification_questions || [])]; nq[i] = e.target.value; setEditConfig({ ...editConfig, qualification_questions: nq }); }} placeholder={t('app.agentIA.questionPlaceholder')} />
                         <Button type="button" variant="ghost" size="icon" onClick={() => { const nq = [...(editConfig.qualification_questions || [])]; nq.splice(i, 1); setEditConfig({ ...editConfig, qualification_questions: nq }); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </div>
                     ))}
-                    {(!editConfig.qualification_questions || editConfig.qualification_questions.length === 0) && <p className="text-sm text-muted-foreground italic">Nenhuma pergunta adicionada.</p>}
+                    {(!editConfig.qualification_questions || editConfig.qualification_questions.length === 0) && <p className="text-sm text-muted-foreground italic">{t('app.agentIA.noQuestionsAdded')}</p>}
                   </div>
                 </div>
               )}
@@ -822,14 +825,14 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
           <TabsContent value="analytics" className="space-y-6">
             <Card className="card-luxury p-6 animate-fade-in-up border-accent/20">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"><Zap className="h-6 w-6 text-accent" /></div><div><h3 className="text-lg font-semibold text-foreground">Consumo de Tokens</h3><p className="text-sm text-muted-foreground">Total acumulado da organização</p></div></div>
+                <div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"><Zap className="h-6 w-6 text-accent" /></div><div><h3 className="text-lg font-semibold text-foreground">{t('app.agentIA.tokenConsumption')}</h3><p className="text-sm text-muted-foreground">{t('app.agentIA.tokenTotalOrg')}</p></div></div>
                 <Badge className="bg-accent/10 text-accent border-accent/20">IA</Badge>
               </div>
               <div className="bg-accent/5 rounded-lg p-6 border border-accent/20">
                 {isLoadingTokens ? <div className="flex items-center justify-center py-4"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div> : (
                   <div className="grid grid-cols-2 gap-6">
-                    <div className="text-center"><p className="text-3xl md:text-4xl font-bold text-accent mb-2">{totalTokens.toLocaleString('pt-BR')}</p><p className="text-sm text-muted-foreground">tokens consumidos</p></div>
-                    <div className="text-center border-l border-accent/20 pl-6"><p className="text-3xl md:text-4xl font-bold text-success mb-2">{totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 8 })}</p><p className="text-sm text-muted-foreground">custo total (R$)</p></div>
+                    <div className="text-center"><p className="text-3xl md:text-4xl font-bold text-accent mb-2">{totalTokens.toLocaleString(i18n.language === 'pt-BR' ? 'pt-BR' : i18n.language === 'es' ? 'es' : 'en')}</p><p className="text-sm text-muted-foreground">{t('app.agentIA.tokensConsumed')}</p></div>
+                    <div className="text-center border-l border-accent/20 pl-6"><p className="text-3xl md:text-4xl font-bold text-success mb-2">{totalCost.toLocaleString(i18n.language === 'pt-BR' ? 'pt-BR' : i18n.language === 'es' ? 'es' : 'en', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 8 })}</p><p className="text-sm text-muted-foreground">{t('app.agentIA.totalCost')}</p></div>
                   </div>
                 )}
               </div>
@@ -837,13 +840,13 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
 
             {/* Filtro de período */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground mr-1">Período:</span>
+              <span className="text-sm text-muted-foreground mr-1">{t('app.agentIA.period')}</span>
               {([
-                { value: "today" as const, label: "Hoje" },
-                { value: "7d" as const, label: "7 dias" },
-                { value: "30d" as const, label: "1 mês" },
-                { value: "90d" as const, label: "3 meses" },
-                { value: "custom" as const, label: "Período" },
+                { value: "today" as const, labelKey: "periodToday" },
+                { value: "7d" as const, labelKey: "period7d" },
+                { value: "30d" as const, labelKey: "period30d" },
+                { value: "90d" as const, labelKey: "period90d" },
+                { value: "custom" as const, labelKey: "periodCustom" },
               ]).map((opt) => (
                 <Button
                   key={opt.value}
@@ -852,7 +855,7 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
                   size="sm"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAnalyticsPeriod(opt.value); }}
                 >
-                  {opt.label}
+                  {t(`app.agentIA.${opt.labelKey}`)}
                 </Button>
               ))}
               {analyticsPeriod === "custom" && (
@@ -860,13 +863,13 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
                   <DatePicker
                     value={customStart}
                     onChange={setCustomStart}
-                    placeholder="Data inicial"
+                    placeholder={t('app.agentIA.dateStart')}
                     className="w-40"
                   />
                   <DatePicker
                     value={customEnd}
                     onChange={setCustomEnd}
-                    placeholder="Data final"
+                    placeholder={t('app.agentIA.dateEnd')}
                     className="w-40"
                   />
                 </div>
@@ -875,18 +878,18 @@ export default function AgentIA({ embedded = false }: { embedded?: boolean }) {
 
             <div className="grid gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 animate-fade-in-up">
               {[
-                { label: "Conversas no período", value: chatMetrics?.periodConversations ?? conversationsToday, loading: isLoadingStats || isLoadingChatMetrics, sub: analyticsPeriod === "today" ? "Hoje" : analyticsPeriod === "7d" ? "Últimos 7 dias" : analyticsPeriod === "30d" ? "Último mês" : analyticsPeriod === "90d" ? "Últimos 3 meses" : customStart && customEnd ? `${customStart} a ${customEnd}` : "" },
-                { label: "Taxa de Resposta", value: `${responseRate}%`, loading: isLoadingStats, color: "text-success", sub: "Conversas respondidas" },
-                { label: "Tempo de Resposta", value: avgResponseTime > 0 ? `${avgResponseTime}min` : '0min', loading: isLoadingStats, sub: "Média de resposta" },
-                { label: "Tempo de Conversa", value: avgConversationTime > 0 ? `${avgConversationTime}min` : '0min', loading: isLoadingStats, sub: "Duração média" },
-                { label: "Leads Qualificados", value: qualifiedLeads, loading: isLoadingStats, color: "text-accent" },
-                { label: "Mensagens/Conversa", value: messagesPerConversation, loading: isLoadingStats, sub: "Média por conversa" },
+                { labelKey: "conversationsPeriod", value: chatMetrics?.periodConversations ?? conversationsToday, loading: isLoadingStats || isLoadingChatMetrics, subKey: analyticsPeriod === "today" ? "todayLabel" : analyticsPeriod === "7d" ? "last7days" : analyticsPeriod === "30d" ? "lastMonth" : analyticsPeriod === "90d" ? "last3months" : null, subCustom: customStart && customEnd ? t('app.agentIA.periodRange', { start: customStart, end: customEnd }) : "" },
+                { labelKey: "responseRate", value: `${responseRate}%`, loading: isLoadingStats, color: "text-success", subKey: "conversationsResponded" },
+                { labelKey: "responseTime", value: avgResponseTime > 0 ? `${avgResponseTime}${t('app.agentIA.minUnit')}` : `0${t('app.agentIA.minUnit')}`, loading: isLoadingStats, subKey: "avgResponse" },
+                { labelKey: "conversationTime", value: avgConversationTime > 0 ? `${avgConversationTime}${t('app.agentIA.minUnit')}` : `0${t('app.agentIA.minUnit')}`, loading: isLoadingStats, subKey: "avgDuration" },
+                { labelKey: "qualifiedLeads", value: qualifiedLeads, loading: isLoadingStats, color: "text-accent" },
+                { labelKey: "messagesPerConv", value: messagesPerConversation, loading: isLoadingStats, subKey: "avgPerConv" },
               ].map((item) => (
-                <div key={item.label} className="card-luxury p-4">
-                  <p className="text-sm text-muted-foreground mb-2">{item.label}</p>
+                <div key={item.labelKey} className="card-luxury p-4">
+                  <p className="text-sm text-muted-foreground mb-2">{t(`app.agentIA.${item.labelKey}`)}</p>
                   {item.loading ? <div className="flex items-center gap-2"><Loader2 className="h-5 w-5 animate-spin text-accent" /><span className="text-2xl font-bold">...</span></div>
                     : <p className={`text-2xl font-bold ${item.color || 'text-foreground'}`}>{item.value}</p>}
-                  {item.sub && <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>}
+                  {(() => { const sub = item.subKey ? t(`app.agentIA.${item.subKey}`) : (item as { subCustom?: string }).subCustom ?? ""; return sub ? <p className="text-xs text-muted-foreground mt-1">{sub}</p> : null; })()}
                 </div>
               ))}
             </div>

@@ -18,6 +18,7 @@ import {
 import { Crown, Check, X, AlertCircle, Pencil, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface PlanConfig {
   id: string;
@@ -45,19 +46,19 @@ interface PlanConfig {
 }
 
 const MAIN_FEATURES = [
-  { key: "atendimento_inteligente", label: "Atendimento Inteligente", description: "Chatbot com IA para atendimento" },
-  { key: "base_conhecimento", label: "Base de Conhecimento", description: "Personalização com informações do negócio" },
-  { key: "agendamento_automatico", label: "Agendamento Automático", description: "Sistema de agenda integrado" },
+  { key: "atendimento_inteligente", labelKey: "plan.smartService", descKey: "superAdmin.plans.descSmartService" },
+  { key: "base_conhecimento", labelKey: "plan.knowledgeBase", descKey: "superAdmin.plans.descKnowledgeBase" },
+  { key: "agendamento_automatico", labelKey: "plan.autoScheduling", descKey: "superAdmin.plans.descAutoScheduling" },
 ] as const;
 
 const SECONDARY_FEATURES = [
-  { key: "lembretes_automaticos", label: "Lembretes Automáticos" },
-  { key: "confirmacao_email", label: "Confirmação por Email" },
-  { key: "relatorios_avancados", label: "Relatórios Avançados" },
-  { key: "integracao_whatsapp", label: "Integração WhatsApp" },
-  { key: "multi_usuarios", label: "Múltiplos Usuários" },
-  { key: "personalizacao_agente", label: "Personalização do Agente" },
-  { key: "analytics", label: "Analytics" },
+  { key: "lembretes_automaticos", labelKey: "plan.autoReminders" },
+  { key: "confirmacao_email", labelKey: "plan.emailConfirmation" },
+  { key: "relatorios_avancados", labelKey: "plan.advancedReports" },
+  { key: "integracao_whatsapp", labelKey: "plan.whatsappIntegration" },
+  { key: "multi_usuarios", labelKey: "plan.multiUsers" },
+  { key: "personalizacao_agente", labelKey: "plan.agentCustomization" },
+  { key: "analytics", labelKey: "plan.analytics" },
 ] as const;
 
 const QUERY_KEY = ["admin-subscription-plans"] as const;
@@ -90,6 +91,7 @@ function emptyPlanForm(plan: PlanConfig) {
 type PlanFormState = ReturnType<typeof emptyPlanForm>;
 
 export default function Plans() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: plans = [], isLoading } = useQuery({
     queryKey: QUERY_KEY,
@@ -145,10 +147,10 @@ export default function Plans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success("Plano atualizado com sucesso.");
+      toast.success(t("superAdmin.plans.planUpdated"));
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Erro ao atualizar plano.");
+      toast.error(err.message || t("superAdmin.plans.updateError"));
     },
   });
 
@@ -208,9 +210,9 @@ export default function Plans() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
             <Crown className="h-4 w-4 text-amber-500" />
           </div>
-          Planos de Assinatura
+          {t("superAdmin.plans.title")}
         </h1>
-        <p>Edite planos e recursos. Alterações valem para novas assinaturas.</p>
+        <p>{t("superAdmin.plans.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -240,12 +242,12 @@ export default function Plans() {
                   <div className="flex items-center gap-2">
                     {isPopular && (
                       <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                        Popular
+                        {t("superAdmin.plans.popular")}
                       </span>
                     )}
                     <Button variant="outline" size="sm" onClick={() => setEditingPlan(plan)}>
                       <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                      Editar
+                      {t("superAdmin.plans.edit")}
                     </Button>
                   </div>
                 </div>
@@ -255,17 +257,17 @@ export default function Plans() {
                       <span className="text-3xl font-bold text-foreground">
                         R$ {Number(plan.preco_mensal).toFixed(2)}
                       </span>
-                      <span className="text-sm text-muted-foreground">/mês</span>
+                      <span className="text-sm text-muted-foreground">{t("superAdmin.plans.perMonth")}</span>
                     </div>
                   ) : (
-                    <span className="text-base font-semibold text-muted-foreground">Sob consulta</span>
+                    <span className="text-base font-semibold text-muted-foreground">{t("superAdmin.plans.onRequest")}</span>
                   )}
                   {plan.preco_anual != null && (
                     <div className="flex items-baseline gap-1 text-sm">
                       <span className="font-semibold text-foreground">
                         R$ {Number(plan.preco_anual).toFixed(2)}
                       </span>
-                      <span className="text-muted-foreground">/ano</span>
+                      <span className="text-muted-foreground">{t("superAdmin.plans.perYear")}</span>
                     </div>
                   )}
                 </div>
@@ -274,7 +276,7 @@ export default function Plans() {
               <CardContent className="space-y-5">
                 <div className="space-y-2.5">
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                    Recursos Principais
+                    {t("superAdmin.plans.mainFeatures")}
                   </h3>
                   <div className="space-y-2">
                     {MAIN_FEATURES.map((feature) => {
@@ -298,10 +300,10 @@ export default function Plans() {
                           )}
                           <div>
                             <p className={cn("text-xs font-medium", isEnabled ? "text-foreground" : "text-muted-foreground/50")}>
-                              {feature.label}
+                              {t(feature.labelKey)}
                             </p>
                             <p className={cn("text-[10px]", isEnabled ? "text-muted-foreground" : "text-muted-foreground/30")}>
-                              {feature.description}
+                              {t(feature.descKey)}
                             </p>
                           </div>
                         </div>
@@ -312,7 +314,7 @@ export default function Plans() {
 
                 <div className="space-y-2.5">
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                    Outros Recursos
+                    {t("superAdmin.plans.otherFeatures")}
                   </h3>
                   <div className="grid grid-cols-2 gap-1.5">
                     {SECONDARY_FEATURES.map((feature) => {
@@ -325,7 +327,7 @@ export default function Plans() {
                             <X className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
                           )}
                           <span className={cn("text-[11px]", isEnabled ? "text-foreground" : "text-muted-foreground/40")}>
-                            {feature.label}
+                            {t(feature.labelKey)}
                           </span>
                         </div>
                       );
@@ -335,15 +337,15 @@ export default function Plans() {
 
                 <div className="space-y-2.5 pt-4 border-t border-border">
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                    Limites
+                    {t("superAdmin.plans.limits")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { value: plan.max_agendamentos_mes, label: "Agendamentos/mês" },
-                      { value: plan.max_mensagens_whatsapp_mes, label: "Mensagens/mês" },
-                      { value: plan.max_usuarios, label: "Usuários" },
-                      { value: plan.max_contatos, label: "Clientes" },
-                      { value: plan.max_arquivos_conhecimento, label: "Arquivos (base conhecimento)" },
+                      { value: plan.max_agendamentos_mes, label: t("superAdmin.plans.appointmentsPerMonth") },
+                      { value: plan.max_mensagens_whatsapp_mes, label: t("superAdmin.plans.messagesPerMonth") },
+                      { value: plan.max_usuarios, label: t("plan.users") },
+                      { value: plan.max_contatos, label: t("plan.clients") },
+                      { value: plan.max_arquivos_conhecimento, label: t("superAdmin.plans.filesKnowledge") },
                     ].map((limit) => (
                       <div key={limit.label} className="text-center p-2.5 rounded-lg bg-muted/50 border border-border">
                         <p className="text-xl font-bold text-primary">{limit.value ?? "∞"}</p>
@@ -367,16 +369,16 @@ export default function Plans() {
       <Dialog open={!!editingPlan} onOpenChange={(open) => !open && setEditingPlan(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar plano</DialogTitle>
+            <DialogTitle>{t("superAdmin.plans.editPlan")}</DialogTitle>
             <DialogDescription>
-              Altere nome, descrição, recursos, limites e preços. O identificador do plano (id_plano) não pode ser alterado.
+              {t("superAdmin.plans.editPlanDesc")}
             </DialogDescription>
           </DialogHeader>
           {form && editingPlan && (
             <div className="space-y-5 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nome do plano</Label>
+                  <Label>{t("superAdmin.plans.planName")}</Label>
                   <Input
                     value={form.nome_plano}
                     onChange={(e) => setFormField("nome_plano", e.target.value)}
@@ -384,22 +386,22 @@ export default function Plans() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID do plano (somente leitura)</Label>
+                  <Label>{t("superAdmin.plans.planIdReadonly")}</Label>
                   <Input value={editingPlan.id_plano} disabled className="bg-muted" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Skeleton - Workflow ID (n8n)</Label>
+                <Label>{t("superAdmin.plans.workflowId")}</Label>
                 <Input
                   value={form.workflow_id_n8n}
                   onChange={(e) => setFormField("workflow_id_n8n", e.target.value)}
                   placeholder="Ex: 1, abc-123 ou ID do workflow no n8n"
                   className="font-mono text-sm"
                 />
-                <p className="text-[10px] text-muted-foreground">ID do workflow no n8n associado a este plano (opcional).</p>
+                <p className="text-[10px] text-muted-foreground">{t("superAdmin.plans.workflowIdHint")}</p>
               </div>
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label>{t("superAdmin.plans.description")}</Label>
                 <Textarea
                   value={form.descricao_plano}
                   onChange={(e) => setFormField("descricao_plano", e.target.value)}
@@ -409,11 +411,11 @@ export default function Plans() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Recursos (ligar/desligar)</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{t("superAdmin.plans.featuresToggle")}</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {[...MAIN_FEATURES, ...SECONDARY_FEATURES].map((f) => (
                     <div key={f.key} className="flex items-center justify-between rounded-lg border p-2">
-                      <span className="text-xs">{f.label}</span>
+                      <span className="text-xs">{t(f.labelKey)}</span>
                       <Switch
                         checked={!!form[f.key]}
                         onCheckedChange={(v) => setFormField(f.key, v)}
@@ -424,10 +426,10 @@ export default function Plans() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Limites (vazio = ilimitado)</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{t("superAdmin.plans.limitsEmpty")}</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <Label className="text-xs">Agendamentos/mês</Label>
+                    <Label className="text-xs">{t("superAdmin.plans.appointmentsPerMonth")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -437,7 +439,7 @@ export default function Plans() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Mensagens WhatsApp/mês</Label>
+                    <Label className="text-xs">{t("superAdmin.plans.messagesPerMonth")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -447,7 +449,7 @@ export default function Plans() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Usuários</Label>
+                    <Label className="text-xs">{t("plan.users")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -457,7 +459,7 @@ export default function Plans() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Clientes</Label>
+                    <Label className="text-xs">{t("plan.clients")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -467,7 +469,7 @@ export default function Plans() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Arquivos (base conhecimento)</Label>
+                    <Label className="text-xs">{t("superAdmin.plans.filesKnowledge")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -481,7 +483,7 @@ export default function Plans() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Preço mensal (R$)</Label>
+                  <Label>{t("superAdmin.plans.monthlyPrice")}</Label>
                   <Input
                     type="number"
                     step={0.01}
@@ -492,7 +494,7 @@ export default function Plans() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Preço anual (R$)</Label>
+                  <Label>{t("superAdmin.plans.annualPrice")}</Label>
                   <Input
                     type="number"
                     step={0.01}
@@ -507,11 +509,11 @@ export default function Plans() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingPlan(null)}>
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleSave} disabled={updatePlan.isPending || !form?.nome_plano?.trim()}>
               {updatePlan.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar alterações
+              {t("superAdmin.plans.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -522,10 +524,9 @@ export default function Plans() {
           <div className="flex gap-3">
             <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <p className="text-sm font-semibold text-foreground">Sobre os Planos</p>
+              <p className="text-sm font-semibold text-foreground">{t("superAdmin.plans.aboutPlans")}</p>
               <p className="text-xs text-muted-foreground">
-                Use o botão &quot;Editar&quot; em cada plano para alterar recursos, limites e preços a qualquer momento.
-                Para alterar o plano de uma empresa específica, acesse a página de edição em &quot;Empresas&quot;.
+                {t("superAdmin.plans.aboutPlansDesc")}
               </p>
             </div>
           </div>

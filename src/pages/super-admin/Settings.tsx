@@ -14,6 +14,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { aplicarCorPrimaria } from "@/hooks/useCoresPataforma";
 import { FonteSistema, FONT_OPTIONS, aplicarFonte } from "@/hooks/useFonteSistema";
 import { cn, resolverUrlImagem } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface ConfiguracoesGlobaisForm {
   whatsapp_suporte: string;
@@ -30,6 +31,7 @@ interface ConfiguracoesGlobaisForm {
 }
 
 export default function SuperAdminSettings() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [logoError, setLogoError] = useState<{ escuro?: boolean; claro?: boolean }>({});
@@ -72,7 +74,7 @@ export default function SuperAdminSettings() {
         });
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
-        toast.error('Erro ao carregar configurações');
+        toast.error(t("superAdmin.settings.loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -100,9 +102,9 @@ export default function SuperAdminSettings() {
       queryClient.invalidateQueries({ queryKey: ["cores-plataforma"] });
       queryClient.invalidateQueries({ queryKey: ["fonte-sistema"] });
       queryClient.invalidateQueries({ queryKey: CONFIGURACOES_GLOBAIS_LOGO_QUERY_KEY });
-      toast.success("Configurações salvas!");
+      toast.success(t("superAdmin.settings.saved"));
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao salvar');
+      toast.error(error.message || t("superAdmin.settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -117,8 +119,8 @@ export default function SuperAdminSettings() {
   const saveButton = (
     <Button type="submit" disabled={isSaving} className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
       {isSaving
-        ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />Salvando...</>
-        : <><Save className="mr-2 h-4 w-4" />Salvar</>}
+        ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />{t("superAdmin.settings.saving")}</>
+        : <><Save className="mr-2 h-4 w-4" />{t("common.save")}</>}
     </Button>
   );
 
@@ -129,27 +131,27 @@ export default function SuperAdminSettings() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-500/10">
             <SettingsIcon className="h-4 w-4 text-slate-500" />
           </div>
-          Configurações
+          {t("superAdmin.settings.title")}
         </h1>
-        <p>Gerencie as configurações globais do sistema</p>
+        <p>{t("superAdmin.settings.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="visual" className="w-full">
         <TabsList className="w-full grid grid-cols-3 h-auto p-1 liquid-glass rounded-xl">
           <TabsTrigger value="visual" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Palette className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Visual</span>
-            <span className="sm:hidden">Visual</span>
+            <span className="hidden sm:inline">{t("superAdmin.settings.visual")}</span>
+            <span className="sm:hidden">{t("superAdmin.settings.visual")}</span>
           </TabsTrigger>
           <TabsTrigger value="ia" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Bot className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">IA & Voz</span>
-            <span className="sm:hidden">IA</span>
+            <span className="hidden sm:inline">{t("superAdmin.settings.iaVoice")}</span>
+            <span className="sm:hidden">{t("superAdmin.settings.iaVoice")}</span>
           </TabsTrigger>
           <TabsTrigger value="apis" className="flex items-center gap-1.5 text-xs md:text-sm py-2 rounded-lg">
             <Key className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Dados de suporte</span>
-            <span className="sm:hidden">Suporte</span>
+            <span className="hidden sm:inline">{t("superAdmin.settings.supportData")}</span>
+            <span className="sm:hidden">{t("superAdmin.settings.supportData")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -163,8 +165,8 @@ export default function SuperAdminSettings() {
                   <Palette className="h-4 w-4 text-violet-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">Branding</CardTitle>
-                  <CardDescription className="text-xs">Nome e logos da plataforma</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.settings.branding")}</CardTitle>
+                  <CardDescription className="text-xs">{t("superAdmin.settings.brandingDesc")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -172,18 +174,18 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nome_plataforma" className="text-foreground text-xs font-medium">Nome da Plataforma</Label>
+                    <Label htmlFor="nome_plataforma" className="text-foreground text-xs font-medium">{t("superAdmin.settings.platformName")}</Label>
                     <Input id="nome_plataforma" {...register("nome_plataforma")} placeholder="FlowAtend" className="liquid-glass-input rounded-xl" />
-                    <p className="text-[10px] text-muted-foreground">Nome exibido no título do browser e como fallback quando não há logo.</p>
+                    <p className="text-[10px] text-muted-foreground">{t("superAdmin.settings.platformNameHint")}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="frase_login" className="text-foreground text-xs font-medium">Frase da Tela de Login</Label>
-                    <Input id="frase_login" {...register("frase_login")} placeholder="Seu universo de automações espera" className="liquid-glass-input rounded-xl" />
-                    <p className="text-[10px] text-muted-foreground">Subtítulo exibido abaixo do logo na tela de login.</p>
+                    <Label htmlFor="frase_login" className="text-foreground text-xs font-medium">{t("superAdmin.settings.loginPhrase")}</Label>
+                    <Input id="frase_login" {...register("frase_login")} placeholder={t("auth.defaultPhrase")} className="liquid-glass-input rounded-xl" />
+                    <p className="text-[10px] text-muted-foreground">{t("superAdmin.settings.loginPhraseHint")}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="url_logo_plataforma" className="text-foreground text-xs font-medium">Logo (fundo escuro)</Label>
+                      <Label htmlFor="url_logo_plataforma" className="text-foreground text-xs font-medium">{t("superAdmin.settings.logoDark")}</Label>
                       <Input id="url_logo_plataforma" {...register("url_logo_plataforma")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
                       <div className="rounded-xl border border-border overflow-hidden bg-zinc-800 p-4 flex flex-col items-center justify-center min-h-[80px] gap-2">
                         {urlLogoPlataforma?.trim() ? (
@@ -207,7 +209,7 @@ export default function SuperAdminSettings() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="url_logo_plataforma_escuro" className="text-foreground text-xs font-medium">Logo (fundo claro)</Label>
+                      <Label htmlFor="url_logo_plataforma_escuro" className="text-foreground text-xs font-medium">{t("superAdmin.settings.logoLight")}</Label>
                       <Input id="url_logo_plataforma_escuro" {...register("url_logo_plataforma_escuro")} placeholder="https://..." className="liquid-glass-input rounded-xl" />
                       <div className="rounded-xl border border-border overflow-hidden bg-zinc-100 dark:bg-zinc-200 p-4 flex flex-col items-center justify-center min-h-[80px] gap-2">
                         {urlLogoPlataformaEscuro?.trim() ? (
@@ -245,8 +247,8 @@ export default function SuperAdminSettings() {
                   <Palette className="h-4 w-4 text-pink-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">Cores</CardTitle>
-                  <CardDescription className="text-xs">Cor primária usada em botões, nav e destaques</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.settings.colors")}</CardTitle>
+                  <CardDescription className="text-xs">{t("superAdmin.settings.colorsDesc")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -254,7 +256,7 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cor_primaria" className="text-foreground text-xs font-medium">Cor Primária</Label>
+                    <Label htmlFor="cor_primaria" className="text-foreground text-xs font-medium">{t("superAdmin.settings.primaryColor")}</Label>
                     <div className="flex items-center gap-3">
                       <input id="cor_primaria" type="color" {...register("cor_primaria")} className="h-10 w-16 cursor-pointer rounded-xl border border-border bg-background p-1" />
                       <div className="flex items-center gap-2">
@@ -278,8 +280,8 @@ export default function SuperAdminSettings() {
                   <Type className="h-4 w-4 text-cyan-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">Fonte do Sistema</CardTitle>
-                  <CardDescription className="text-xs">Tipografia usada em todo o sistema</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.settings.systemFont")}</CardTitle>
+                  <CardDescription className="text-xs">{t("superAdmin.settings.systemFontDesc")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -323,8 +325,8 @@ export default function SuperAdminSettings() {
                   <Bot className="h-4 w-4 text-blue-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">API Key OpenAI</CardTitle>
-                  <CardDescription className="text-xs">Chave de API usada por todas as empresas</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.settings.openaiKey")}</CardTitle>
+                  <CardDescription className="text-xs">{t("superAdmin.settings.openaiDesc")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -332,7 +334,7 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="chave_openai" className="text-foreground text-xs font-medium">Chave de API OpenAI</Label>
+                    <Label htmlFor="chave_openai" className="text-foreground text-xs font-medium">{t("superAdmin.settings.openaiKey")}</Label>
                     <Input id="chave_openai" type="password" {...register("chave_openai")} placeholder="sk-..." className="font-mono liquid-glass-input rounded-xl" />
                     <p className="text-[10px] text-muted-foreground">Esta chave é global e afeta todas as empresas do sistema.</p>
                   </div>
@@ -349,8 +351,8 @@ export default function SuperAdminSettings() {
                   <Mic className="h-4 w-4 text-teal-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-foreground text-sm md:text-base">ElevenLabs — Síntese de Voz</CardTitle>
-                  <CardDescription className="text-xs">Credenciais e voz para fluxos de áudio</CardDescription>
+                  <CardTitle className="text-foreground text-sm md:text-base">{t("superAdmin.settings.elevenlabs")}</CardTitle>
+                  <CardDescription className="text-xs">{t("superAdmin.settings.elevenlabsDesc")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -358,7 +360,7 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">Chave de API ElevenLabs</Label>
+                    <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">{t("superAdmin.settings.openaiKey")}</Label>
                     <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono liquid-glass-input rounded-xl" />
                   </div>
                   <div className="space-y-2">

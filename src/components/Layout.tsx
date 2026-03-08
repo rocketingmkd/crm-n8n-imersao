@@ -21,10 +21,13 @@ import {
   X,
   UserCircle,
   ListTodo,
-  MessageCircle
+  MessageCircle,
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -47,11 +50,11 @@ import SupportButton from "@/components/SupportButton";
 import { AppLogo } from "@/components/AppLogo";
 
 const allNavigationItems = [
-  { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
-  { name: "Agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
-  { name: "CRM / Clientes", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
-  { name: "Conversas", href: "/app/conversas", icon: MessageCircle, requiredFeature: null },
-  { name: "Configurações", href: "/app/configuracoes", icon: Settings, requiredFeature: null },
+  { navKey: "dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
+  { navKey: "agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
+  { navKey: "crm", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
+  { navKey: "conversations", href: "/app/conversas", icon: MessageCircle, requiredFeature: null },
+  { navKey: "settings", href: "/app/configuracoes", icon: Settings, requiredFeature: null },
 ];
 
 function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: { 
@@ -60,6 +63,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
   onToggleCollapse?: () => void;
 }) {
   const location = useLocation();
+  const { t } = useTranslation();
   const { profile, organization, signOut } = useAuth();
   const { features } = usePlanFeatures();
   const { theme, toggleTheme } = useTheme();
@@ -95,18 +99,18 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 
   const handleRequestPlanChange = async () => {
     if (!selectedPlanForRequest || !organization?.id) {
-      toast.error('Por favor, selecione um plano');
+      toast.error(t('plan.selectPlan'));
       return;
     }
     try {
-      toast.success('Solicitação enviada! Entraremos em contato em breve.', {
-        description: `Plano solicitado: ${plans.find(p => p.id_plano === selectedPlanForRequest)?.nome_plano}`,
+      toast.success(t('plan.requestSent'), {
+        description: `${t('plan.current')}: ${plans.find(p => p.id_plano === selectedPlanForRequest)?.nome_plano}`,
       });
       setIsPlanModalOpen(false);
       setSelectedPlanForRequest(null);
     } catch (error) {
       console.error('Erro ao solicitar mudança de plano:', error);
-      toast.error('Erro ao enviar solicitação');
+      toast.error(t('plan.requestError'));
     }
   };
 
@@ -148,6 +152,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             isCollapsed ? "justify-center" : "gap-3"
           )}>
             <AppLogo variant="org" height={isCollapsed ? 28 : 36} />
+            {!isCollapsed && <LanguageSelector />}
           </div>
 
           {!isCollapsed && (
@@ -155,23 +160,23 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               <div className="liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
                 {organization && (
                   <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Empresa</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t('common.company')}</p>
                     <p className="text-xs font-semibold text-foreground truncate">{organization.nome}</p>
                   </div>
                 )}
                 <div className="flex items-center gap-2.5">
                   <Avatar className="h-8 w-8 shrink-0 border border-white/10">
-                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? t('common.user')} className="object-cover" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                       {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
-                      {profile?.nome_completo || 'Usuário'}
+                      {profile?.nome_completo || t('common.user')}
                     </p>
                     <p className="text-[10px] text-muted-foreground truncate capitalize">
-                      {profile?.funcao || 'profissional'}
+                      {profile?.funcao || t('common.professional')}
                     </p>
                   </div>
                 </div>
@@ -189,18 +194,21 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   "h-[18px] w-[18px] shrink-0",
                   location.pathname === "/app/minha-conta" ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                 )} />
-                <span className="truncate">Minha Conta</span>
+                <span className="truncate">{t('common.myAccount')}</span>
               </NavLink>
             </div>
           )}
 
           {isCollapsed && (
             <div className="mt-3 space-y-2">
+              <div className="flex justify-center">
+                <LanguageSelector />
+              </div>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex justify-center">
                     <Avatar className="h-8 w-8 shrink-0 border border-white/10">
-                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Usuário"} className="object-cover" />
+                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? t('common.user')} className="object-cover" />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                         {profile?.nome_completo?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
@@ -208,7 +216,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>
-                  {profile?.nome_completo || 'Usuário'}
+                  {profile?.nome_completo || t('common.user')}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -225,7 +233,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                     <UserCircle className="h-[18px] w-[18px]" />
                   </NavLink>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>Minha Conta</TooltipContent>
+                <TooltipContent side="right" sideOffset={8}>{t('common.myAccount')}</TooltipContent>
               </Tooltip>
             </div>
           )}
@@ -238,14 +246,15 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
         )}>
           {!isCollapsed && (
             <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Menu
+              {t('common.menu')}
             </p>
           )}
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
+            const label = t(`nav.${item.navKey}`);
             const linkContent = (
               <NavLink
-                key={item.name}
+                key={item.navKey}
                 to={item.href}
                 onClick={onNavigate}
                 className={cn(
@@ -260,16 +269,16 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
                   isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                 )} />
-                {!isCollapsed && <span className="truncate">{item.name}</span>}
+                {!isCollapsed && <span className="truncate">{label}</span>}
               </NavLink>
             );
 
             if (isCollapsed) {
               return (
-                <Tooltip key={item.name}>
+                <Tooltip key={item.navKey}>
                   <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                   <TooltipContent side="right" sideOffset={8}>
-                    {item.name}
+                    {label}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -321,7 +330,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                {theme === "dark" ? "Modo claro" : "Modo escuro"}
+                {theme === "dark" ? t('common.lightMode') : t('common.darkMode')}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -332,8 +341,26 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs rounded-xl"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              {theme === "dark" ? "Modo claro" : "Modo escuro"}
+              {theme === "dark" ? t('common.lightMode') : t('common.darkMode')}
             </Button>
+          )}
+
+          {/* Idioma / Language */}
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex w-full justify-center">
+                  <LanguageSelector />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>{t('common.language')}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground liquid-glass-subtle">
+              <Globe className="h-4 w-4 shrink-0" />
+              <span className="text-xs flex-1">{t('common.language')}</span>
+              <LanguageSelector />
+            </div>
           )}
 
           {isCollapsed ? (
@@ -348,7 +375,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                   <LogOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>Sair</TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>{t('common.logout')}</TooltipContent>
             </Tooltip>
           ) : (
             <Button
@@ -358,7 +385,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
               className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs rounded-xl"
             >
               <LogOut className="h-4 w-4" />
-              Sair
+              {t('common.logout')}
             </Button>
           )}
         </div>
@@ -369,11 +396,11 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Alterar Plano de Assinatura
+                {t('plan.changePlan')}
               </DialogTitle>
               <DialogDescription>
-                Seu plano atual: <strong>{currentPlan?.nome_plano}</strong>. 
-                Selecione um novo plano para solicitar a alteração.
+                {t('plan.currentPlan')}: <strong>{currentPlan?.nome_plano}</strong>. 
+                {t('plan.selectNewPlan')}
               </DialogDescription>
             </DialogHeader>
 
@@ -396,7 +423,7 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
                     {isCurrentPlan && (
                       <div className="absolute top-2 right-2">
                         <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">
-                          Atual
+                          {t('plan.current')}
                         </Badge>
                       </div>
                     )}
@@ -472,14 +499,14 @@ function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsPlanModalOpen(false)}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button 
                 onClick={handleRequestPlanChange}
                 disabled={!selectedPlanForRequest}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                Solicitar Alteração
+                {t('plan.requestChange')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -516,17 +543,19 @@ export default function Layout() {
         <div className="flex items-center gap-2.5">
           <AppLogo variant="org" height={28} />
         </div>
-        
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[260px] p-0 liquid-glass-strong border-border">
-            <SidebarContent onNavigate={() => setMobileMenuOpen(false)} />
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-1">
+          <LanguageSelector />
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[260px] p-0 liquid-glass-strong border-border">
+              <SidebarContent onNavigate={() => setMobileMenuOpen(false)} />
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
       {/* Main Content */}

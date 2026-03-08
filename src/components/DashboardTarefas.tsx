@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Trash2, GripVertical, CalendarClock, Bell, BellOff, Loader2, Clock, CheckCircle2, ListTodo } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,25 +23,26 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTarefas, useCriarTarefa, useAtualizarTarefa, useDeletarTarefa, type Tarefa } from "@/hooks/useTarefas";
 import { toast } from "sonner";
 
-const STATUS_CONFIG = {
-  a_fazer: { label: "A Fazer", icon: ListTodo, color: "bg-primary/10 text-primary border-primary/20" },
-  fazendo: { label: "Fazendo", icon: Clock, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  feito: { label: "Feito", icon: CheckCircle2, color: "bg-success/10 text-success border-success/20" },
-} as const;
+const getStatusConfig = (t: (key: string) => string) => ({
+  a_fazer: { label: t('app.tarefas.toDo'), icon: ListTodo, color: "bg-primary/10 text-primary border-primary/20" },
+  fazendo: { label: t('app.tarefas.doing'), icon: Clock, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  feito: { label: t('app.tarefas.done'), icon: CheckCircle2, color: "bg-success/10 text-success border-success/20" },
+}) as const;
 
-const ANTECEDENCIA_OPTIONS = [
-  { value: "30", label: "30 minutos antes" },
-  { value: "60", label: "1 hora antes" },
-  { value: "120", label: "2 horas antes" },
+const getAntecedenciaOptions = (t: (key: string) => string) => [
+  { value: "30", label: t('app.tarefas.reminder30') },
+  { value: "60", label: t('app.tarefas.reminder60') },
+  { value: "120", label: t('app.tarefas.reminder120') },
 ];
 
-function TarefaCard({ tarefa, onEdit, onDelete, onStatusChange }: {
+function TarefaCard({ tarefa, onEdit, onDelete, onStatusChange, statusConfig }: {
   tarefa: Tarefa;
   onEdit: (t: Tarefa) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: Tarefa['status']) => void;
+  statusConfig: ReturnType<typeof getStatusConfig>;
 }) {
-  const cfg = STATUS_CONFIG[tarefa.status];
+  const cfg = statusConfig[tarefa.status];
   const isExpired = tarefa.data_finalizacao && new Date(tarefa.data_finalizacao) < new Date() && tarefa.status !== 'feito';
 
   return (
@@ -83,8 +85,8 @@ function TarefaCard({ tarefa, onEdit, onDelete, onStatusChange }: {
 
       {/* Quick status change */}
       <div className="flex gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
-        {(Object.keys(STATUS_CONFIG) as Tarefa['status'][]).map((s) => {
-          const c = STATUS_CONFIG[s];
+        {(Object.keys(statusConfig) as Tarefa['status'][]).map((s) => {
+          const c = statusConfig[s];
           return (
             <button
               key={s}
@@ -103,6 +105,9 @@ function TarefaCard({ tarefa, onEdit, onDelete, onStatusChange }: {
 }
 
 export default function DashboardTarefas() {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
+  const antecedenciaOptions = getAntecedenciaOptions(t);
   const { data: tarefas = [], isLoading } = useTarefas();
   const criarTarefa = useCriarTarefa();
   const atualizarTarefa = useAtualizarTarefa();
@@ -189,7 +194,7 @@ export default function DashboardTarefas() {
         <div>
           <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-1 flex items-center gap-2">
             <ListTodo className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            Minhas Tarefas
+            {t('app.tarefas.title')}
           </h2>
           <p className="text-sm text-muted-foreground">
             {tarefas.filter(t => t.status !== 'feito').length} pendentes · {tarefas.filter(t => t.status === 'feito').length} concluídas
@@ -203,7 +208,7 @@ export default function DashboardTarefas() {
             </TabsList>
           </Tabs>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Nova
+            <Plus className="h-4 w-4" /> {t('app.tarefas.newTask')}
           </Button>
         </div>
       </div>
@@ -215,17 +220,17 @@ export default function DashboardTarefas() {
       ) : tarefas.length === 0 ? (
         <div className="text-center py-12 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-dashed border-primary/20">
           <ListTodo className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-          <p className="text-lg font-medium text-foreground mb-2">Nenhuma tarefa ainda</p>
+          <p className="text-lg font-medium text-foreground mb-2">{t('app.tarefas.noTasks')}</p>
           <p className="text-sm text-muted-foreground mb-4">Crie sua primeira tarefa para organizar suas atividades</p>
           <Button onClick={openCreate} variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" /> Criar Tarefa
+            <Plus className="h-4 w-4" /> {t('app.tarefas.newTask')}
           </Button>
         </div>
       ) : viewMode === 'kanban' ? (
         /* ═══ Kanban View ═══ */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {columns.map((col) => {
-            const cfg = STATUS_CONFIG[col];
+            const cfg = statusConfig[col];
             const Icon = cfg.icon;
             const items = tarefas.filter(t => t.status === col);
             return (
@@ -243,6 +248,7 @@ export default function DashboardTarefas() {
                       onEdit={openEdit}
                       onDelete={setDeleteId}
                       onStatusChange={handleStatusChange}
+                      statusConfig={statusConfig}
                     />
                   ))}
                 </div>
@@ -260,6 +266,7 @@ export default function DashboardTarefas() {
               onEdit={openEdit}
               onDelete={setDeleteId}
               onStatusChange={handleStatusChange}
+              statusConfig={statusConfig}
             />
           ))}
         </div>
@@ -308,7 +315,7 @@ export default function DashboardTarefas() {
                     <Select value={antecedencia} onValueChange={setAntecedencia}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {ANTECEDENCIA_OPTIONS.map(o => (
+                        {antecedenciaOptions.map(o => (
                           <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
@@ -331,7 +338,7 @@ export default function DashboardTarefas() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir tarefa?</AlertDialogTitle>
+            <AlertDialogTitle>{t('app.tarefas.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

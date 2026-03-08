@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Save, Upload, X, Workflow, Loader2, MessageSquare, Check, XCircle, Clock, Users, UserPlus, Trash2, Building2, Image, Zap, AlertTriangle, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,10 +39,11 @@ interface OrganizationFormData {
   plano_assinatura: 'plano_a' | 'plano_b' | 'plano_c' | 'plano_d';
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrador",
-  profissional: "Profissional",
-  assistente: "Assistente",
+
+const ROLE_KEYS: Record<string, string> = {
+  admin: "roleAdmin",
+  profissional: "roleProfissional",
+  assistente: "roleAssistente",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -51,6 +53,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function OrganizationForm() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
@@ -406,10 +409,10 @@ export default function OrganizationForm() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            {isEditing ? "Editar Organização" : "Nova Organização"}
+            {isEditing ? t("superAdmin.organizationForm.editOrg") : t("superAdmin.organizationForm.newOrg")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isEditing ? "Gerencie as configurações da empresa" : "Crie uma nova empresa e seu administrador"}
+            {isEditing ? t("superAdmin.organizationForm.editSubtitle") : t("superAdmin.organizationForm.createSubtitle")}
           </p>
         </div>
         <Button
@@ -419,7 +422,7 @@ export default function OrganizationForm() {
           className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
         >
           <Save className="mr-2 h-4 w-4" />
-          {uploadingLogo ? "Enviando..." : saveMutation.isPending ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
+          {uploadingLogo ? t("superAdmin.organizationForm.uploading") : saveMutation.isPending ? t("superAdmin.organizationForm.saving") : isEditing ? t("common.save") : t("superAdmin.organizationForm.create")}
         </Button>
       </div>
 
@@ -428,19 +431,19 @@ export default function OrganizationForm() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="info" className="flex-1 min-w-[120px] gap-1.5 text-xs sm:text-sm">
-              <Building2 className="h-4 w-4" /> Informações
+              <Building2 className="h-4 w-4" /> {t("superAdmin.organizationForm.companyInfo")}
             </TabsTrigger>
             <TabsTrigger value="logo" className="flex-1 min-w-[100px] gap-1.5 text-xs sm:text-sm">
-              <Image className="h-4 w-4" /> Logo
+              <Image className="h-4 w-4" /> {t("superAdmin.organizationForm.logo")}
             </TabsTrigger>
             <TabsTrigger value="workflows" className="flex-1 min-w-[120px] gap-1.5 text-xs sm:text-sm">
-              <Zap className="h-4 w-4" /> Automações
+              <Zap className="h-4 w-4" /> {t("superAdmin.organizationForm.automations")}
             </TabsTrigger>
             <TabsTrigger value="whatsapp" className="flex-1 min-w-[110px] gap-1.5 text-xs sm:text-sm">
-              <MessageSquare className="h-4 w-4" /> WhatsApp
+              <MessageSquare className="h-4 w-4" /> {t("superAdmin.organizationForm.whatsappInstance")}
             </TabsTrigger>
             <TabsTrigger value="users" className="flex-1 min-w-[100px] gap-1.5 text-xs sm:text-sm">
-              <Users className="h-4 w-4" /> Usuários
+              <Users className="h-4 w-4" /> {t("superAdmin.organizationForm.companyUsers")}
               <Badge variant="outline" className="ml-1 text-[10px] h-5 px-1.5">{orgUsers.length}</Badge>
             </TabsTrigger>
           </TabsList>
@@ -452,15 +455,15 @@ export default function OrganizationForm() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
-                    Informações da Empresa
+                    {t("superAdmin.organizationForm.companyInfo")}
                   </CardTitle>
-                  <CardDescription>Dados básicos e configurações da empresa</CardDescription>
+                  <CardDescription>{t("superAdmin.organizationForm.basicData")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div>
-                    <Label htmlFor="name">Nome da Empresa *</Label>
-                    <Input id="name" {...register("name", { required: "Nome é obrigatório" })} placeholder="Ex: Empresa São Paulo" className="mt-1.5" />
-                    {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
+                    <Label htmlFor="name">{t("superAdmin.organizationForm.companyName")}</Label>
+                    <Input id="name" {...register("name", { required: true })} placeholder="Ex: Empresa São Paulo" className="mt-1.5" />
+                    {errors.name && <p className="text-xs text-destructive mt-1">{t("superAdmin.organizationForm.companyName")}</p>}
                   </div>
 
                   <div>
@@ -484,7 +487,7 @@ export default function OrganizationForm() {
                     <Label htmlFor="plano_assinatura">Pacote de Assinatura *</Label>
                     <select
                       id="plano_assinatura"
-                      {...register("plano_assinatura", { required: "Plano é obrigatório" })}
+                      {...register("plano_assinatura", { required: true })}
                       className="w-full h-10 px-3 rounded-xl bg-background/60 backdrop-blur-sm border border-input text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                     >
                       {plans.map((plan) => (
@@ -498,19 +501,19 @@ export default function OrganizationForm() {
                       <div className="mt-3 p-4 rounded-xl liquid-glass-subtle">
                         <p className="text-sm text-foreground mb-3">{currentPlan.descricao_plano}</p>
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">Recursos Inclusos:</p>
+                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">{t("superAdmin.organizationForm.includedResources")}</p>
                           <div className="grid grid-cols-2 gap-2">
                             {[
-                              { key: 'atendimento_inteligente', label: 'Atendimento Inteligente' },
-                              { key: 'agendamento_automatico', label: 'Agendamento Automático' },
-                              { key: 'lembretes_automaticos', label: 'Lembretes Automáticos' },
-                              { key: 'confirmacao_email', label: 'Confirmação por Email' },
-                              { key: 'base_conhecimento', label: 'Base de Conhecimento' },
-                              { key: 'relatorios_avancados', label: 'Relatórios Avançados' },
-                              { key: 'integracao_whatsapp', label: 'Integração WhatsApp' },
-                              { key: 'multi_usuarios', label: 'Múltiplos Usuários' },
-                              { key: 'personalizacao_agente', label: 'Personalização do Agente' },
-                              { key: 'analytics', label: 'Analytics' },
+                              { key: 'atendimento_inteligente', labelKey: 'plan.smartService' },
+                              { key: 'agendamento_automatico', labelKey: 'plan.autoScheduling' },
+                              { key: 'lembretes_automaticos', labelKey: 'plan.autoReminders' },
+                              { key: 'confirmacao_email', labelKey: 'plan.emailConfirmation' },
+                              { key: 'base_conhecimento', labelKey: 'plan.knowledgeBase' },
+                              { key: 'relatorios_avancados', labelKey: 'plan.advancedReports' },
+                              { key: 'integracao_whatsapp', labelKey: 'plan.whatsappIntegration' },
+                              { key: 'multi_usuarios', labelKey: 'plan.multiUsers' },
+                              { key: 'personalizacao_agente', labelKey: 'plan.agentCustomization' },
+                              { key: 'analytics', labelKey: 'plan.analytics' },
                             ].filter(f => (currentPlan as any)[f.key]).map(f => (
                               <div key={f.key} className="flex items-center gap-2 text-xs text-foreground">
                                 <Check className="h-3 w-3 text-primary" />
@@ -822,7 +825,7 @@ export default function OrganizationForm() {
                             <p className="text-sm font-semibold text-foreground">{user.nome_completo}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline" className={`text-[10px] ${ROLE_COLORS[user.funcao] || ''}`}>
-                                {ROLE_LABELS[user.funcao] || user.funcao}
+                                {t(`superAdmin.organizationForm.${ROLE_KEYS[user.funcao] || "roleAdmin"}`)}
                               </Badge>
                               <Badge variant="outline" className={`text-[10px] ${user.ativo ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'text-muted-foreground'}`}>
                                 {user.ativo ? 'Ativo' : 'Inativo'}
@@ -859,7 +862,7 @@ export default function OrganizationForm() {
                 <Label htmlFor="plano_assinatura">Pacote de Assinatura *</Label>
                 <select
                   id="plano_assinatura"
-                  {...register("plano_assinatura", { required: "Plano é obrigatório" })}
+                  {...register("plano_assinatura", { required: true })}
                   className="w-full h-10 px-3 rounded-xl bg-background/60 backdrop-blur-sm border border-input text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                 >
                   {plans.map((plan) => (

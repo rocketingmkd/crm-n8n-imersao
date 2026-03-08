@@ -194,6 +194,34 @@ CREATE POLICY "usuarios_crud_contatos_da_org" ON contatos
 GRANT ALL ON contatos TO authenticated;
 
 -- ============================================================
+-- TABELA: historico_contatos (linhas de histórico por cliente)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS historico_contatos (
+  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_contato      uuid NOT NULL REFERENCES contatos(id) ON DELETE CASCADE,
+  id_organizacao  uuid NOT NULL REFERENCES organizacoes(id) ON DELETE CASCADE,
+  criado_em       timestamptz DEFAULT now(),
+  criado_por      uuid REFERENCES perfis(id) ON DELETE SET NULL,
+  conteudo        text NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS historico_contatos_id_contato_idx ON historico_contatos(id_contato);
+CREATE INDEX IF NOT EXISTS historico_contatos_id_organizacao_idx ON historico_contatos(id_organizacao);
+CREATE INDEX IF NOT EXISTS historico_contatos_criado_em_idx ON historico_contatos(criado_em DESC);
+
+ALTER TABLE historico_contatos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admin_acesso_total_historico_contatos" ON historico_contatos
+  USING (usuario_e_super_admin());
+
+CREATE POLICY "usuarios_crud_historico_contatos_da_org" ON historico_contatos
+  USING (id_organizacao = obter_id_organizacao_usuario())
+  WITH CHECK (id_organizacao = obter_id_organizacao_usuario());
+
+GRANT ALL ON historico_contatos TO authenticated;
+
+-- ============================================================
 -- TABELA: agendamentos
 -- ============================================================
 
@@ -473,7 +501,6 @@ CREATE TABLE IF NOT EXISTS planos_assinatura (
   max_usuarios               integer,
   max_contatos               integer,
   max_arquivos_conhecimento   integer,
-image.png  -- Integração n8n
   workflow_id_n8n            text,
   -- Preços
   preco_mensal               numeric(10,2),

@@ -4,26 +4,31 @@ import { Menu, X, Building2, LayoutDashboard, LogOut, Gem, Eye, Sliders, Chevron
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AppLogo } from "@/components/AppLogo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const menuItems = [
-  { path: "/super-admin/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-  { path: "/super-admin/organizations", label: "Empresas", icon: Building2 },
-  { path: "/super-admin/relatorios", label: "Relatórios", icon: FileBarChart },
-  { path: "/super-admin/plans", label: "Pacotes", icon: Gem },
-  { path: "/super-admin/token-usage", label: "Consumos dos Planos", icon: Eye },
-  { path: "/super-admin/observability", label: "Observabilidade", icon: Activity },
-  { path: "/super-admin/gestao-vps", label: "Gestão de VPS", icon: Server },
-  { path: "/super-admin/settings", label: "Configs", icon: Sliders },
-  { path: "/super-admin/minha-conta", label: "Minha conta", icon: UserCircle },
+  { path: "/super-admin/dashboard", navKey: "overview", icon: LayoutDashboard },
+  { path: "/super-admin/organizations", navKey: "organizations", icon: Building2 },
+  { path: "/super-admin/relatorios", navKey: "reports", icon: FileBarChart },
+  { path: "/super-admin/plans", navKey: "packages", icon: Gem },
+  { path: "/super-admin/token-usage", navKey: "planConsumption", icon: Eye },
+  { path: "/super-admin/observability", navKey: "observability", icon: Activity },
+  { path: "/super-admin/gestao-vps", navKey: "vpsManagement", icon: Server },
+  { path: "/super-admin/settings", navKey: "configs", icon: Sliders },
+  { path: "/super-admin/minha-conta", navKey: "myAccount", icon: UserCircle },
 ];
 
 export default function SuperAdminLayout() {
+  const { t } = useTranslation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const sidebarAlwaysExpanded = true; // Menu sempre com labels visíveis // false = sempre expandido para mostrar labels do menu
+  // Sidebar sempre expandido para mostrar labels do menu
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useAuth();
@@ -58,19 +63,7 @@ export default function SuperAdminLayout() {
             isSidebarCollapsed ? "lg:w-[60px]" : "lg:w-60"
           )}
         >
-          {/* Collapse Toggle */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute -right-3 top-6 z-50 h-6 w-6 rounded-full border border-border bg-card shadow-sm hover:bg-accent/10 hover:border-primary/40 transition-all hidden lg:flex"
-          >
-            {isSidebarCollapsed ? (
-              <ChevronRight className="h-3 w-3 text-foreground" />
-            ) : (
-              <ChevronLeft className="h-3 w-3 text-foreground" />
-            )}
-          </Button>
+          {/* Sidebar sempre expandido para exibir rótulos do menu */}
 
           {/* Header: Logo + User (matching org Layout) */}
           <div className={cn(
@@ -95,21 +88,21 @@ export default function SuperAdminLayout() {
             {!isSidebarCollapsed && (
               <div className="mt-3 liquid-glass-subtle rounded-xl px-3 py-2.5 space-y-2.5">
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Plataforma</p>
-                  <p className="text-xs font-semibold text-foreground truncate">Super Admin</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t("superAdmin.layout.platform")}</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{t("superAdmin.layout.superAdmin")}</p>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Avatar className="h-8 w-8 shrink-0 border border-white/10">
-                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
+                    <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? t("common.admin")} className="object-cover" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                       {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
-                      {profile?.nome_completo || "Admin"}
+                      {profile?.nome_completo || t("common.admin")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">Administrador</p>
+                    <p className="text-[10px] text-muted-foreground">{t("superAdmin.layout.administrator")}</p>
                   </div>
                 </div>
               </div>
@@ -120,7 +113,7 @@ export default function SuperAdminLayout() {
                 <TooltipTrigger asChild>
                   <div className="mt-3 flex justify-center">
                     <Avatar className="h-8 w-8 shrink-0 border border-white/10">
-                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? "Admin"} className="object-cover" />
+                      <AvatarImage src={profile?.url_avatar ?? undefined} alt={profile?.nome_completo ?? t("common.admin")} className="object-cover" />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                         {profile?.nome_completo?.charAt(0).toUpperCase() || "A"}
                       </AvatarFallback>
@@ -128,7 +121,7 @@ export default function SuperAdminLayout() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>
-                  {profile?.nome_completo || "Admin"}
+                  {profile?.nome_completo || t("common.admin")}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -167,7 +160,7 @@ export default function SuperAdminLayout() {
                     "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
                     isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                   )} />
-                  {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                  {!isSidebarCollapsed && <span className="truncate">{item.navKey === "myAccount" ? t("common.myAccount") : t(`nav.${item.navKey}`)}</span>}
                 </button>
               );
 
@@ -175,7 +168,7 @@ export default function SuperAdminLayout() {
                 return (
                   <Tooltip key={item.path}>
                     <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={8}>{item.label}</TooltipContent>
+                    <TooltipContent side="right" sideOffset={8}>{item.navKey === "myAccount" ? t("common.myAccount") : t(`nav.${item.navKey}`)}</TooltipContent>
                   </Tooltip>
                 );
               }
@@ -195,12 +188,12 @@ export default function SuperAdminLayout() {
                     {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>{theme === "dark" ? "Modo claro" : "Modo escuro"}</TooltipContent>
+                <TooltipContent side="right" sideOffset={8}>{theme === "dark" ? t("common.lightMode") : t("common.darkMode")}</TooltipContent>
               </Tooltip>
             ) : (
               <Button variant="ghost" size="sm" onClick={toggleTheme} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-muted text-xs rounded-xl">
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                {theme === "dark" ? "Modo claro" : "Modo escuro"}
+                {theme === "dark" ? t("common.lightMode") : t("common.darkMode")}
               </Button>
             )}
 
@@ -211,12 +204,12 @@ export default function SuperAdminLayout() {
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>Sair</TooltipContent>
+                <TooltipContent side="right" sideOffset={8}>{t("common.logout")}</TooltipContent>
               </Tooltip>
             ) : (
               <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive text-xs rounded-xl">
                 <LogOut className="h-4 w-4" />
-                Sair
+                {t("common.logout")}
               </Button>
             )}
           </div>
@@ -237,9 +230,10 @@ export default function SuperAdminLayout() {
 
             <AppLogo variant="platform" height={26} />
 
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <LanguageSelector />
               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/20">
-                Admin
+                {t("common.admin")}
               </span>
             </div>
           </header>

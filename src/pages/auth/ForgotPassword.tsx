@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sun, Moon, ArrowLeft, Mail } from 'lucide-react';
+import LanguageSelector from "@/components/LanguageSelector";
 import { AppLogo } from "@/components/AppLogo";
 import loginBg from "@/assets/login-bg.jpg";
 
@@ -13,6 +15,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const { t } = useTranslation();
   const { resetPassword } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
@@ -35,18 +38,21 @@ export default function ForgotPassword() {
       <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className={isDark ? "absolute inset-0 bg-black/50" : "absolute inset-0 bg-white/60 backdrop-blur-sm"} />
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-50 h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
-          isDark
-            ? "bg-white/10 border-white/20 text-white/70 hover:text-white hover:bg-white/20"
-            : "bg-black/10 border-black/10 text-foreground/70 hover:text-foreground hover:bg-black/15"
-        }`}
-      >
-        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
+        <LanguageSelector />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className={`h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
+            isDark
+              ? "bg-white/10 border-white/20 text-white/70 hover:text-white hover:bg-white/20"
+              : "bg-black/10 border-black/10 text-foreground/70 hover:text-foreground hover:bg-black/15"
+          }`}
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+      </div>
 
       <div className="relative z-10 w-full max-w-[440px] mx-4">
         <div className={`relative rounded-3xl backdrop-blur-2xl shadow-2xl p-8 sm:p-10 space-y-6 ${
@@ -66,10 +72,10 @@ export default function ForgotPassword() {
             </div>
             <div>
               <h1 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>
-                {sent ? 'Email Enviado!' : 'Recuperar Senha'}
+                {sent ? t('auth.emailSent') : t('auth.recoverPassword')}
               </h1>
               <p className={`text-sm mt-1 ${isDark ? "text-white/60" : "text-foreground/60"}`}>
-                {sent ? 'Verifique sua caixa de entrada' : 'Digite seu email para receber instruções'}
+                {sent ? t('auth.checkInbox') : t('auth.enterEmailForInstructions')}
               </p>
             </div>
           </div>
