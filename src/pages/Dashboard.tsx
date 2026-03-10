@@ -1,19 +1,19 @@
-import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, BarChart3, Loader2, DollarSign } from "lucide-react";
+import { Calendar, Users, Clock, TrendingUp, Activity, CheckCircle2, MessageSquare, MessagesSquare, UserCheck, ListTodo, Loader2 } from "lucide-react";
 import KPICard from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import DashboardTarefas from "@/components/DashboardTarefas";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useAppointments, useCreateAppointment, useAgendamentosPorPeriodo } from "@/hooks/useAppointments";
+import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { useTiposAtendimento } from "@/hooks/useTiposAtendimento";
 import { useEntityLabel } from "@/hooks/useEntityLabel";
 import { useChatMetrics } from "@/hooks/useChatMetrics";
-import { useTokenUsageOrg } from "@/hooks/useTokenUsageOrg";
 import { useTarefas } from "@/hooks/useTarefas";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { formatTime, isToday } from "@/lib/dateUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -37,12 +37,6 @@ import {
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
 
 interface AppointmentFormData {
   start_date: string;
@@ -83,7 +77,7 @@ export default function Dashboard() {
     organization?.plano_assinatura === "plano_a" || organization?.plano_assinatura === "plano_b";
   const showTarefasAnalyticsRelatorios = !isBasicOrIntermediate;
 
-  // Aba ativa (controlado para não sair do Analytics ao clicar nos filtros)
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("tarefas");
 
   // Plano basic/intermediate com agendamento: exibir só a aba Agenda
@@ -93,82 +87,9 @@ export default function Dashboard() {
     }
   }, [isBasicOrIntermediate, hasAgendamento]);
 
-  // Analytics period filter
-  type AnalyticsPeriod = 'today' | '7d' | '30d' | '90d';
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('7d');
-
   const today = new Date();
-  const analyticsRange = (() => {
-    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const start = new Date(end);
-    if (analyticsPeriod === 'today') start.setDate(end.getDate());
-    else if (analyticsPeriod === '7d') start.setDate(end.getDate() - 7);
-    else if (analyticsPeriod === '30d') start.setDate(end.getDate() - 30);
-    else start.setDate(end.getDate() - 90);
-    return { start, end };
-  })();
-  const { data: appointmentsInPeriod = [], isLoading: loadingAppointmentsPeriod } = useAgendamentosPorPeriodo(analyticsRange.start, analyticsRange.end);
-  const { data: chatMetrics, isLoading: loadingChats } = useChatMetrics({ start: analyticsRange.start, end: analyticsRange.end });
-  const { data: tokenUsage } = useTokenUsageOrg(analyticsRange.start, analyticsRange.end);
+  const { data: chatMetrics } = useChatMetrics();
 
-  const periodLabel =
-    analyticsPeriod === 'today' ? t('app.dashboard.periodToday') :
-    analyticsPeriod === '7d' ? t('app.dashboard.period7d') :
-    analyticsPeriod === '30d' ? t('app.dashboard.period30d') : t('app.dashboard.period90d');
-
-  const contatosConcluidosNoPeriodo = contacts.filter((c) => {
-    if ((c as { status_kanban?: string }).status_kanban !== 'concluido') return false;
-    const criado = (c as { criado_em?: string }).criado_em;
-    if (!criado) return true;
-    const d = new Date(criado);
-    return d >= analyticsRange.start && d <= analyticsRange.end;
-  }).length;
-  // Contatos que "entraram" no Kanban no período (criados no período)
-  const totalContatosNoPeriodoKanban = contacts.filter((c) => {
-    const criado = (c as { criado_em?: string }).criado_em;
-    if (!criado) return false;
-    const d = new Date(criado);
-    return d >= analyticsRange.start && d <= analyticsRange.end;
-  }).length;
-  const agendadosNoPeriodo = appointmentsInPeriod.length;
-  const confirmadosNoPeriodo = appointmentsInPeriod.filter((a) => a.situacao === 'confirmado').length;
-
-  // Dados para gráficos
-  const messagesChartData = useMemo(() => {
-    const daily = chatMetrics?.dailyBreakdown ?? [];
-    return daily.map((d) => ({
-      dia: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      mensagens: d.messages,
-      conversas: d.conversations,
-    }));
-  }, [chatMetrics?.dailyBreakdown]);
-
-  const appointmentsChartData = useMemo(() => {
-    const byDay: Record<string, { total: number; confirmados: number }> = {};
-    appointmentsInPeriod.forEach((a) => {
-      const d = (a as { data?: string }).data ?? "";
-      if (!d) return;
-      if (!byDay[d]) byDay[d] = { total: 0, confirmados: 0 };
-      byDay[d].total++;
-      if (a.situacao === "confirmado") byDay[d].confirmados++;
-    });
-    return Object.entries(byDay)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, v]) => ({
-        dia: new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-        total: v.total,
-        confirmados: v.confirmados,
-      }));
-  }, [appointmentsInPeriod]);
-
-  const tokenChartData = useMemo(() => {
-    const daily = tokenUsage?.daily ?? [];
-    return daily.map((d) => ({
-      dia: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      tokens: d.tokens,
-      custo: d.cost,
-    }));
-  }, [tokenUsage?.daily]);
 
   // Modals state
   const [isTodayModalOpen, setIsTodayModalOpen] = useState(false);
@@ -198,12 +119,6 @@ export default function Dashboard() {
   const confirmedToday = todayAppointments.filter(apt => apt.situacao === 'confirmado').length;
   const totalInteractions = contacts.reduce((sum, c) => sum + (c.total_interacoes || 0), 0);
 
-  // Taxa de confirmação pela Agenda: confirmados / total de compromissos no período
-  const totalAgendaNoPeriodo = analyticsPeriod === 'today' ? todayAppointments.length : agendadosNoPeriodo;
-  const confirmadosAgendaNoPeriodo = analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo;
-  const taxaConfirmacaoAgenda = totalAgendaNoPeriodo > 0
-    ? Math.round((confirmadosAgendaNoPeriodo / totalAgendaNoPeriodo) * 100)
-    : 0;
 
   // Submit handlers
   const onSubmitAppointment = async (data: AppointmentFormData) => {
@@ -261,7 +176,7 @@ export default function Dashboard() {
     }
   };
 
-  const isLoading = loadingAppointments || loadingContacts || loadingChats || loadingAppointmentsPeriod;
+  const isLoading = loadingAppointments || loadingContacts;
 
   if (isLoading) {
     return (
@@ -350,7 +265,7 @@ export default function Dashboard() {
         </button>
 
         <button 
-          onClick={() => setIsReportsModalOpen(true)}
+          onClick={() => (showTarefasAnalyticsRelatorios ? navigate('/app/analytics') : setIsReportsModalOpen(true))}
           className="card-luxury group p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50 bg-gradient-to-br from-background to-primary/5"
         >
           <div className="mb-3 md:mb-4 flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-md">
@@ -381,12 +296,6 @@ export default function Dashboard() {
             <TabsTrigger value="agenda" className="gap-2 text-sm px-4">
               <Calendar className="h-4 w-4" />
               {t('app.dashboard.dayAgenda')}
-            </TabsTrigger>
-          )}
-          {showTarefasAnalyticsRelatorios && (
-            <TabsTrigger value="analytics" className="gap-2 text-sm px-4">
-              <BarChart3 className="h-4 w-4" />
-              {t('app.dashboard.analytics')}
             </TabsTrigger>
           )}
         </TabsList>
@@ -491,348 +400,6 @@ export default function Dashboard() {
               )}
             </div>
           </TabsContent>
-        )}
-
-        {/* ═══ Tab: Analytics (apenas planos acima de basic/intermediate) ═══ */}
-        {showTarefasAnalyticsRelatorios && (
-        <TabsContent value="analytics" className="mt-4 space-y-6">
-          {/* Period Filter - type="button" evita submit e mantém a aba Analytics */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {([
-              { value: 'today' as const, label: t('app.dashboard.periodToday') },
-              { value: '7d' as const, label: t('app.dashboard.period7d') },
-              { value: '30d' as const, label: t('app.dashboard.period30d') },
-              { value: '90d' as const, label: t('app.dashboard.period90d') },
-            ]).map((opt) => (
-              <Button
-                key={opt.value}
-                type="button"
-                variant={analyticsPeriod === opt.value ? 'default' : 'outline'}
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setAnalyticsPeriod(opt.value);
-                }}
-                className="text-xs"
-              >
-                {t(opt.labelKey)}
-              </Button>
-            ))}
-          </div>
-
-          {/* KPI Grid - todos respeitam o filtro de período */}
-          <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => setIsReportsModalOpen(true)}>
-              <KPICard
-                title={t('app.dashboard.conversations')}
-                value={
-                  analyticsPeriod === 'today' ? (chatMetrics?.conversationsToday ?? 0) :
-                  analyticsPeriod === '7d' ? (chatMetrics?.conversationsThisWeek ?? 0) :
-                  analyticsPeriod === '30d' ? (chatMetrics?.conversationsThisMonth ?? 0) :
-                  (chatMetrics?.conversationsLast90d ?? 0)
-                }
-                change={
-                  analyticsPeriod === 'today' ? `${chatMetrics?.messagesToday ?? 0} ${t('app.dashboard.messages')}` :
-                  analyticsPeriod === '7d' ? `${chatMetrics?.messagesThisWeek ?? 0} ${t('app.dashboard.messages')}` :
-                  analyticsPeriod === '30d' ? `${chatMetrics?.messagesThisMonth ?? 0} ${t('app.dashboard.messages')}` :
-                  `${chatMetrics?.messagesLast90d ?? 0} ${t('app.dashboard.messages')}`
-                }
-                changeType="positive"
-                icon={MessageSquare}
-                description={periodLabel}
-              />
-            </div>
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => setIsReportsModalOpen(true)}>
-              <KPICard
-                title={t('app.dashboard.messages')}
-                value={
-                  analyticsPeriod === 'today' ? (chatMetrics?.messagesToday ?? 0) :
-                  analyticsPeriod === '7d' ? (chatMetrics?.messagesThisWeek ?? 0) :
-                  analyticsPeriod === '30d' ? (chatMetrics?.messagesThisMonth ?? 0) :
-                  (chatMetrics?.messagesLast90d ?? 0)
-                }
-                changeType="positive"
-                icon={Activity}
-                description={`${t('app.dashboard.messagesVolume')} · ${periodLabel}`}
-              />
-            </div>
-
-            {hasAgendamento && (
-              <>
-                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => setIsTodayModalOpen(true)}>
-                  <KPICard
-                    title={analyticsPeriod === 'today' ? 'Compromissos Hoje' : 'Compromissos no período'}
-                    value={analyticsPeriod === 'today' ? todayAppointments.length : appointmentsInPeriod.length}
-                    change={t('app.dashboard.confirmedCount', { count: analyticsPeriod === 'today' ? confirmedToday : confirmadosNoPeriodo })}
-                    changeType="positive"
-                    icon={Calendar}
-                    description={periodLabel}
-                  />
-                </div>
-                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => setIsTodayModalOpen(true)}>
-                  <KPICard
-                    title="Taxa de Confirmação"
-                    value={`${taxaConfirmacaoAgenda}%`}
-                    change={`${confirmadosAgendaNoPeriodo} ${t('app.dashboard.confirmed').toLowerCase()} / ${totalAgendaNoPeriodo} ${t('app.dashboard.inAgenda')}`}
-                    changeType="positive"
-                    icon={CheckCircle2}
-                    description={`Agenda · ${periodLabel}`}
-                  />
-                </div>
-                <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  onClick={() => window.location.href = '/app/clientes/crm'}>
-                  <KPICard
-                    title="Concluídos (Kanban)"
-                    value={contatosConcluidosNoPeriodo}
-                    change="status concluído"
-                    changeType="positive"
-                    icon={UserCheck}
-                    description={`Kanban · ${periodLabel}`}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Tarefas (Kanban de tarefas) */}
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => setActiveTab('tarefas')}>
-              <KPICard
-                title="Tarefas"
-                value={tarefas.length}
-                change={`${tarefas.filter(t => t.status === 'a_fazer').length} ${t('app.dashboard.toDo')} · ${tarefas.filter(t => t.status === 'feito').length} ${t('app.dashboard.done')}`}
-                changeType="neutral"
-                icon={ListTodo}
-                description="Kanban de tarefas"
-              />
-            </div>
-
-            <div className="cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => window.location.href = '/app/clientes/crm'}>
-              <KPICard
-                title={t('app.dashboard.totalContacts', { plural })}
-                value={contacts.length}
-                change={t('app.dashboard.activeCount', { count: activeContacts })}
-                changeType="positive"
-                icon={Users}
-                description={t('app.dashboard.contactsBase')}
-              />
-            </div>
-          </div>
-
-          {/* ═══ Gráficos ═══ */}
-          <div className="space-y-6">
-            <h2 className="font-display text-lg font-semibold text-foreground">Gráficos</h2>
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              {/* Custo de Tokens */}
-              {tokenUsage && (
-                <Card className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Custo de Tokens (IA)</h3>
-                  </div>
-                  {tokenChartData.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum consumo no período</p>
-                  ) : (
-                    <ChartContainer config={{ custo: { label: "Custo (R$)", color: "hsl(142, 72%, 40%)" } }} className="h-[220px] w-full">
-                      <AreaChart data={tokenChartData} margin={{ left: 0, right: 4 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$ ${Number(v).toFixed(2)}`} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(v: number) => `R$ ${Number(v).toFixed(4)}`} />} />
-                        <Area type="monotone" dataKey="custo" stroke="hsl(142, 72%, 40%)" fill="hsl(142, 72%, 40%)" fillOpacity={0.2} strokeWidth={2} />
-                      </AreaChart>
-                    </ChartContainer>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">Total: R$ {tokenUsage.totalCost.toFixed(4)} · {tokenUsage.totalTokens.toLocaleString("pt-BR")} tokens</p>
-                </Card>
-              )}
-
-              {/* Quantidade de Tokens */}
-              {tokenUsage && (
-                <Card className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Activity className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Quantidade de Tokens (IA)</h3>
-                  </div>
-                  {tokenChartData.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum consumo no período</p>
-                  ) : (
-                    <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(45, 93%, 47%)" } }} className="h-[220px] w-full">
-                      <BarChart data={tokenChartData} margin={{ left: 0, right: 4 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(v: number) => v.toLocaleString("pt-BR")} />} />
-                        <Bar dataKey="tokens" fill="hsl(45, 93%, 47%)" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ChartContainer>
-                  )}
-                </Card>
-              )}
-
-              {/* Mensagens por dia */}
-              <Card className="liquid-glass-subtle p-4 md:p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Mensagens por dia</h3>
-                </div>
-                {(!chatMetrics?.dailyBreakdown || chatMetrics.dailyBreakdown.length === 0) ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma mensagem no período</p>
-                ) : (
-                  <ChartContainer config={{ messages: { label: "Mensagens", color: "hsl(262, 83%, 58%)" } }} className="h-[220px] w-full">
-                    <BarChart data={chatMetrics.dailyBreakdown} margin={{ left: 0, right: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="messages" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ChartContainer>
-                )}
-              </Card>
-
-              {/* Agendamentos por dia */}
-              {hasAgendamento && (
-                <Card className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Agendamentos por dia</h3>
-                  </div>
-                  {appointmentsChartData.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum agendamento no período</p>
-                  ) : (
-                    <ChartContainer config={{ total: { label: "Total", color: "hsl(200, 80%, 50%)" }, confirmados: { label: "Confirmados", color: "hsl(142, 72%, 40%)" } }} className="h-[220px] w-full">
-                      <BarChart data={appointmentsChartData} margin={{ left: 0, right: 4 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="total" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} name="Total" />
-                        <Bar dataKey="confirmados" fill="hsl(142, 72%, 40%)" radius={[4, 4, 0, 0]} name="Confirmados" />
-                      </BarChart>
-                    </ChartContainer>
-                  )}
-                </Card>
-              )}
-
-              {/* Conversas por dia */}
-              <Card className="liquid-glass-subtle p-4 md:p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Conversas por dia</h3>
-                </div>
-                {(!chatMetrics?.dailyBreakdown || chatMetrics.dailyBreakdown.length === 0) ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma conversa no período</p>
-                ) : (
-                  <ChartContainer config={{ conversations: { label: "Conversas", color: "hsl(45, 93%, 47%)" } }} className="h-[220px] w-full">
-                    <LineChart data={chatMetrics.dailyBreakdown} margin={{ left: 0, right: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line type="monotone" dataKey="conversations" stroke="hsl(45, 93%, 47%)" strokeWidth={2} dot={{ r: 3 }} />
-                    </LineChart>
-                  </ChartContainer>
-                )}
-              </Card>
-            </div>
-          </div>
-
-          {/* Resumo de Atendimentos (para planos sem agendamento) */}
-          {!hasAgendamento && (
-            <div className="liquid-glass p-4 md:p-6 lg:p-8">
-              <div className="mb-4 md:mb-6">
-                <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2">
-                  Resumo de Atendimentos
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground">
-                  Visão geral das conversas do seu atendimento automatizado
-                </p>
-              </div>
-
-              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
-                <div className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-                      <MessageSquare className="h-5 w-5 text-success" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Hoje</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Conversas</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsToday || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Mensagens</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.messagesToday || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Esta Semana</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Conversas</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisWeek || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Mensagens</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.messagesThisWeek || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="liquid-glass-subtle p-4 md:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                      <Activity className="h-5 w-5 text-accent" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Este Mês</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Conversas</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.conversationsThisMonth || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Mensagens</span>
-                      <span className="font-semibold text-foreground">{chatMetrics?.messagesThisMonth || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Geral</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {chatMetrics?.totalConversations || 0} conversas
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total de Mensagens</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {chatMetrics?.totalMessages || 0}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </TabsContent>
         )}
       </Tabs>
       )}

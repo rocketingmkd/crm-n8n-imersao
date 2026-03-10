@@ -227,6 +227,11 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
     [data, since, granularity]
   );
 
+  const chartConfig = useMemo(() => ({
+    success: { label: t("superAdmin.observability.successful"), color: "hsl(160, 60%, 45%)" },
+    failed: { label: t("superAdmin.observability.failed"), color: "hsl(15, 80%, 55%)" },
+  }), [t]);
+
   const totalExecPeriod = filteredExec.length;
   const successExecPeriod = filteredExec.filter((e) => e.status === "success").length;
   const failedExecPeriod = filteredExec.filter(
@@ -264,11 +269,6 @@ export default function N8nInsights({ hideHeader = false }: { hideHeader?: boole
       </div>
     );
   }
-
-  const chartConfig = useMemo(() => ({
-    success: { label: t("superAdmin.observability.successful"), color: "hsl(160, 60%, 45%)" },
-    failed: { label: t("superAdmin.observability.failed"), color: "hsl(15, 80%, 55%)" },
-  }), [t]);
 
   return (
     <div className="space-y-6">

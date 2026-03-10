@@ -23,6 +23,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Organization Pages
 import Dashboard from "./pages/Dashboard";
+import DashboardAnalytics from "./pages/DashboardAnalytics";
 import Agenda from "./pages/Agenda";
 import CRM from "./pages/CRM";
 import AgentIA from "./pages/AgentIA";
@@ -93,6 +94,7 @@ const App = () => (
               <Route element={<OrgRoute><Layout /></OrgRoute>}>
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="/app/dashboard" element={<Dashboard />} />
+                <Route path="/app/analytics" element={<DashboardAnalytics />} />
                 <Route path="/app/agenda" element={<Agenda />} />
                 <Route path="/app/tipos-atendimento" element={<Navigate to="/app/configuracoes" replace />} />
                 <Route path="/app/clientes/crm" element={<CRM />} />

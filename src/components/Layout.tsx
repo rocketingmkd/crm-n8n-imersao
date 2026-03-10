@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavLink";
 import { useState, useEffect, useMemo } from "react";
 import { 
   LayoutDashboard, 
+  BarChart3,
   Calendar, 
   Users, 
   Settings, 
@@ -51,6 +52,7 @@ import { AppLogo } from "@/components/AppLogo";
 
 const allNavigationItems = [
   { navKey: "dashboard", href: "/app/dashboard", icon: LayoutDashboard, requiredFeature: null },
+  { navKey: "analytics", href: "/app/analytics", icon: BarChart3, requiredFeature: 'analytics' as const },
   { navKey: "agenda", href: "/app/agenda", icon: Calendar, requiredFeature: 'agendamento_automatico' as const },
   { navKey: "crm", href: "/app/clientes/crm", icon: Users, requiredFeature: null },
   { navKey: "conversations", href: "/app/conversas", icon: MessageCircle, requiredFeature: null },

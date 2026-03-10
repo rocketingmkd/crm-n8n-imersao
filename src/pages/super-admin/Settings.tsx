@@ -360,7 +360,7 @@ export default function SuperAdminSettings() {
               {isLoading ? loadingSpinner : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">{t("superAdmin.settings.openaiKey")}</Label>
+                    <Label htmlFor="chave_elevenlabs" className="text-foreground text-xs font-medium">{t("superAdmin.settings.elevenlabsKey")}</Label>
                     <Input id="chave_elevenlabs" type="password" {...register("chave_elevenlabs")} placeholder="sk_..." className="font-mono liquid-glass-input rounded-xl" />
                   </div>
                   <div className="space-y-2">
