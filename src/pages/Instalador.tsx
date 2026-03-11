@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 import LanguageSelector from "@/components/LanguageSelector";
+import { AppLogo } from "@/components/AppLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Server, Database, Key, FileArchive, Download, Lock, ArrowLeft, CheckCircle2, HelpCircle, ListOrdered, ExternalLink, Monitor, Apple, ChevronRight } from "lucide-react";
+import { Server, Database, Key, FileArchive, Download, Lock, ArrowLeft, CheckCircle2, HelpCircle, ListOrdered, ExternalLink, Monitor, Apple, ChevronRight, Sun, Moon, Sparkles } from "lucide-react";
+import loginBg from "@/assets/login-bg.jpg";
+import loginBgVideo from "@/assets/login-bg-video.mp4";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
-const SENHA_INSTALADOR = "#flowgrammersInstall2026";
+const SENHA_INSTALADOR = import.meta.env.VITE_SENHA_INSTALADOR ?? "";
 
 function LabelComTooltip({ htmlFor, children, tooltip }: { htmlFor?: string; children: React.ReactNode; tooltip: string }) {
   return (
@@ -34,6 +38,7 @@ function LabelComTooltip({ htmlFor, children, tooltip }: { htmlFor?: string; chi
 export default function Instalador() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [autenticado, setAutenticado] = useState(false);
   const [senhaDigitada, setSenhaDigitada] = useState("");
   const [erroSenha, setErroSenha] = useState(false);
@@ -50,6 +55,7 @@ export default function Instalador() {
   const [vpsPassword, setVpsPassword] = useState("");
   const [vpsSshKey, setVpsSshKey] = useState("");
   const [dominio, setDominio] = useState("");
+  const [emailLetsEncrypt, setEmailLetsEncrypt] = useState("");
   const [nomeContainer, setNomeContainer] = useState("flowatend");
 
   const [passoAtual, setPassoAtual] = useState(1);
@@ -117,8 +123,9 @@ SCP_OPTS=""
     const dockerRunCmd = dominio
       ? `docker run -d \\
   --name ${nomeContainer} \\
-  -p 80 \\
+  --network web \\
   -l traefik.enable=true \\
+  -l traefik.docker.network=web \\
   -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' \\
   -l traefik.http.routers.${nomeContainer}.entrypoints=websecure \\
   -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver \\
@@ -230,10 +237,51 @@ SCP_CMD \$SCP_OPTS -o StrictHostKeyChecking=no -r "\$DEPLOY_DIR/dist" "\$DEPLOY_
 # 5. Build e run na VPS
 echo -e "\${GREEN}[5/5] Iniciando container na VPS...\${NC}"
 SSH_CMD \$SSH_OPTS -o StrictHostKeyChecking=no \$VPS_USER@\$VPS_IP << REMOTEEOF
+ACME_EMAIL='${(emailLetsEncrypt || `admin@${dominio}`).replace(/'/g, "'\"'\"'")}'
 cd \$REMOTE_DIR
 docker stop \$CONTAINER_NAME 2>/dev/null || true
 docker rm \$CONTAINER_NAME 2>/dev/null || true
 docker build -t \$CONTAINER_NAME:latest .
+${dominio ? `# Rede Docker e firewall (Hostinger, AWS, Portainer)
+docker network create web 2>/dev/null || true
+if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Status: active"; then
+  echo "Liberando portas 80 e 443 no UFW..."
+  sudo ufw allow 80/tcp 2>/dev/null || true
+  sudo ufw allow 443/tcp 2>/dev/null || true
+  sudo ufw --force reload 2>/dev/null || true
+fi
+
+# Configurar Traefik com Let's Encrypt
+if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+  mkdir -p /opt/traefik-flowatend/letsencrypt
+  touch /opt/traefik-flowatend/letsencrypt/acme.json
+  chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
+  cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
+api:
+  dashboard: false
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: "\$ACME_EMAIL"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: "web"
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: web
+TRAEFIKYML
+  docker run -d --name traefik --restart unless-stopped --network web -p 80:80 -p 443:443 -v /var/run/docker.sock:/var/run/docker.sock:ro -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro -v /opt/traefik-flowatend/letsencrypt:/letsencrypt traefik:v2.10
+  echo "Traefik instalado. Aguardando 5s..."
+  sleep 5
+fi
+` : ""}
 ${dockerRunCmd}
 rm -rf \$REMOTE_DIR
 echo "Container \$CONTAINER_NAME iniciado!"
@@ -257,7 +305,7 @@ ${dominio ? `echo -e "Acesse: https://${dominio}"` : `echo -e "Acesse: http://${
     const deployDir = "$env:TEMP\\flowatend-deploy-" + (Math.random().toString(36).slice(2, 9));
 
     const dockerRunCmd = dominio
-      ? `docker run -d --name ${nomeContainer} -p 80 -l traefik.enable=true -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver ${nomeContainer}:latest`
+      ? `docker run -d --name ${nomeContainer} --network web -l traefik.enable=true -l traefik.docker.network=web -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver ${nomeContainer}:latest`
       : `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
 
     const sshOpts = usaSshKey ? `-i "${sshKeyPath}"` : "";
@@ -359,10 +407,51 @@ EXPOSE 80
     # 5. Build e run na VPS
     Write-Host "[5/5] Iniciando container na VPS..." -ForegroundColor Green
     $remoteScript = @"
+ACME_EMAIL='${(emailLetsEncrypt || `admin@${dominio}`).replace(/'/g, "'\"'\"'")}'
 cd $REMOTE_DIR
 docker stop $nomeContainer 2>/dev/null || true
 docker rm $nomeContainer 2>/dev/null || true
 docker build -t $nomeContainer:latest .
+${dominio ? `# Rede Docker e firewall (Hostinger, AWS, Portainer)
+docker network create web 2>/dev/null || true
+if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Status: active"; then
+  echo "Liberando portas 80 e 443 no UFW..."
+  sudo ufw allow 80/tcp 2>/dev/null || true
+  sudo ufw allow 443/tcp 2>/dev/null || true
+  sudo ufw --force reload 2>/dev/null || true
+fi
+
+# Configurar Traefik com Let's Encrypt
+if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+  mkdir -p /opt/traefik-flowatend/letsencrypt
+  touch /opt/traefik-flowatend/letsencrypt/acme.json
+  chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
+  cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
+api:
+  dashboard: false
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: "\$ACME_EMAIL"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: "web"
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: web
+TRAEFIKYML
+  docker run -d --name traefik --restart unless-stopped --network web -p 80:80 -p 443:443 -v /var/run/docker.sock:/var/run/docker.sock:ro -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro -v /opt/traefik-flowatend/letsencrypt:/letsencrypt traefik:v2.10
+  echo "Traefik instalado. Aguardando 5s..."
+  sleep 5
+fi
+` : ""}
 ${dockerRunCmd}
 rm -rf $REMOTE_DIR
 echo Container $nomeContainer iniciado!
@@ -445,6 +534,7 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
       vpsIp,
       vpsUser,
       dominio,
+      emailLetsEncrypt,
       nomeContainer,
     };
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
@@ -457,44 +547,105 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
     toast.success("Configuração baixada!");
   };
 
+  const isDark = theme === "dark";
+
   if (!autenticado) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4 relative">
-        <div className="fixed top-4 right-4 z-50">
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={loginBg}
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src={loginBgVideo} type="video/mp4" />
+        </video>
+        <div className={isDark ? "absolute inset-0 bg-black/50" : "absolute inset-0 bg-white/60 backdrop-blur-sm"} />
+
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
           <LanguageSelector />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className={`h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
+              isDark
+                ? "bg-white/10 border-white/20 text-white/70 hover:text-white hover:bg-white/20"
+                : "bg-black/10 border-black/10 text-foreground/70 hover:text-foreground hover:bg-black/15"
+            }`}
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
         </div>
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Lock className="h-6 w-6 text-primary" />
+
+        <div className="relative z-10 w-full max-w-[440px] mx-4">
+          <div className={`relative rounded-3xl backdrop-blur-2xl shadow-2xl p-8 sm:p-10 space-y-6 ${
+            isDark
+              ? "border border-white/10 bg-white/5 shadow-black/40"
+              : "border border-black/5 bg-white/70 shadow-black/10"
+          }`}>
+            <div className={`absolute inset-0 rounded-3xl pointer-events-none ${
+              isDark
+                ? "shadow-[inset_0_0_30px_-8px_rgba(255,255,255,0.15)]"
+                : "shadow-[inset_0_0_30px_-8px_rgba(0,0,0,0.05)]"
+            }`} />
+
+            <div className="relative space-y-3 text-center">
+              <div className="flex justify-center">
+                <AppLogo variant="platform" height={64} />
               </div>
-              <div>
-                <CardTitle>{t('installer.title')}</CardTitle>
-                <CardDescription>{t('installer.restricted')}</CardDescription>
+              <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-foreground"}`}>{t('installer.title')}</h2>
+              <p className={`text-sm ${isDark ? "text-white/60" : "text-foreground/60"}`}>
+                {t('installer.restricted')}
+              </p>
+              <div className={`flex items-center justify-center gap-1.5 text-xs ${isDark ? "text-white/30" : "text-foreground/30"}`}>
+                <Sparkles className="h-3 w-3" />
+                <span>{t('installer.enterPassword')}</span>
+                <Sparkles className="h-3 w-3" />
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="senha">{t('installer.password')}</Label>
-              <Input
-                id="senha"
-                type="password"
-                placeholder={t('installer.passwordPlaceholder')}
-                value={senhaDigitada}
-                onChange={(e) => { setSenhaDigitada(e.target.value); setErroSenha(false); }}
-                onKeyDown={(e) => e.key === "Enter" && handleVerificarSenha()}
-                className={erroSenha ? "border-red-500" : ""}
-              />
+
+            <div className="relative space-y-4">
+              <div className="relative">
+                <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
+                <Input
+                  id="senha"
+                  type="password"
+                  placeholder={t('installer.passwordPlaceholder')}
+                  value={senhaDigitada}
+                  onChange={(e) => { setSenhaDigitada(e.target.value); setErroSenha(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleVerificarSenha()}
+                  className={`h-12 pl-11 pr-4 rounded-xl backdrop-blur-sm focus-visible:ring-primary/50 ${
+                    isDark
+                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      : "bg-black/5 border-black/10 text-foreground placeholder:text-foreground/40"
+                  } ${erroSenha ? "border-red-500" : ""}`}
+                />
+              </div>
               {erroSenha && <p className="text-xs text-red-500">{t('installer.wrongPassword')}</p>}
+
+              <Button
+                onClick={handleVerificarSenha}
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground hover:from-primary/90 hover:to-primary/60 shadow-lg shadow-primary/25 font-semibold"
+              >
+                {t('installer.access')}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/")}
+                className={`w-full gap-2 ${isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-foreground/70 hover:text-foreground hover:bg-black/10"}`}
+              >
+                <ArrowLeft className="h-4 w-4" /> {t('common.back')}
+              </Button>
             </div>
-            <Button onClick={handleVerificarSenha} className="w-full">{t('installer.access')}</Button>
-            <Button variant="ghost" onClick={() => navigate("/")} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+
+          <p className={`text-center text-[10px] mt-6 ${isDark ? "text-white/30" : "text-foreground/30"}`}>
+            © {new Date().getFullYear()} FlowAtend
+          </p>
+        </div>
       </div>
     );
   }
@@ -510,6 +661,7 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
       if (!n8nWebhookUrl?.trim()) return { ok: false, msg: t("installer.validation.n8nWebhook") };
     }
     if (passo === 5) {
+      if (dominio?.trim() && !emailLetsEncrypt?.trim()) return { ok: false, msg: t("installer.validation.emailLetsEncrypt") };
       if (!vpsIp?.trim()) return { ok: false, msg: t("installer.validation.vpsIp") };
       if (!vpsUser?.trim()) return { ok: false, msg: t("installer.validation.vpsUser") };
       if (plataforma === "windows") {
@@ -558,10 +710,27 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
 
   return (
     <TooltipProvider>
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 md:p-6 relative">
-      <div className="fixed top-4 right-4 z-50">
+    <div className="relative min-h-screen overflow-hidden">
+      <video autoPlay loop muted playsInline poster={loginBg} className="absolute inset-0 w-full h-full object-cover">
+        <source src={loginBgVideo} type="video/mp4" />
+      </video>
+      <div className={isDark ? "absolute inset-0 bg-black/50" : "absolute inset-0 bg-white/60 backdrop-blur-sm"} />
+
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
         <LanguageSelector />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className={`h-9 w-9 rounded-full backdrop-blur-md border transition-colors ${
+            isDark ? "bg-white/10 border-white/20 text-white/70 hover:text-white" : "bg-black/10 border-black/10 text-foreground/70 hover:text-foreground"
+          }`}
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
       </div>
+
+      <div className="relative z-10 min-h-screen p-4 md:p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -848,6 +1017,13 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <div className="space-y-2">
                   <Label htmlFor="dominio">{t('installer.domain')}</Label>
                   <Input id="dominio" placeholder="app.seudominio.com" value={dominio} onChange={(e) => setDominio(e.target.value)} />
+                  {dominio?.trim() && (
+                    <div className="space-y-2 mt-2">
+                      <Label htmlFor="emailLetsEncrypt">{t('installer.emailLetsEncrypt')}</Label>
+                      <Input id="emailLetsEncrypt" type="email" placeholder="seu@email.com" value={emailLetsEncrypt} onChange={(e) => setEmailLetsEncrypt(e.target.value)} />
+                      <p className="text-xs text-muted-foreground">{t('installer.emailLetsEncryptDesc')}</p>
+                    </div>
+                  )}
                   <Alert className="mt-3">
                     <ListOrdered className="h-4 w-4" />
                     <AlertDescription asChild>
@@ -857,8 +1033,8 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                           <li><strong className="text-foreground">Acesse o painel</strong> — <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dash.cloudflare.com</a> e selecione seu domínio.</li>
                           <li><strong className="text-foreground">Vá em DNS</strong> — Menu lateral → &quot;Registros DNS&quot;</li>
                           <li><strong className="text-foreground">Adicione um registro</strong> — Clique em &quot;Adicionar registro&quot;</li>
-                          <li><strong className="text-foreground">Configure o registro tipo A</strong>: Nome = subdomínio (ex: <code>app</code>), Conteúdo = IP da VPS, Proxy = Laranja ou Cinza</li>
-                          <li><strong className="text-foreground">Se usar proxy (laranja)</strong> — SSL/TLS → &quot;Completo&quot; ou &quot;Completo (estrito)&quot;</li>
+                          <li><strong className="text-foreground">Configure o registro tipo A</strong>: Nome = subdomínio (ex: <code>app</code>), Conteúdo = IP da VPS, Proxy = <strong>Cinza</strong> (apenas DNS)</li>
+                          <li><strong className="text-foreground">Com proxy cinza (DNS apenas)</strong> — o script instala Traefik e Let&apos;s Encrypt na VPS. Preencha o e-mail abaixo.</li>
                           <li><strong className="text-foreground">Aguarde a propagação</strong> e informe o domínio acima (ex: app.seudominio.com)</li>
                         </ol>
                         <p className="text-muted-foreground pt-1 border-t">Com Traefik na VPS, o script configura HTTPS automático com Let&apos;s Encrypt.</p>
@@ -893,17 +1069,53 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
               {plataforma === "mac" ? t('installer.scriptInfoMac') : t('installer.scriptInfoWindows')}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button onClick={handleDownloadScript} className="gap-2">
-              <Download className="h-4 w-4" />
-              {plataforma === "mac" ? t('installer.downloadMac') : t('installer.downloadWindows')}
-            </Button>
-            <Button variant="outline" onClick={handleDownloadConfig} className="gap-2">
-              {t('installer.downloadConfig')}
-            </Button>
+          <CardContent className="space-y-6">
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={handleDownloadScript} className="gap-2">
+                <Download className="h-4 w-4" />
+                {plataforma === "mac" ? t('installer.downloadMac') : t('installer.downloadWindows')}
+              </Button>
+              <Button variant="outline" onClick={handleDownloadConfig} className="gap-2">
+                {t('installer.downloadConfig')}
+              </Button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Alert>
+                <ListOrdered className="h-4 w-4" />
+                <AlertDescription asChild>
+                  <div className="space-y-2 text-xs mt-1">
+                    <p className="font-medium">{t('installer.runStepsMacTitle')}</p>
+                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                      <li>{t('installer.runStepsMac1')}</li>
+                      <li>{t('installer.runStepsMac2')}</li>
+                      <li>{t('installer.runStepsMac3')}</li>
+                      <li>{t('installer.runStepsMac4')}</li>
+                      <li>{t('installer.runStepsMac5')}</li>
+                    </ol>
+                  </div>
+                </AlertDescription>
+              </Alert>
+              <Alert>
+                <ListOrdered className="h-4 w-4" />
+                <AlertDescription asChild>
+                  <div className="space-y-2 text-xs mt-1">
+                    <p className="font-medium">{t('installer.runStepsWinTitle')}</p>
+                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                      <li>{t('installer.runStepsWin1')}</li>
+                      <li>{t('installer.runStepsWin2')}</li>
+                      <li>{t('installer.runStepsWin3')}</li>
+                      <li>{t('installer.runStepsWin4')}</li>
+                      <li>{t('installer.runStepsWin5')}</li>
+                    </ol>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
           </CardContent>
         </Card>
         )}
+      </div>
       </div>
     </div>
     </TooltipProvider>
