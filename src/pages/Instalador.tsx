@@ -14,6 +14,7 @@ import loginBg from "@/assets/login-bg.jpg";
 import loginBgVideo from "@/assets/login-bg-video.mp4";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { APP_VERSION } from "@/lib/version";
 
 const SENHA_INSTALADOR = import.meta.env.VITE_SENHA_INSTALADOR ?? "";
 
@@ -57,6 +58,9 @@ export default function Instalador() {
   const [dominio, setDominio] = useState("");
   const [emailLetsEncrypt, setEmailLetsEncrypt] = useState("");
   const [nomeContainer, setNomeContainer] = useState("flowatend");
+  const [redeDocker, setRedeDocker] = useState("web");
+  const [modoDocker, setModoDocker] = useState<"standalone" | "swarm">("standalone");
+  const [certResolver, setCertResolver] = useState("letsencryptresolver");
 
   const [passoAtual, setPassoAtual] = useState(1);
   const TOTAL_PASSOS = 6;
@@ -114,27 +118,36 @@ SCP_OPTS="-i \$SSH_KEY_PATH"
 `
       : `# Usando senha (requer sshpass: apt install sshpass / brew install sshpass)
 export SSHPASS='${vpsPassword.replace(/'/g, "'\"'\"'")}'
-SSH_CMD() { sshpass -e ssh "\$@"; }
-SCP_CMD() { sshpass -e scp "\$@"; }
+SSH_CMD() { export SSHPASS; sshpass -e ssh -o PreferredAuthentications=password,keyboard-interactive "\$@"; }
+SCP_CMD() { export SSHPASS; sshpass -e scp -o PreferredAuthentications=password,keyboard-interactive "\$@"; }
 SSH_OPTS=""
 SCP_OPTS=""
 `;
 
-    const dockerRunCmd = dominio
-      ? `docker run -d \\
-  --name ${nomeContainer} \\
-  --network web \\
-  -l traefik.enable=true \\
-  -l traefik.docker.network=web \\
-  -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' \\
-  -l traefik.http.routers.${nomeContainer}.entrypoints=websecure \\
-  -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver \\
-  -l traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 \\
-  -l 'traefik.http.routers.${nomeContainer}-http.rule=Host(\`${dominio}\`)' \\
-  -l traefik.http.routers.${nomeContainer}-http.entrypoints=web \\
-  -l traefik.http.routers.${nomeContainer}-http.middlewares=redirect-to-https \\
-  ${nomeContainer}:latest`
-      : `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+    const net = redeDocker?.trim() || "web";
+    const isSwarm = modoDocker === "swarm";
+
+    let dockerRunCmd: string;
+    if (dominio) {
+      if (isSwarm) {
+        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} -p 80 --label traefik.enable=true --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.docker.network=${net} ${nomeContainer}:latest`;
+      } else {
+        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} -l traefik.docker.network=${net} ${nomeContainer}:latest`;
+      }
+    } else {
+      if (isSwarm) {
+        dockerRunCmd = `docker service create --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+      } else {
+        dockerRunCmd = `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+      }
+    }
+
+    const dockerStopCmd = isSwarm
+      ? `echo "Removendo servico anterior (se existir)..."
+docker service rm \$CONTAINER_NAME 2>/dev/null || true
+sleep 5`
+      : `docker stop \$CONTAINER_NAME 2>/dev/null || true
+docker rm \$CONTAINER_NAME 2>/dev/null || true`;
 
     const script = `#!/bin/bash
 # FlowAtend - Instalador automático para VPS
@@ -224,113 +237,48 @@ VITE_N8N_WEBHOOK_URL=${n8nWebhookUrl}
 ENVEOF
 npm run build
 
-# 3. Criar Dockerfile
+# 3. Criar Dockerfile e config Nginx (SPA - corrige 404)
 echo -e "\${GREEN}[3/5] Preparando Docker...\${NC}"
+cat > "\$DEPLOY_DIR/nginx-default.conf" << 'NGINXEOF'
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+NGINXEOF
 cat > "\$DEPLOY_DIR/Dockerfile" << 'DOCKEREOF'
 FROM nginx:alpine
 COPY dist /usr/share/nginx/html
+COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 DOCKEREOF
 
 # 4. Enviar para VPS
 echo -e "\${GREEN}[4/5] Enviando para VPS (\$VPS_IP)...\${NC}"
 REMOTE_DIR="/tmp/flowatend-\$\$"
-SSH_CMD \$SSH_OPTS -o StrictHostKeyChecking=no \$VPS_USER@\$VPS_IP "mkdir -p \$REMOTE_DIR"
-SCP_CMD \$SCP_OPTS -o StrictHostKeyChecking=no -r "\$DEPLOY_DIR/dist" "\$DEPLOY_DIR/Dockerfile" \$VPS_USER@\$VPS_IP:\$REMOTE_DIR/
+if ! SSH_CMD \$SSH_OPTS -o StrictHostKeyChecking=no -o ConnectTimeout=15 \$VPS_USER@\$VPS_IP "echo ok" 2>/dev/null; then
+  echo -e "\${RED}Erro: Não foi possível conectar na VPS.\${NC}"
+  echo -e "\${YELLOW}Verifique: senha/chave corretas, usuário (\$VPS_USER), IP (\$VPS_IP), porta 22 aberta.\${NC}"
+  echo -e "\${YELLOW}Hostinger: use chave SSH na aba VPS (autenticação por senha pode estar desativada).\${NC}"
+  exit 1
+fi
+SSH_CMD \$SSH_OPTS -o StrictHostKeyChecking=no -o ConnectTimeout=15 \$VPS_USER@\$VPS_IP "mkdir -p \$REMOTE_DIR"
+SCP_CMD \$SCP_OPTS -o StrictHostKeyChecking=no -o ConnectTimeout=15 -r "\$DEPLOY_DIR/dist" "\$DEPLOY_DIR/Dockerfile" "\$DEPLOY_DIR/nginx-default.conf" "\$VPS_USER@\$VPS_IP:\$REMOTE_DIR/"
 
 # 5. Build e run na VPS
 echo -e "\${GREEN}[5/5] Iniciando container na VPS...\${NC}"
 SSH_CMD \$SSH_OPTS -o StrictHostKeyChecking=no \$VPS_USER@\$VPS_IP << REMOTEEOF
-ACME_EMAIL='${(emailLetsEncrypt || `admin@${dominio}`).replace(/'/g, "'\"'\"'")}'
 cd \$REMOTE_DIR
-docker stop \$CONTAINER_NAME 2>/dev/null || true
-docker rm \$CONTAINER_NAME 2>/dev/null || true
+${dockerStopCmd}
+docker rmi \$CONTAINER_NAME:latest 2>/dev/null || true
 docker build -t \$CONTAINER_NAME:latest .
-${dominio ? `# Rede Docker e firewall (Hostinger, AWS, Portainer)
-docker network create web 2>/dev/null || true
-if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Status: active"; then
-  echo "Liberando portas 80 e 443 no UFW..."
-  sudo ufw allow 80/tcp 2>/dev/null || true
-  sudo ufw allow 443/tcp 2>/dev/null || true
-  sudo ufw --force reload 2>/dev/null || true
-fi
-
-# Configurar Traefik com Let's Encrypt
-setup_traefik() {
-  mkdir -p /opt/traefik-flowatend/letsencrypt
-  test -f /opt/traefik-flowatend/letsencrypt/acme.json || touch /opt/traefik-flowatend/letsencrypt/acme.json
-  chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
-  cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
-api:
-  dashboard: false
-entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-  websecure:
-    address: ":443"
-certificatesResolvers:
-  myresolver:
-    acme:
-      email: "\$ACME_EMAIL"
-      storage: "/letsencrypt/acme.json"
-      httpChallenge:
-        entryPoint: "web"
-providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-    network: web
-TRAEFIKYML
-  docker run -d --name traefik --restart unless-stopped --network web \\
-    -p 80:80 -p 443:443 \\
-    -v /var/run/docker.sock:/var/run/docker.sock:ro \\
-    -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro \\
-    -v /opt/traefik-flowatend/letsencrypt:/letsencrypt \\
-    -l traefik.enable=true \\
-    -l traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https \\
-    -l traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true \\
-    traefik:v2.10
-}
-
-if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
-  echo "Instalando Traefik..."
-  setup_traefik
-  echo "Traefik instalado. Aguardando 10s para obter certificado..."
-  sleep 10
-else
-  echo "Traefik ja existe. Verificando configuracao..."
-  # Se Traefik existe mas nao tem o middleware, recriar
-  if ! docker inspect traefik --format '{{json .Config.Labels}}' 2>/dev/null | grep -q redirect-to-https; then
-    echo "Atualizando Traefik com redirect HTTPS e middleware..."
-    docker stop traefik 2>/dev/null || true
-    docker rm traefik 2>/dev/null || true
-    setup_traefik
-    sleep 10
-  fi
-  # Garantir que container esta rodando
-  docker start traefik 2>/dev/null || true
-fi
-` : ""}
 ${dockerRunCmd}
 rm -rf \$REMOTE_DIR
 echo "Container \$CONTAINER_NAME iniciado!"
-${dominio ? `echo "Aguardando certificado SSL (pode levar ate 30s)..."
-sleep 5
-# Verificar se o certificado foi obtido
-if curl -sSf --max-time 10 "https://${dominio}" -o /dev/null 2>/dev/null; then
-  echo "SSL OK! Certificado obtido com sucesso."
-else
-  echo "AVISO: Certificado ainda nao disponivel. Verifique:"
-  echo "  1. DNS do dominio ${dominio} aponta para este IP (\$(curl -s ifconfig.me))"
-  echo "  2. Portas 80 e 443 estao abertas no firewall"
-  echo "  3. Logs: docker logs traefik --tail 50"
-  echo "  4. Aguarde 1-2 minutos e tente novamente no navegador"
-fi` : ""}
 REMOTEEOF
 
 # Limpar
@@ -350,9 +298,30 @@ ${dominio ? `echo -e "Acesse: https://${dominio}"` : `echo -e "Acesse: http://${
     const remoteDir = "/tmp/flowatend-" + (Math.random().toString(36).slice(2, 9));
     const deployDir = "$env:TEMP\\flowatend-deploy-" + (Math.random().toString(36).slice(2, 9));
 
-    const dockerRunCmd = dominio
-      ? `docker run -d --name ${nomeContainer} --network web -l traefik.enable=true -l traefik.docker.network=web -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver -l traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 -l 'traefik.http.routers.${nomeContainer}-http.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}-http.entrypoints=web -l traefik.http.routers.${nomeContainer}-http.middlewares=redirect-to-https ${nomeContainer}:latest`
-      : `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+    const net = redeDocker?.trim() || "web";
+    const isSwarm = modoDocker === "swarm";
+
+    let dockerRunCmd: string;
+    if (dominio) {
+      if (isSwarm) {
+        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} -p 80 --label traefik.enable=true --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.docker.network=${net} ${nomeContainer}:latest`;
+      } else {
+        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} -l traefik.docker.network=${net} ${nomeContainer}:latest`;
+      }
+    } else {
+      if (isSwarm) {
+        dockerRunCmd = `docker service create --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+      } else {
+        dockerRunCmd = `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
+      }
+    }
+
+    const dockerStopCmd = isSwarm
+      ? `echo "Removendo servico anterior (se existir)..."
+docker service rm ${nomeContainer} 2>/dev/null || true
+sleep 5`
+      : `docker stop ${nomeContainer} 2>/dev/null || true
+docker rm ${nomeContainer} 2>/dev/null || true`;
 
     const sshOpts = usaSshKey ? `-i "${sshKeyPath}"` : "";
     const scpOpts = usaSshKey ? `-i "${sshKeyPath}"` : "";
@@ -437,95 +406,38 @@ VITE_N8N_WEBHOOK_URL=${n8nWebhookUrl}
 "@ | Out-File -FilePath ".env" -Encoding utf8
     npm run build
 
-    # 3. Dockerfile
+    # 3. Dockerfile + Nginx config (SPA - corrige 404)
     Write-Host "[3/5] Preparando Docker..." -ForegroundColor Green
+    @"
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+    location / {
+        try_files \`$uri \`$uri/ /index.html;
+    }
+}
+"@ | Out-File -FilePath "nginx-default.conf" -Encoding utf8
     @"
 FROM nginx:alpine
 COPY dist /usr/share/nginx/html
+COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 "@ | Out-File -FilePath "Dockerfile" -Encoding utf8
 
     # 4. Enviar para VPS
     Write-Host "[4/5] Enviando para VPS ($VPS_IP)..." -ForegroundColor Green
     ssh ${sshOpts} $VPS_USER@$VPS_IP "mkdir -p $REMOTE_DIR"
-    scp ${scpOpts} -r dist Dockerfile "$VPS_USER@$VPS_IP:$REMOTE_DIR/"
+    scp ${scpOpts} -r dist Dockerfile nginx-default.conf "$VPS_USER@$VPS_IP:$REMOTE_DIR/"
 
     # 5. Build e run na VPS
     Write-Host "[5/5] Iniciando container na VPS..." -ForegroundColor Green
     $remoteScript = @"
-ACME_EMAIL='${(emailLetsEncrypt || `admin@${dominio}`).replace(/'/g, "'\"'\"'")}'
 cd $REMOTE_DIR
-docker stop $nomeContainer 2>/dev/null || true
-docker rm $nomeContainer 2>/dev/null || true
+${dockerStopCmd}
+docker rmi $nomeContainer:latest 2>/dev/null || true
 docker build -t $nomeContainer:latest .
-${dominio ? `# Rede Docker e firewall (Hostinger, AWS, Portainer)
-docker network create web 2>/dev/null || true
-if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Status: active"; then
-  echo "Liberando portas 80 e 443 no UFW..."
-  sudo ufw allow 80/tcp 2>/dev/null || true
-  sudo ufw allow 443/tcp 2>/dev/null || true
-  sudo ufw --force reload 2>/dev/null || true
-fi
-
-# Configurar Traefik com Let's Encrypt
-setup_traefik() {
-  mkdir -p /opt/traefik-flowatend/letsencrypt
-  test -f /opt/traefik-flowatend/letsencrypt/acme.json || touch /opt/traefik-flowatend/letsencrypt/acme.json
-  chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
-  cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
-api:
-  dashboard: false
-entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-  websecure:
-    address: ":443"
-certificatesResolvers:
-  myresolver:
-    acme:
-      email: "\$ACME_EMAIL"
-      storage: "/letsencrypt/acme.json"
-      httpChallenge:
-        entryPoint: "web"
-providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-    network: web
-TRAEFIKYML
-  docker run -d --name traefik --restart unless-stopped --network web \\
-    -p 80:80 -p 443:443 \\
-    -v /var/run/docker.sock:/var/run/docker.sock:ro \\
-    -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro \\
-    -v /opt/traefik-flowatend/letsencrypt:/letsencrypt \\
-    -l traefik.enable=true \\
-    -l traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https \\
-    -l traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true \\
-    traefik:v2.10
-}
-
-if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
-  echo "Instalando Traefik..."
-  setup_traefik
-  echo "Traefik instalado. Aguardando 10s para obter certificado..."
-  sleep 10
-else
-  echo "Traefik ja existe. Verificando configuracao..."
-  if ! docker inspect traefik --format '{{json .Config.Labels}}' 2>/dev/null | grep -q redirect-to-https; then
-    echo "Atualizando Traefik com redirect HTTPS e middleware..."
-    docker stop traefik 2>/dev/null || true
-    docker rm traefik 2>/dev/null || true
-    setup_traefik
-    sleep 10
-  fi
-  docker start traefik 2>/dev/null || true
-fi
-` : ""}
 ${dockerRunCmd}
 rm -rf $REMOTE_DIR
 echo Container $nomeContainer iniciado!
@@ -717,7 +629,7 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
           </div>
 
           <p className={`text-center text-[10px] mt-6 ${isDark ? "text-white/30" : "text-foreground/30"}`}>
-            © {new Date().getFullYear()} FlowAtend
+            © {new Date().getFullYear()} FlowAtend v{APP_VERSION}
           </p>
         </div>
       </div>
@@ -912,7 +824,10 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </CardTitle>
             <CardDescription>{t("installer.platformDesc")}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Selecione o sistema operacional do <strong>seu computador</strong> (onde vai rodar o script). O script faz o build localmente e envia para a VPS.
+            </p>
             <div className="flex gap-4 flex-wrap">
               <label
                 className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors ${
@@ -921,7 +836,10 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
               >
                 <input type="radio" checked={plataforma === "windows"} onChange={() => setPlataforma("windows")} className="sr-only" />
                 <Monitor className="h-5 w-5" />
-                <span>{t("installer.platformWindows")}</span>
+                <div>
+                  <span className="font-medium">{t("installer.platformWindows")}</span>
+                  <p className="text-xs text-muted-foreground">Gera um .ps1 (PowerShell). Requer chave SSH.</p>
+                </div>
               </label>
               <label
                 className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors ${
@@ -930,7 +848,10 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
               >
                 <input type="radio" checked={plataforma === "mac"} onChange={() => setPlataforma("mac")} className="sr-only" />
                 <Apple className="h-5 w-5" />
-                <span>{t("installer.platformMac")}</span>
+                <div>
+                  <span className="font-medium">{t("installer.platformMac")}</span>
+                  <p className="text-xs text-muted-foreground">Gera um .sh (Bash). Aceita senha ou chave SSH.</p>
+                </div>
               </label>
             </div>
             <Button onClick={avancarPasso} className="mt-4 gap-2">
@@ -947,21 +868,34 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <CardDescription>{t('installer.projectSourceDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" checked={fonteProjeto === "github"} onChange={() => setFonteProjeto("github")} />
-                    {t('installer.github')}
+                <p className="text-sm text-muted-foreground">
+                  O script precisa do codigo-fonte do FlowAtend para fazer o build (<code className="rounded bg-muted px-1.5 py-0.5 text-xs">npm install</code> + <code className="rounded bg-muted px-1.5 py-0.5 text-xs">npm run build</code>) no seu computador antes de enviar para a VPS.
+                </p>
+                <div className="flex gap-4 flex-wrap">
+                  <label className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors text-sm ${
+                    fonteProjeto === "github" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                  }`}>
+                    <input type="radio" checked={fonteProjeto === "github"} onChange={() => setFonteProjeto("github")} className="sr-only" />
+                    <div>
+                      <span className="font-medium">{t('installer.github')}</span>
+                      <p className="text-xs text-muted-foreground">Clona automaticamente via git clone</p>
+                    </div>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" checked={fonteProjeto === "zip"} onChange={() => setFonteProjeto("zip")} />
-                    {t('installer.zip')}
+                  <label className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors text-sm ${
+                    fonteProjeto === "zip" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                  }`}>
+                    <input type="radio" checked={fonteProjeto === "zip"} onChange={() => setFonteProjeto("zip")} className="sr-only" />
+                    <div>
+                      <span className="font-medium">{t('installer.zip')}</span>
+                      <p className="text-xs text-muted-foreground">Usa arquivo ZIP local (~&#x2F;flowatend.zip)</p>
+                    </div>
                   </label>
                 </div>
                 {fonteProjeto === "github" && (
                   <div className="space-y-2">
                     <LabelComTooltip
                       htmlFor="githubRepo"
-                      tooltip="Onde encontrar: No GitHub, abra o repositório e clique em Code → copie a URL HTTPS. Para que serve: O script clona este repositório para fazer o build do projeto."
+                      tooltip="No GitHub, abra o repositorio e clique em Code → copie a URL HTTPS."
                     >
                       {t('installer.repoUrl')}
                     </LabelComTooltip>
@@ -971,13 +905,17 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                       value={githubRepo}
                       onChange={(e) => setGithubRepo(e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">Deixe em branco para usar o repositório padrão Flowgrammers.</p>
+                    <p className="text-xs text-muted-foreground">Deixe em branco para usar o repositorio padrao Flowgrammers. Se o repo for privado, o git pedira credenciais durante a execucao.</p>
                   </div>
                 )}
                 {fonteProjeto === "zip" && (
-                  <p className="text-sm text-muted-foreground">
-                    {plataforma === "mac" ? t("installer.zipPathMac") : t("installer.zipPathWindows")}
-                  </p>
+                  <Alert>
+                    <AlertDescription className="text-xs">
+                      {plataforma === "mac"
+                        ? "Coloque o ZIP do projeto em ~/flowatend.zip (pasta pessoal do usuario). O script descompacta automaticamente."
+                        : "Coloque o ZIP em C:\\Users\\SeuUsuario\\flowatend.zip. O script descompacta automaticamente."}
+                    </AlertDescription>
+                  </Alert>
                 )}
                 <Button onClick={avancarPasso} className="mt-4 gap-2" disabled={!passoPodeAvançar}>
                   {t('installer.stepDone')} <ChevronRight className="h-4 w-4" />
@@ -993,9 +931,16 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <CardDescription>{t('installer.supabaseDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Veja o passo a passo no Passo 1. Preencha os campos abaixo com os dados do Supabase (Project Settings → API).
-                </p>
+                <Alert className="border-primary/30 bg-primary/5">
+                  <Database className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    <p className="font-medium mb-1">Onde encontrar esses dados?</p>
+                    <p className="text-muted-foreground">
+                      No <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-primary underline hover:no-underline">Supabase Dashboard</a>, clique no seu projeto → <strong>Project Settings</strong> (icone engrenagem) → <strong>API</strong>.
+                      Os 3 primeiros campos estao nessa pagina. O Webhook do n8n voce encontra no seu painel n8n.
+                    </p>
+                  </AlertDescription>
+                </Alert>
                 <div className="space-y-2">
                   <LabelComTooltip
                     htmlFor="supabaseUrl"
@@ -1004,33 +949,37 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                     {t('installer.url')}
                   </LabelComTooltip>
                   <Input id="supabaseUrl" placeholder="https://xxx.supabase.co" value={supabaseUrl} onChange={(e) => setSupabaseUrl(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Project Settings → API → <strong>Project URL</strong>. Ex: https://abcdefg.supabase.co</p>
                 </div>
                 <div className="space-y-2">
                   <LabelComTooltip
                     htmlFor="supabaseKey"
-                    tooltip="Onde encontrar: Supabase Dashboard → Project Settings → API → Project API keys → anon public. Para que serve: Chave pública para o frontend conectar ao Supabase (segura para expor no navegador)."
+                    tooltip="Chave publica (anon) do Supabase. Segura para expor no frontend."
                   >
                     {t('installer.publicKey')}
                   </LabelComTooltip>
                   <Input id="supabaseKey" placeholder="eyJ..." value={supabaseKey} onChange={(e) => setSupabaseKey(e.target.value)} type="password" />
+                  <p className="text-xs text-muted-foreground">Project Settings → API → Project API keys → <strong>anon public</strong>. Comeca com &quot;eyJ...&quot;</p>
                 </div>
                 <div className="space-y-2">
                   <LabelComTooltip
                     htmlFor="supabaseProjectId"
-                    tooltip="Onde encontrar: Supabase Dashboard → Project Settings → General → Reference ID (ou na URL do projeto). Para que serve: Identificador único do projeto no Supabase."
+                    tooltip="Identificador unico do projeto. Encontrado na URL ou em General settings."
                   >
                     {t('installer.projectId')}
                   </LabelComTooltip>
                   <Input id="supabaseProjectId" placeholder="abcdefghijkl" value={supabaseProjectId} onChange={(e) => setSupabaseProjectId(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Project Settings → General → <strong>Reference ID</strong>. Tambem aparece na URL: supabase.com/dashboard/project/<strong>ESTE_ID</strong></p>
                 </div>
                 <div className="space-y-2">
                   <LabelComTooltip
                     htmlFor="n8nWebhookUrl"
-                    tooltip="Onde encontrar: No n8n, crie um nó Webhook e copie a URL de produção. Para que serve: Webhook base para automações (WhatsApp, agendamento, etc.). Obrigatório."
+                    tooltip="URL base do webhook do n8n. Usado para automacoes do FlowAtend."
                   >
                     {t('installer.n8nWebhook')}
                   </LabelComTooltip>
                   <Input id="n8nWebhookUrl" placeholder="https://seu-n8n.com/webhook/..." value={n8nWebhookUrl} onChange={(e) => setN8nWebhookUrl(e.target.value)} required />
+                  <p className="text-xs text-muted-foreground">No n8n, crie um no Webhook → copie a <strong>URL de producao</strong>. Ex: https://n8n.seudominio.com/webhook/</p>
                 </div>
                 <Button onClick={avancarPasso} className="mt-4 gap-2" disabled={!passoPodeAvançar}>
                   {t('installer.stepDone')} <ChevronRight className="h-4 w-4" />
@@ -1046,20 +995,31 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <CardDescription>{t('installer.vpsCredentials')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Alert className="border-primary/30 bg-primary/5">
+                  <Server className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    <p className="font-medium mb-1">Conexao SSH</p>
+                    <p className="text-muted-foreground">
+                      O script conecta via SSH na sua VPS, envia os arquivos (dist + Dockerfile), faz o build da imagem Docker e inicia o container.
+                      Voce precisa do <strong>IP</strong>, <strong>usuario</strong> e <strong>senha ou chave SSH</strong> da VPS. Sao os mesmos dados que usa no Termius/terminal para acessar o servidor.
+                    </p>
+                  </AlertDescription>
+                </Alert>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <LabelComTooltip
                       htmlFor="vpsIp"
-                      tooltip="Onde encontrar: No painel da sua VPS (DigitalOcean, AWS, etc.) ou use o IP que você usa para SSH. Para que serve: Endereço do servidor onde o app será implantado."
+                      tooltip="IP do servidor. Mesmo que usa para ssh root@IP."
                     >
                       {t('installer.serverIp')}
                     </LabelComTooltip>
-                    <Input id="vpsIp" placeholder="203.0.113.10" value={vpsIp} onChange={(e) => setVpsIp(e.target.value)} />
+                    <Input id="vpsIp" placeholder="203.0.113.10 ou ssh root@IP" value={vpsIp} onChange={(e) => setVpsIp(e.target.value)} />
+                    <p className="text-xs text-muted-foreground">Voce pode colar <code className="rounded bg-muted px-1 text-xs">ssh root@69.62.89.76</code> direto, o sistema extrai o IP e usuario.</p>
                   </div>
                   <div className="space-y-2">
                     <LabelComTooltip
                       htmlFor="vpsUser"
-                      tooltip="Onde encontrar: O usuário que você usa para fazer SSH no servidor (ex: ssh root@IP). Para que serve: Usuário SSH para conectar e enviar os arquivos."
+                      tooltip="Usuario SSH. Normalmente 'root' em VPS."
                     >
                       {t('installer.sshUser')}
                     </LabelComTooltip>
@@ -1069,28 +1029,38 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <div className="space-y-2">
                   <LabelComTooltip
                     htmlFor="vpsPassword"
-                    tooltip="Onde encontrar: A senha do usuário SSH (definida ao criar a VPS). Para que serve: Autenticação para SCP/SSH. Requer sshpass instalado. Deixe em branco se usar chave SSH."
+                    tooltip="Senha SSH. Requer sshpass instalado. Se a VPS usa apenas chave SSH, deixe em branco."
                   >
                     {t('installer.sshPassword')}
                   </LabelComTooltip>
                   <Input id="vpsPassword" type="password" placeholder="Senha do servidor" value={vpsPassword} onChange={(e) => setVpsPassword(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Se sua VPS (ex: Hostinger) desabilita autenticacao por senha, use a chave SSH abaixo.</p>
                 </div>
                 <div className="space-y-2">
                   <LabelComTooltip
-                    tooltip="Onde encontrar: Arquivo ~/.ssh/id_rsa ou id_ed25519 (copie o conteúdo completo). Para que serve: Alternativa mais segura à senha. Cole a chave privada completa incluindo BEGIN e END."
+                    tooltip="Chave privada SSH. Mais segura que senha. Cole o conteudo completo do arquivo de chave."
                   >
                     {t('installer.sshKey')}
                   </LabelComTooltip>
                   <textarea
-                    className="w-full min-h-[120px] rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                    className="w-full min-h-[120px] rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono text-xs"
                     placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
                     value={vpsSshKey}
                     onChange={(e) => setVpsSshKey(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Arquivo <code className="rounded bg-muted px-1 text-xs">~/.ssh/id_rsa</code> ou <code className="rounded bg-muted px-1 text-xs">~/.ssh/id_ed25519</code>.
+                    Na Hostinger: VPS → SSH Keys → copie a chave privada. Cole o conteudo completo incluindo BEGIN e END.
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dominio">{t('installer.domain')}</Label>
+                  <LabelComTooltip htmlFor="dominio" tooltip="Subdominio apontando para o IP da VPS. Opcional: sem dominio, acessa via IP:8080.">
+                    {t('installer.domain')}
+                  </LabelComTooltip>
                   <Input id="dominio" placeholder="app.seudominio.com" value={dominio} onChange={(e) => setDominio(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">
+                    Opcional. Sem dominio, o app fica em <code className="rounded bg-muted px-1 text-xs">http://IP:8080</code>. Com dominio, o Traefik gera HTTPS automatico via Let&apos;s Encrypt.
+                  </p>
                   {dominio?.trim() && (
                     <div className="space-y-2 mt-2">
                       <Label htmlFor="emailLetsEncrypt">{t('installer.emailLetsEncrypt')}</Label>
@@ -1125,6 +1095,106 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                   </LabelComTooltip>
                   <Input id="nomeContainer" placeholder="flowatend" value={nomeContainer} onChange={(e) => setNomeContainer(e.target.value)} />
                 </div>
+                {dominio?.trim() && (
+                  <>
+                    <div className="space-y-3">
+                      <LabelComTooltip
+                        tooltip="Como saber: rode 'docker service ls' na VPS. Se listar servicos (traefik, n8n, portainer), e Swarm. Se der erro ou vazio, e Standalone."
+                      >
+                        Modo Docker
+                      </LabelComTooltip>
+                      <div className="flex gap-4 flex-wrap">
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors text-sm ${
+                            modoDocker === "standalone" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <input type="radio" checked={modoDocker === "standalone"} onChange={() => setModoDocker("standalone")} className="sr-only" />
+                          <Server className="h-4 w-4" />
+                          <div>
+                            <span className="font-medium">Standalone</span>
+                            <p className="text-xs text-muted-foreground">docker run &mdash; Docker simples, sem orquestrador</p>
+                          </div>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors text-sm ${
+                            modoDocker === "swarm" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <input type="radio" checked={modoDocker === "swarm"} onChange={() => setModoDocker("swarm")} className="sr-only" />
+                          <Server className="h-4 w-4" />
+                          <div>
+                            <span className="font-medium">Swarm</span>
+                            <p className="text-xs text-muted-foreground">docker service &mdash; Portainer + Swarm (mais comum em VPS com n8n)</p>
+                          </div>
+                        </label>
+                      </div>
+                      <Alert>
+                        <HelpCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <p className="font-medium mb-1">Como descobrir?</p>
+                          <p className="text-muted-foreground">Na VPS, rode <code className="rounded bg-muted px-1 text-xs">docker service ls</code>.</p>
+                          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                            <li>Se listar servicos como <code className="rounded bg-muted px-1 text-xs">traefik_traefik</code>, <code className="rounded bg-muted px-1 text-xs">n8n_n8n</code> → escolha <strong>Swarm</strong></li>
+                            <li>Se der erro ou nao listar nada → escolha <strong>Standalone</strong></li>
+                          </ul>
+                          <p className="text-muted-foreground mt-1">Se voce seguiu o setup da Imersao Flowgrammers (Hostinger + Portainer + n8n), provavelmente e <strong>Swarm</strong>.</p>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                    <div className="space-y-2">
+                      <LabelComTooltip
+                        htmlFor="certResolver"
+                        tooltip="Nome do certificado resolver configurado no Traefik. E o nome que aparece em --certificatesresolvers.NOME.acme nos args do Traefik."
+                      >
+                        Cert Resolver (Traefik)
+                      </LabelComTooltip>
+                      <Input id="certResolver" placeholder="letsencryptresolver" value={certResolver} onChange={(e) => setCertResolver(e.target.value)} />
+                      <Alert>
+                        <HelpCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <p className="font-medium mb-1">Como descobrir?</p>
+                          <div className="space-y-1 text-muted-foreground">
+                            <p>Rode na VPS (substitua <code className="rounded bg-muted px-1 text-xs">traefik_traefik</code> pelo nome do seu servico Traefik):</p>
+                            <code className="block rounded bg-muted px-2 py-1 text-xs">docker service inspect traefik_traefik --format {`'{{json .Spec.TaskTemplate.ContainerSpec.Args}}'`} | tr , &apos;\n&apos; | grep certif</code>
+                            <p>Procure por <code className="rounded bg-muted px-1 text-xs">--certificatesresolvers.<strong>NOME</strong>.acme</code>. O <strong>NOME</strong> e o que vai aqui.</p>
+                            <p>No setup Flowgrammers, normalmente e <strong>letsencryptresolver</strong>.</p>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                    <div className="space-y-2">
+                      <LabelComTooltip
+                        htmlFor="redeDocker"
+                        tooltip="O container FlowAtend precisa estar na mesma rede Docker que o Traefik para receber trafego HTTPS."
+                      >
+                        Rede Docker (Traefik)
+                      </LabelComTooltip>
+                      <Input id="redeDocker" placeholder={modoDocker === "swarm" ? "ricneves" : "web"} value={redeDocker} onChange={(e) => setRedeDocker(e.target.value)} />
+                      <Alert>
+                        <HelpCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <p className="font-medium mb-1">Como descobrir a rede?</p>
+                          {modoDocker === "swarm" ? (
+                            <div className="space-y-1 text-muted-foreground">
+                              <p>Rode na VPS:</p>
+                              <code className="block rounded bg-muted px-2 py-1 text-xs">docker service inspect traefik_traefik --format {`'{{json .Spec.TaskTemplate.Networks}}'`}</code>
+                              <p>O resultado mostra o ID da rede. Depois rode <code className="rounded bg-muted px-1 text-xs">docker network ls</code> para ver o nome correspondente.</p>
+                              <p>Normalmente a rede overlay se chama como o usuario/stack (ex: <strong>ricneves</strong>, <strong>traefik_default</strong>).</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1 text-muted-foreground">
+                              <p>Rode na VPS:</p>
+                              <code className="block rounded bg-muted px-2 py-1 text-xs">docker network ls</code>
+                              <p>Procure a rede bridge onde o Traefik esta (normalmente <strong>web</strong> ou <strong>traefik_default</strong>).</p>
+                              <p>Confirme com: <code className="rounded bg-muted px-1 text-xs">docker inspect traefik --format {`'{{json .NetworkSettings.Networks}}'`}</code></p>
+                            </div>
+                          )}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  </>
+                )}
                 <Button onClick={avancarPasso} className="mt-4 gap-2" disabled={!passoPodeAvançar}>
                   {t('installer.stepDone')} <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -1144,8 +1214,33 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <Alert className="border-primary/30 bg-primary/5">
+              <ListOrdered className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <p className="font-medium mb-1">O que o script faz?</p>
+                <ol className="list-decimal list-inside space-y-0.5 text-muted-foreground">
+                  <li>Clona o repositorio (ou descompacta o ZIP)</li>
+                  <li>Instala dependencias (<code className="rounded bg-muted px-1 text-xs">npm install</code>) e faz o build (<code className="rounded bg-muted px-1 text-xs">npm run build</code>)</li>
+                  <li>Cria o Dockerfile e config do Nginx (SPA com try_files)</li>
+                  <li>Envia os arquivos para a VPS via SCP</li>
+                  <li>Faz o <code className="rounded bg-muted px-1 text-xs">docker build</code> e inicia o container {modoDocker === "swarm" ? "(docker service create)" : "(docker run)"} com labels do Traefik</li>
+                </ol>
+              </AlertDescription>
+            </Alert>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">Resumo da configuracao</p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <span>Plataforma:</span><span className="font-medium text-foreground">{plataforma === "mac" ? "Mac/Linux (.sh)" : "Windows (.ps1)"}</span>
+                <span>Modo Docker:</span><span className="font-medium text-foreground">{modoDocker === "swarm" ? "Swarm (docker service)" : "Standalone (docker run)"}</span>
+                <span>Container:</span><span className="font-medium text-foreground">{nomeContainer}</span>
+                {dominio ? <><span>Dominio:</span><span className="font-medium text-foreground">{dominio} (HTTPS via Traefik)</span></> : <><span>Acesso:</span><span className="font-medium text-foreground">http://{vpsIp || "IP"}:8080</span></>}
+                {dominio && <><span>Rede Docker:</span><span className="font-medium text-foreground">{redeDocker}</span></>}
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-3">
-              <Button onClick={handleDownloadScript} className="gap-2">
+              <Button onClick={handleDownloadScript} className="gap-2" size="lg">
                 <Download className="h-4 w-4" />
                 {plataforma === "mac" ? t('installer.downloadMac') : t('installer.downloadWindows')}
               </Button>
@@ -1159,13 +1254,13 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <ListOrdered className="h-4 w-4" />
                 <AlertDescription asChild>
                   <div className="space-y-2 text-xs mt-1">
-                    <p className="font-medium">{t('installer.runStepsMacTitle')}</p>
+                    <p className="font-medium">Como executar no Mac/Linux</p>
                     <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                      <li>{t('installer.runStepsMac1')}</li>
-                      <li>{t('installer.runStepsMac2')}</li>
-                      <li>{t('installer.runStepsMac3')}</li>
-                      <li>{t('installer.runStepsMac4')}</li>
-                      <li>{t('installer.runStepsMac5')}</li>
+                      <li>Abra o <strong>Terminal</strong></li>
+                      <li><code className="rounded bg-muted px-1 text-xs">cd ~/Downloads</code> (ou onde salvou)</li>
+                      <li><code className="rounded bg-muted px-1 text-xs">chmod +x flowatend-install.sh</code></li>
+                      <li><code className="rounded bg-muted px-1 text-xs">bash flowatend-install.sh</code></li>
+                      <li>Aguarde a instalacao (5-10 min na primeira vez)</li>
                     </ol>
                   </div>
                 </AlertDescription>
@@ -1174,18 +1269,32 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
                 <ListOrdered className="h-4 w-4" />
                 <AlertDescription asChild>
                   <div className="space-y-2 text-xs mt-1">
-                    <p className="font-medium">{t('installer.runStepsWinTitle')}</p>
+                    <p className="font-medium">Como executar no Windows</p>
                     <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                      <li>{t('installer.runStepsWin1')}</li>
-                      <li>{t('installer.runStepsWin2')}</li>
-                      <li>{t('installer.runStepsWin3')}</li>
-                      <li>{t('installer.runStepsWin4')}</li>
-                      <li>{t('installer.runStepsWin5')}</li>
+                      <li>Abra o <strong>PowerShell como Administrador</strong></li>
+                      <li><code className="rounded bg-muted px-1 text-xs">Set-ExecutionPolicy Bypass -Scope Process</code></li>
+                      <li><code className="rounded bg-muted px-1 text-xs">cd ~\Downloads</code></li>
+                      <li><code className="rounded bg-muted px-1 text-xs">.\flowatend-install.ps1</code></li>
+                      <li>Aguarde a instalacao (5-10 min na primeira vez)</li>
                     </ol>
                   </div>
                 </AlertDescription>
               </Alert>
             </div>
+
+            {dominio && (
+              <Alert>
+                <HelpCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  <p className="font-medium mb-1">Apos a instalacao</p>
+                  <ul className="space-y-0.5 text-muted-foreground">
+                    <li>Acesse <strong>https://{dominio}</strong> no navegador</li>
+                    <li>Se aparecer erro de certificado, aguarde 1-2 minutos (o Let&apos;s Encrypt esta gerando o certificado)</li>
+                    <li>Se persistir, verifique: DNS apontando para o IP correto, Cloudflare em modo &quot;DNS only&quot; (cinza), e Traefik rodando na VPS</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
         )}

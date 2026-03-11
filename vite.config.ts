@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import pkg from "./package.json" with { type: "json" };
 
 // Base do webhook n8n (evita CORS em dev ao usar proxy)
 const n8nBase = process.env.VITE_N8N_WEBHOOK_URL || "https://webhook.agentes-n8n.com.br/webhook/";
@@ -21,6 +22,9 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/api\/n8n-proxy/, n8nPath),
       },
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

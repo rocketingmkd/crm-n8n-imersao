@@ -12,6 +12,7 @@ import { AppLogo } from "@/components/AppLogo";
 import LanguageSelector from "@/components/LanguageSelector";
 import loginBg from "@/assets/login-bg.jpg";
 import loginBgVideo from "@/assets/login-bg-video.mp4";
+import { APP_VERSION } from "@/lib/version";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -206,7 +207,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className={`text-center text-[10px] mt-6 ${isDark ? "text-white/30" : "text-foreground/30"}`}>
-          © {new Date().getFullYear()} FlowAtend. {t('auth.copyright')}
+          © {new Date().getFullYear()} FlowAtend v{APP_VERSION}. {t('auth.copyright')}
         </p>
       </div>
     </div>
