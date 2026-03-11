@@ -530,6 +530,21 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
     if (passoAtual < TOTAL_PASSOS) setPassoAtual((p) => p + 1);
   };
 
+  const irParaPasso = (targetId: number) => {
+    if (targetId <= passoAtual) {
+      setPassoAtual(targetId);
+      return;
+    }
+    for (let p = passoAtual + 1; p <= targetId; p++) {
+      const { ok, msg } = validarPasso(p);
+      if (!ok) {
+        toast.error(msg);
+        return;
+      }
+    }
+    setPassoAtual(targetId);
+  };
+
   const passoPodeAvançar = validarPasso(passoAtual).ok;
 
   const steps = [
@@ -571,7 +586,7 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
             <div key={s.id} className="flex items-center flex-1">
               <button
                 type="button"
-                onClick={() => setPassoAtual(s.id)}
+                onClick={() => irParaPasso(s.id)}
                 className={`flex flex-col items-center gap-1 group ${
                   passoAtual >= s.id ? "cursor-pointer" : "cursor-default opacity-60"
                 }`}
