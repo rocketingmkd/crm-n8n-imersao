@@ -129,6 +129,10 @@ SCP_OPTS=""
   -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' \\
   -l traefik.http.routers.${nomeContainer}.entrypoints=websecure \\
   -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver \\
+  -l traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 \\
+  -l 'traefik.http.routers.${nomeContainer}-http.rule=Host(\`${dominio}\`)' \\
+  -l traefik.http.routers.${nomeContainer}-http.entrypoints=web \\
+  -l traefik.http.routers.${nomeContainer}-http.middlewares=redirect-to-https \\
   ${nomeContainer}:latest`
       : `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
 
@@ -252,9 +256,9 @@ if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Stat
 fi
 
 # Configurar Traefik com Let's Encrypt
-if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+setup_traefik() {
   mkdir -p /opt/traefik-flowatend/letsencrypt
-  touch /opt/traefik-flowatend/letsencrypt/acme.json
+  test -f /opt/traefik-flowatend/letsencrypt/acme.json || touch /opt/traefik-flowatend/letsencrypt/acme.json
   chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
   cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
 api:
@@ -262,6 +266,11 @@ api:
 entryPoints:
   web:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     address: ":443"
 certificatesResolvers:
@@ -277,14 +286,51 @@ providers:
     exposedByDefault: false
     network: web
 TRAEFIKYML
-  docker run -d --name traefik --restart unless-stopped --network web -p 80:80 -p 443:443 -v /var/run/docker.sock:/var/run/docker.sock:ro -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro -v /opt/traefik-flowatend/letsencrypt:/letsencrypt traefik:v2.10
-  echo "Traefik instalado. Aguardando 5s..."
-  sleep 5
+  docker run -d --name traefik --restart unless-stopped --network web \\
+    -p 80:80 -p 443:443 \\
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \\
+    -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro \\
+    -v /opt/traefik-flowatend/letsencrypt:/letsencrypt \\
+    -l traefik.enable=true \\
+    -l traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https \\
+    -l traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true \\
+    traefik:v2.10
+}
+
+if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+  echo "Instalando Traefik..."
+  setup_traefik
+  echo "Traefik instalado. Aguardando 10s para obter certificado..."
+  sleep 10
+else
+  echo "Traefik ja existe. Verificando configuracao..."
+  # Se Traefik existe mas nao tem o middleware, recriar
+  if ! docker inspect traefik --format '{{json .Config.Labels}}' 2>/dev/null | grep -q redirect-to-https; then
+    echo "Atualizando Traefik com redirect HTTPS e middleware..."
+    docker stop traefik 2>/dev/null || true
+    docker rm traefik 2>/dev/null || true
+    setup_traefik
+    sleep 10
+  fi
+  # Garantir que container esta rodando
+  docker start traefik 2>/dev/null || true
 fi
 ` : ""}
 ${dockerRunCmd}
 rm -rf \$REMOTE_DIR
 echo "Container \$CONTAINER_NAME iniciado!"
+${dominio ? `echo "Aguardando certificado SSL (pode levar ate 30s)..."
+sleep 5
+# Verificar se o certificado foi obtido
+if curl -sSf --max-time 10 "https://${dominio}" -o /dev/null 2>/dev/null; then
+  echo "SSL OK! Certificado obtido com sucesso."
+else
+  echo "AVISO: Certificado ainda nao disponivel. Verifique:"
+  echo "  1. DNS do dominio ${dominio} aponta para este IP (\$(curl -s ifconfig.me))"
+  echo "  2. Portas 80 e 443 estao abertas no firewall"
+  echo "  3. Logs: docker logs traefik --tail 50"
+  echo "  4. Aguarde 1-2 minutos e tente novamente no navegador"
+fi` : ""}
 REMOTEEOF
 
 # Limpar
@@ -305,7 +351,7 @@ ${dominio ? `echo -e "Acesse: https://${dominio}"` : `echo -e "Acesse: http://${
     const deployDir = "$env:TEMP\\flowatend-deploy-" + (Math.random().toString(36).slice(2, 9));
 
     const dockerRunCmd = dominio
-      ? `docker run -d --name ${nomeContainer} --network web -l traefik.enable=true -l traefik.docker.network=web -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver ${nomeContainer}:latest`
+      ? `docker run -d --name ${nomeContainer} --network web -l traefik.enable=true -l traefik.docker.network=web -l 'traefik.http.routers.${nomeContainer}.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=myresolver -l traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 -l 'traefik.http.routers.${nomeContainer}-http.rule=Host(\`${dominio}\`)' -l traefik.http.routers.${nomeContainer}-http.entrypoints=web -l traefik.http.routers.${nomeContainer}-http.middlewares=redirect-to-https ${nomeContainer}:latest`
       : `docker run -d --name ${nomeContainer} -p 8080:80 ${nomeContainer}:latest`;
 
     const sshOpts = usaSshKey ? `-i "${sshKeyPath}"` : "";
@@ -422,9 +468,9 @@ if command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -q "Stat
 fi
 
 # Configurar Traefik com Let's Encrypt
-if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+setup_traefik() {
   mkdir -p /opt/traefik-flowatend/letsencrypt
-  touch /opt/traefik-flowatend/letsencrypt/acme.json
+  test -f /opt/traefik-flowatend/letsencrypt/acme.json || touch /opt/traefik-flowatend/letsencrypt/acme.json
   chmod 600 /opt/traefik-flowatend/letsencrypt/acme.json
   cat > /opt/traefik-flowatend/traefik.yml << TRAEFIKYML
 api:
@@ -432,6 +478,11 @@ api:
 entryPoints:
   web:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     address: ":443"
 certificatesResolvers:
@@ -447,9 +498,32 @@ providers:
     exposedByDefault: false
     network: web
 TRAEFIKYML
-  docker run -d --name traefik --restart unless-stopped --network web -p 80:80 -p 443:443 -v /var/run/docker.sock:/var/run/docker.sock:ro -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro -v /opt/traefik-flowatend/letsencrypt:/letsencrypt traefik:v2.10
-  echo "Traefik instalado. Aguardando 5s..."
-  sleep 5
+  docker run -d --name traefik --restart unless-stopped --network web \\
+    -p 80:80 -p 443:443 \\
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \\
+    -v /opt/traefik-flowatend/traefik.yml:/etc/traefik/traefik.yml:ro \\
+    -v /opt/traefik-flowatend/letsencrypt:/letsencrypt \\
+    -l traefik.enable=true \\
+    -l traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https \\
+    -l traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true \\
+    traefik:v2.10
+}
+
+if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+  echo "Instalando Traefik..."
+  setup_traefik
+  echo "Traefik instalado. Aguardando 10s para obter certificado..."
+  sleep 10
+else
+  echo "Traefik ja existe. Verificando configuracao..."
+  if ! docker inspect traefik --format '{{json .Config.Labels}}' 2>/dev/null | grep -q redirect-to-https; then
+    echo "Atualizando Traefik com redirect HTTPS e middleware..."
+    docker stop traefik 2>/dev/null || true
+    docker rm traefik 2>/dev/null || true
+    setup_traefik
+    sleep 10
+  fi
+  docker start traefik 2>/dev/null || true
 fi
 ` : ""}
 ${dockerRunCmd}
