@@ -130,9 +130,9 @@ SCP_OPTS=""
     let dockerRunCmd: string;
     if (dominio) {
       if (isSwarm) {
-        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} -p 80 --label traefik.enable=true --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.docker.network=${net} ${nomeContainer}:latest`;
+        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} --label traefik.enable=true --label traefik.docker.network=${net} --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.http.routers.${nomeContainer}.service=${nomeContainer} --label traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 ${nomeContainer}:latest`;
       } else {
-        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} -l traefik.docker.network=${net} ${nomeContainer}:latest`;
+        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l traefik.docker.network=${net} -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} ${nomeContainer}:latest`;
       }
     } else {
       if (isSwarm) {
@@ -304,9 +304,9 @@ ${dominio ? `echo -e "Acesse: https://${dominio}"` : `echo -e "Acesse: http://${
     let dockerRunCmd: string;
     if (dominio) {
       if (isSwarm) {
-        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} -p 80 --label traefik.enable=true --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.docker.network=${net} ${nomeContainer}:latest`;
+        dockerRunCmd = `docker service create --name ${nomeContainer} --network ${net} --label traefik.enable=true --label traefik.docker.network=${net} --label 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' --label traefik.http.routers.${nomeContainer}.entrypoints=websecure --label traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} --label traefik.http.routers.${nomeContainer}.service=${nomeContainer} --label traefik.http.services.${nomeContainer}.loadbalancer.server.port=80 ${nomeContainer}:latest`;
       } else {
-        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} -l traefik.docker.network=${net} ${nomeContainer}:latest`;
+        dockerRunCmd = `docker run -d --name ${nomeContainer} --network ${net} -p 80 -l traefik.enable=true -l traefik.docker.network=${net} -l 'traefik.http.routers.${nomeContainer}.rule=Host(\\\`${dominio}\\\`)' -l traefik.http.routers.${nomeContainer}.entrypoints=websecure -l traefik.http.routers.${nomeContainer}.tls.certresolver=${certResolver} ${nomeContainer}:latest`;
       }
     } else {
       if (isSwarm) {

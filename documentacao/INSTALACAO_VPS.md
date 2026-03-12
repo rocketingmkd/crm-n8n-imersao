@@ -188,16 +188,20 @@ Use se o Traefik roda como serviço Swarm (setup Flowgrammers com Portainer):
 docker service create \
   --name seuprojeto \
   --network ricneves \
-  -p 80 \
   --label traefik.enable=true \
+  --label traefik.docker.network=ricneves \
   --label 'traefik.http.routers.seuprojeto.rule=Host(`seuprojeto.seudominio.com`)' \
   --label traefik.http.routers.seuprojeto.entrypoints=websecure \
   --label traefik.http.routers.seuprojeto.tls.certresolver=letsencryptresolver \
-  --label traefik.docker.network=ricneves \
+  --label traefik.http.routers.seuprojeto.service=seuprojeto \
+  --label traefik.http.services.seuprojeto.loadbalancer.server.port=80 \
   seuprojeto:latest
 ```
 
+- `--label traefik.http.services.seuprojeto.loadbalancer.server.port=80` → **obrigatório** em Swarm para o Traefik saber qual porta do container usar
+- `--label traefik.http.routers.seuprojeto.service=seuprojeto` → liga o router ao service
 - `--network ricneves` → mesma rede overlay do Traefik (troque `ricneves` pelo nome da sua rede)
+- Sem `-p 80` → em Swarm com Traefik, não é necessário publicar a porta (o Traefik acessa via rede overlay)
 
 ### Sem Traefik?
 
@@ -327,12 +331,13 @@ docker build -t seuprojeto:latest .
 docker service create \
   --name seuprojeto \
   --network ricneves \
-  -p 80 \
   --label traefik.enable=true \
+  --label traefik.docker.network=ricneves \
   --label 'traefik.http.routers.seuprojeto.rule=Host(`seuprojeto.seudominio.com`)' \
   --label traefik.http.routers.seuprojeto.entrypoints=websecure \
   --label traefik.http.routers.seuprojeto.tls.certresolver=letsencryptresolver \
-  --label traefik.docker.network=ricneves \
+  --label traefik.http.routers.seuprojeto.service=seuprojeto \
+  --label traefik.http.services.seuprojeto.loadbalancer.server.port=80 \
   seuprojeto:latest
 ```
 
