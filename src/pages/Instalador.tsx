@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Server, Database, Key, FileArchive, Download, Lock, ArrowLeft, CheckCircle2, HelpCircle, ListOrdered, ExternalLink, Monitor, Apple, ChevronRight, Sun, Moon, Sparkles } from "lucide-react";
+import { Server, Database, Key, FileArchive, Download, Lock, ArrowLeft, CheckCircle2, HelpCircle, ListOrdered, ExternalLink, Monitor, Apple, ChevronRight, Sun, Moon, Sparkles, Zap } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import loginBgVideo from "@/assets/login-bg-video.mp4";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -63,7 +63,7 @@ export default function Instalador() {
   const [certResolver, setCertResolver] = useState("letsencryptresolver");
 
   const [passoAtual, setPassoAtual] = useState(1);
-  const TOTAL_PASSOS = 6;
+  const TOTAL_PASSOS = 7;
 
   // Extrai apenas IP/host e usuário se o usuário colar "ssh root@69.62.89.76"
   const normalizeVpsInput = (ip: string, user: string) => {
@@ -637,16 +637,16 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
   }
 
   const validarPasso = (passo: number): { ok: boolean; msg?: string } => {
-    if (passo === 3) {
+    if (passo === 4) {
       if (fonteProjeto === "github" && !githubRepo?.trim()) return { ok: false, msg: t("installer.validation.githubRepo") };
     }
-    if (passo === 4) {
+    if (passo === 5) {
       if (!supabaseUrl?.trim()) return { ok: false, msg: t("installer.validation.supabaseUrl") };
       if (!supabaseKey?.trim()) return { ok: false, msg: t("installer.validation.supabaseKey") };
       if (!supabaseProjectId?.trim()) return { ok: false, msg: t("installer.validation.supabaseProjectId") };
       if (!n8nWebhookUrl?.trim()) return { ok: false, msg: t("installer.validation.n8nWebhook") };
     }
-    if (passo === 5) {
+    if (passo === 6) {
       if (dominio?.trim() && !emailLetsEncrypt?.trim()) return { ok: false, msg: t("installer.validation.emailLetsEncrypt") };
       if (!vpsIp?.trim()) return { ok: false, msg: t("installer.validation.vpsIp") };
       if (!vpsUser?.trim()) return { ok: false, msg: t("installer.validation.vpsUser") };
@@ -687,11 +687,12 @@ console.log("\\nPara executar a instalação completa, use o script bash (Linux/
 
   const steps = [
     { id: 1, label: t("installer.stepLabel1"), icon: Database },
-    { id: 2, label: t("installer.stepLabel2"), icon: Monitor },
-    { id: 3, label: t("installer.stepLabel3"), icon: FileArchive },
-    { id: 4, label: t("installer.stepLabel4"), icon: Key },
-    { id: 5, label: t("installer.stepLabel5"), icon: Server },
-    { id: 6, label: t("installer.stepLabel6"), icon: Download },
+    { id: 2, label: "Workflows n8n", icon: Zap },
+    { id: 3, label: t("installer.stepLabel2"), icon: Monitor },
+    { id: 4, label: t("installer.stepLabel3"), icon: FileArchive },
+    { id: 5, label: t("installer.stepLabel4"), icon: Key },
+    { id: 6, label: t("installer.stepLabel5"), icon: Server },
+    { id: 7, label: t("installer.stepLabel6"), icon: Download },
   ];
 
   return (
@@ -816,6 +817,122 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
         )}
 
         {passoAtual === 2 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              Workflows n8n
+            </CardTitle>
+            <CardDescription>
+              Importe e configure os workflows de automação no seu n8n. Eles são responsáveis pelo atendimento via WhatsApp, agendamentos, RAG e gestão do servidor.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <Alert className="border-primary/30 bg-primary/5">
+              <Zap className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <p className="font-medium mb-1">Pré-requisitos</p>
+                <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
+                  <li>n8n rodando (self-hosted ou cloud)</li>
+                  <li>UAZAPI configurado (servidor WhatsApp)</li>
+                  <li>Redis disponível</li>
+                  <li>Chave da API OpenAI</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              <p className="font-medium text-foreground">1. Criar credenciais no n8n</p>
+              <p className="text-muted-foreground text-xs">
+                Vá em <strong>Settings → Credentials</strong> e crie com estes nomes exatos:
+              </p>
+              <div className="rounded-lg border overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left px-3 py-2 font-medium">Credencial</th>
+                      <th className="text-left px-3 py-2 font-medium">Tipo</th>
+                      <th className="text-left px-3 py-2 font-medium">Onde obter</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">Supabase Flow Atend</td><td className="px-3 py-1.5">Supabase</td><td className="px-3 py-1.5">URL + Service Role Key</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">Postgres FlowAtend</td><td className="px-3 py-1.5">PostgreSQL</td><td className="px-3 py-1.5">Connection Pooling do Supabase</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">OpenAI</td><td className="px-3 py-1.5">OpenAI API</td><td className="px-3 py-1.5">platform.openai.com</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">Redis</td><td className="px-3 py-1.5">Redis</td><td className="px-3 py-1.5">Host, porta e senha</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">n8n API</td><td className="px-3 py-1.5">n8n API</td><td className="px-3 py-1.5">Settings → API → Create Key</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">Uazapi (Header Auth)</td><td className="px-3 py-1.5">HTTP Header</td><td className="px-3 py-1.5">admintoken do UAZAPI</td></tr>
+                    <tr><td className="px-3 py-1.5 font-mono">SMTP Flowgrammers</td><td className="px-3 py-1.5">SMTP</td><td className="px-3 py-1.5">Dados do servidor de e-mail</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="font-medium text-foreground">2. Criar variáveis no n8n</p>
+              <p className="text-muted-foreground text-xs">
+                Vá em <strong>Settings → Variables</strong> e crie:
+              </p>
+              <div className="rounded-lg border overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left px-3 py-2 font-medium">Variável</th>
+                      <th className="text-left px-3 py-2 font-medium">Exemplo</th>
+                      <th className="text-left px-3 py-2 font-medium">Descrição</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">servidorUAZAPI</td><td className="px-3 py-1.5">server1</td><td className="px-3 py-1.5">Subdomínio UAZAPI</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">urlN8N</td><td className="px-3 py-1.5">https://n8n.exemplo.com/</td><td className="px-3 py-1.5">URL base do n8n</td></tr>
+                    <tr className="border-b"><td className="px-3 py-1.5 font-mono">projectId</td><td className="px-3 py-1.5">abc123</td><td className="px-3 py-1.5">ID do projeto n8n</td></tr>
+                    <tr><td className="px-3 py-1.5 font-mono">urlBasePrd</td><td className="px-3 py-1.5">https://n8n.exemplo.com/webhook/</td><td className="px-3 py-1.5">URL base webhooks produção</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="font-medium text-foreground">3. Importar workflows (na ordem)</p>
+              <p className="text-muted-foreground text-xs">
+                Importe os arquivos JSON da pasta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">n8n/</code> do projeto. Para cada: <strong>Add workflow → ... → Import from file</strong>.
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground text-xs">
+                <li>
+                  <span className="font-medium text-foreground">Sub-workflows</span> (pasta <code className="rounded bg-muted px-1 text-xs">sub-workflows-atend/</code>) — 11 arquivos. São a base chamada pelos outros. Não precisam ser ativados.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">APIs</span> (pasta <code className="rounded bg-muted px-1 text-xs">apis/</code>) — 17 arquivos em subpastas (agenda, rag, whatsapp, servidor, workflows). Ative todos após configurar credenciais.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">Skeletons</span> (pasta <code className="rounded bg-muted px-1 text-xs">skeletons/</code>) — 3 templates de atendimento (Basic, Intermediate, Advanced). <strong>Não ative</strong> — são clonados automaticamente pelo instalador de workflows.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">Crons</span> (pasta <code className="rounded bg-muted px-1 text-xs">crons/</code>) — 2 workflows agendados (lembretes e follow-up). Ative quando quiser que rodem automaticamente.
+                </li>
+              </ol>
+            </div>
+
+            <Alert>
+              <HelpCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <p className="font-medium mb-1">Após importar cada workflow</p>
+                <ul className="space-y-0.5 text-muted-foreground">
+                  <li>Abra cada node com ⚠️ e selecione a credencial correspondente</li>
+                  <li>Salve o workflow antes de ativar</li>
+                  <li>Documentação completa: <code className="rounded bg-muted px-1 text-xs">documentacao/INSTALACAO_WORKFLOWS_N8N.md</code></li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+
+            <Button onClick={avancarPasso} className="mt-4 gap-2">
+              {t('installer.stepDone')} <ChevronRight className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
+        )}
+
+        {passoAtual === 3 && (
         <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -861,7 +978,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
         </Card>
         )}
 
-        {passoAtual === 3 && (
+        {passoAtual === 4 && (
             <Card>
               <CardHeader>
                 <CardTitle>{t('installer.projectSource')}</CardTitle>
@@ -924,7 +1041,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </Card>
         )}
 
-        {passoAtual === 4 && (
+        {passoAtual === 5 && (
             <Card>
               <CardHeader>
                 <CardTitle>{t('installer.supabase')}</CardTitle>
@@ -988,7 +1105,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </Card>
         )}
 
-        {passoAtual === 5 && (
+        {passoAtual === 6 && (
             <Card>
               <CardHeader>
                 <CardTitle>{t('installer.vpsServer')}</CardTitle>
@@ -1202,7 +1319,7 @@ VALUES ('COLE-O-UUID-AQUI', 'Seu Nome', 'admin', true, true);`}</pre>
             </Card>
         )}
 
-        {passoAtual === 6 && (
+        {passoAtual === 7 && (
         <Card className="border-primary/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
