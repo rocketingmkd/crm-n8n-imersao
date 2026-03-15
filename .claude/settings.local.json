@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao/src/pages/super-admin/*.tsx)",
+      "Bash(python3 - <<'PYEOF'\nimport re\n\nfilepath = \"/Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao/src/pages/AgentIA.tsx\"\n\nwith open\\(filepath, \"r\", encoding=\"utf-8\"\\) as f:\n    content = f.read\\(\\)\n\n# Show context around openai_api_key occurrences\nprint\\(\"openai_api_key contexts:\"\\)\nfor m in re.finditer\\(r'openai_api_key', content\\):\n    start = max\\(0, m.start\\(\\)-80\\)\n    end = min\\(len\\(content\\), m.end\\(\\)+80\\)\n    print\\(f\"  -> {repr\\(content[start:end]\\)}\"\\)\n    print\\(\\)\n\n# Show context around agent_name occurrences\nprint\\(\"agent_name contexts:\"\\)\nfor m in re.finditer\\(r'agent_name', content\\):\n    start = max\\(0, m.start\\(\\)-80\\)\n    end = min\\(len\\(content\\), m.end\\(\\)+80\\)\n    print\\(f\"  -> {repr\\(content[start:end]\\)}\"\\)\n    print\\(\\)\n\nPYEOF)",
+      "Bash(python3 << 'PYEOF'\nwith open\\('/Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao/src/pages/super-admin/OrganizationForm.tsx', 'r', encoding='utf-8'\\) as f:\n    content = f.read\\(\\)\n\nprint\\(content[18000:24000]\\)\nPYEOF)",
+      "Bash(which npx && npx supabase functions deploy gerenciar-usuarios-organizacao --project-ref detsacgocmirxkgjusdf 2>&1 || echo \"npx failed\"a de uma)",
+      "Bash(grep -A 3 \"documentos.*select\\\\|contatos.*select\\\\|agendamentos.*select\" /Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao/src/hooks/*.ts | head -40)",
+      "Bash(npm run:*)",
+      "Bash(find /Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao -path \"*/n8n*\" -prune -o -type f \\\\\\( -name \"*n8n*\" -o -name \"*workflow*\" \\\\\\) -print | grep -E \"\\\\.\\(md|txt\\)$\")",
+      "Bash(xargs ls:*)",
+      "Bash(sort -k2)"
+    ]
+  }
+}

@@ -1,1 +1,110 @@
-{"updatedAt":"2026-03-05T16:39:17.832Z","createdAt":"2026-03-05T14:55:09.319Z","id":"9faFLtvu7tmW84u3","name":"listarPausaAgenteAPI","active":true,"isArchived":false,"nodes":[{"parameters":{"httpMethod":"POST","path":"lista-pausa-agente","responseMode":"responseNode","options":{}},"type":"n8n-nodes-base.webhook","typeVersion":2.1,"position":[0,0],"id":"3bf54866-0429-4ec9-91e5-e0b91dfa2c14","name":"Webhook","webhookId":"1dbd56ac-6264-47dd-961e-e36b9632d80d"},{"parameters":{"respondWith":"allIncomingItems","options":{"responseCode":200}},"type":"n8n-nodes-base.respondToWebhook","typeVersion":1.5,"position":[448,0],"id":"89a3faff-7cb5-44ac-a3dd-4f127c445c89","name":"responderParaWebhook"},{"parameters":{"operation":"get","key":"={{ $json.body.remote_J_id }}_block","options":{}},"type":"n8n-nodes-base.redis","typeVersion":1,"position":[240,0],"id":"a3e9b27e-74c6-462c-bebd-f1f35045f3e2","name":"listarTempoPausaAtendimentoHumano","credentials":{"redis":{"id":"mG96KO4qIJc2Z5cp","name":"Redis"}}}],"connections":{"Webhook":{"main":[[{"node":"listarTempoPausaAtendimentoHumano","type":"main","index":0}]]},"listarTempoPausaAtendimentoHumano":{"main":[[{"node":"responderParaWebhook","type":"main","index":0}]]}},"settings":{"executionOrder":"v1","binaryMode":"separate","availableInMCP":false},"staticData":null,"meta":null,"versionId":"10d53705-5104-47b1-821f-094de3c2021a","activeVersionId":"10d53705-5104-47b1-821f-094de3c2021a","triggerCount":1,"shared":[{"updatedAt":"2026-03-05T14:55:09.319Z","createdAt":"2026-03-05T14:55:09.319Z","role":"workflow:owner","workflowId":"9faFLtvu7tmW84u3","projectId":"sXNN8zKIunLvXNly"}],"activeVersion":{"updatedAt":"2026-03-05T16:33:04.868Z","createdAt":"2026-03-05T16:33:02.792Z","versionId":"10d53705-5104-47b1-821f-094de3c2021a","workflowId":"9faFLtvu7tmW84u3","nodes":[{"parameters":{"httpMethod":"POST","path":"lista-pausa-agente","responseMode":"responseNode","options":{}},"type":"n8n-nodes-base.webhook","typeVersion":2.1,"position":[0,0],"id":"3bf54866-0429-4ec9-91e5-e0b91dfa2c14","name":"Webhook","webhookId":"1dbd56ac-6264-47dd-961e-e36b9632d80d"},{"parameters":{"respondWith":"allIncomingItems","options":{"responseCode":200}},"type":"n8n-nodes-base.respondToWebhook","typeVersion":1.5,"position":[448,0],"id":"89a3faff-7cb5-44ac-a3dd-4f127c445c89","name":"responderParaWebhook"},{"parameters":{"operation":"get","key":"={{ $json.body.remote_J_id }}_block","options":{}},"type":"n8n-nodes-base.redis","typeVersion":1,"position":[240,0],"id":"a3e9b27e-74c6-462c-bebd-f1f35045f3e2","name":"listarTempoPausaAtendimentoHumano","credentials":{"redis":{"id":"mG96KO4qIJc2Z5cp","name":"Redis"}}}],"connections":{"Webhook":{"main":[[{"node":"listarTempoPausaAtendimentoHumano","type":"main","index":0}]]},"listarTempoPausaAtendimentoHumano":{"main":[[{"node":"responderParaWebhook","type":"main","index":0}]]}},"authors":"Ricardo Neves","name":"Version 10d53705","description":"","autosaved":true},"tags":[{"updatedAt":"2026-03-04T14:31:03.764Z","createdAt":"2026-03-04T14:31:03.764Z","id":"YgEN0njwKdGXy3EG","name":"🏢 enterprise"},{"updatedAt":"2025-11-04T18:13:18.649Z","createdAt":"2025-11-04T18:13:18.649Z","id":"ur1maN6bsjwttizq","name":"💗 flowgrammers"}]}
+{
+  "name": "listarPausaAgenteAPI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lista-pausa-agente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3bf54866-0429-4ec9-91e5-e0b91dfa2c14",
+      "name": "Webhook",
+      "webhookId": "1dbd56ac-6264-47dd-961e-e36b9632d80d"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "89a3faff-7cb5-44ac-a3dd-4f127c445c89",
+      "name": "responderParaWebhook"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "block",
+        "key": "={{ $json.body.remote_J_id }}_block",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "a3e9b27e-74c6-462c-bebd-f1f35045f3e2",
+      "name": "listarTempoPausaAtendimentoHumano",
+      "credentials": {
+        "redis": {
+          "id": "mG96KO4qIJc2Z5cp",
+          "name": "Redis"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "listarTempoPausaAtendimentoHumano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "listarTempoPausaAtendimentoHumano": {
+      "main": [
+        [
+          {
+            "node": "responderParaWebhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f2c6c038-d411-4dea-b66f-7b256b5a9827",
+  "meta": {
+    "instanceId": "8125e227058f92fdce9ece7d059bc1433ced99d24a7edc65b549aaa2538e2b97"
+  },
+  "id": "9faFLtvu7tmW84u3",
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T18:13:18.649Z",
+      "createdAt": "2025-11-04T18:13:18.649Z",
+      "id": "ur1maN6bsjwttizq",
+      "name": "💗 flowgrammers"
+    },
+    {
+      "updatedAt": "2026-03-04T14:31:03.764Z",
+      "createdAt": "2026-03-04T14:31:03.764Z",
+      "id": "YgEN0njwKdGXy3EG",
+      "name": "🏢 enterprise"
+    }
+  ]
+}
