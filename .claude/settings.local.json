@@ -9,7 +9,11 @@
       "Bash(npm run:*)",
       "Bash(find /Users/ricneves/Documents/Projetos/imersao-flowgrammers/imersao -path \"*/n8n*\" -prune -o -type f \\\\\\( -name \"*n8n*\" -o -name \"*workflow*\" \\\\\\) -print | grep -E \"\\\\.\\(md|txt\\)$\")",
       "Bash(xargs ls:*)",
-      "Bash(sort -k2)"
+      "Bash(sort -k2)",
+      "Bash(mkdir -p /c/Users/leand/AppData/Local/supabase)",
+      "Bash(tar -xzf \"$TEMP/supabase.tar.gz\" -C /c/Users/leand/AppData/Local/supabase)",
+      "Read(//c/Users/leand/AppData/Local/**)",
+      "Bash(cat:*)"
     ]
   }
 }

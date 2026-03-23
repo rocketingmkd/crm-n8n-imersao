@@ -164,6 +164,7 @@ Verifique em **Storage** que os buckets existem e estão como **Public**. Se o u
 | `configuracoes_globais` | Config global da plataforma |
 | `documentos` | Base de conhecimento (RAG) |
 | `clientes_followup` | Follow-up de clientes via n8n |
+| `model_costs` | Custos por modelo LLM (input/output em USD + cotação do dólar) |
 
 ---
 

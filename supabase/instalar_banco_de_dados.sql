@@ -44,25 +44,32 @@ $$;
 -- Retorna o id_organizacao do usuário autenticado
 CREATE OR REPLACE FUNCTION obter_id_organizacao_usuario()
 RETURNS uuid
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 STABLE
 AS $$
-  SELECT id_organizacao
-  FROM perfis
-  WHERE id = auth.uid();
+BEGIN
+  RETURN (
+    SELECT id_organizacao
+    FROM perfis
+    WHERE id = auth.uid()
+  );
+END;
 $$;
 
 -- Verifica se o usuário autenticado é super admin
 CREATE OR REPLACE FUNCTION usuario_e_super_admin()
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 STABLE
 AS $$
-  SELECT COALESCE(super_admin, false)
-  FROM perfis
-  WHERE id = auth.uid();
+BEGIN
+  RETURN COALESCE(
+    (SELECT super_admin FROM perfis WHERE id = auth.uid()),
+    false
+  );
+END;
 $$;
 
 -- Trigger para atualizar atualizado_em automaticamente
@@ -1057,6 +1064,60 @@ CREATE POLICY "Usuarios podem atualizar tarefas da sua org"
 CREATE POLICY "Usuarios podem deletar tarefas da sua org"
   ON public.anotacoes_tarefas FOR DELETE
   USING (id_organizacao = obter_id_organizacao_usuario());
+
+-- ============================================================
+-- TABELA: model_costs
+-- Custos por modelo LLM — usada pelo workflow
+-- calcularERegistrarTokens para calcular custo em BRL.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS model_costs (
+  llm_model     text           PRIMARY KEY,
+  input_price   numeric(10, 6) NOT NULL, -- preço por 1M tokens de input (USD)
+  output_price  numeric(10, 6) NOT NULL, -- preço por 1M tokens de output (USD)
+  dolar         numeric(8, 4)  NOT NULL, -- cotação do dólar em reais (BRL)
+  criado_em     timestamptz    NOT NULL DEFAULT now(),
+  atualizado_em timestamptz    NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER set_atualizado_em_model_costs
+  BEFORE UPDATE ON model_costs
+  FOR EACH ROW EXECUTE FUNCTION trigger_atualizado_em();
+
+ALTER TABLE model_costs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "model_costs_select"
+  ON model_costs FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "model_costs_insert"
+  ON model_costs FOR INSERT
+  TO authenticated
+  WITH CHECK (usuario_e_super_admin());
+
+CREATE POLICY "model_costs_update"
+  ON model_costs FOR UPDATE
+  TO authenticated
+  USING (usuario_e_super_admin());
+
+CREATE POLICY "model_costs_delete"
+  ON model_costs FOR DELETE
+  TO authenticated
+  USING (usuario_e_super_admin());
+
+-- Dados iniciais — preços OpenAI em USD por 1M tokens
+-- Atualize o campo `dolar` conforme a cotação atual antes de executar
+INSERT INTO model_costs (llm_model, input_price, output_price, dolar) VALUES
+  ('gpt-4o',        2.50,  10.00, 5.80),
+  ('gpt-4o-mini',   0.15,   0.60, 5.80),
+  ('gpt-4-turbo',  10.00,  30.00, 5.80),
+  ('gpt-4',        30.00,  60.00, 5.80),
+  ('gpt-3.5-turbo', 0.50,   1.50, 5.80),
+  ('o1',           15.00,  60.00, 5.80),
+  ('o1-mini',       3.00,  12.00, 5.80),
+  ('o3-mini',       1.10,   4.40, 5.80)
+ON CONFLICT (llm_model) DO NOTHING;
 
 -- ============================================================
 -- FIM DA INSTALAÇÃO

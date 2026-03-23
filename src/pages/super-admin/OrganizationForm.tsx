@@ -112,20 +112,6 @@ export default function OrganizationForm() {
     const filePath = `${fileName}`;
     const bucketName = 'organization-logos';
 
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === bucketName);
-
-    if (!bucketExists) {
-      const { error: createErr } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 2 * 1024 * 1024,
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
-      });
-      if (createErr && !createErr.message?.includes('already exists')) {
-        throw new Error(`Não foi possível criar o bucket de logos. Erro: ${createErr.message}`);
-      }
-    }
-
     const { error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, { cacheControl: '3600', upsert: true });
