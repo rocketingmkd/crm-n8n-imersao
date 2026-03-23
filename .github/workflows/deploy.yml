@@ -63,6 +63,7 @@ jobs:
             docker service update \
               --image "$IMAGE:latest" \
               --with-registry-auth \
+              --force \
               crm-rocketing
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
